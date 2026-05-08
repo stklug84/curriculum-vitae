@@ -1,0 +1,240 @@
+name: Build CV
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      engine:
+        description: "LaTeX toolchain to use"
+        required: true
+        default: "pdflatex"
+        type: choice
+        options:
+          - pdflatex
+          - latex-chain
+
+env:
+  # Default engine when not triggered via workflow_dispatch.
+  # Override here or via the workflow_dispatch input above.
+  DEFAULT_ENGINE: pdflatex
+  # Main document basename (without .tex). Discovered automatically if empty.
+  MAIN_TEX: ""
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: texlive/texlive:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve engine
+        id: engine
+        shell: bash
+        run: |
+          ENGINE="${{ github.event.inputs.engine }}"
+          if [ -z "$ENGINE" ]; then
+            ENGINE="${DEFAULT_ENGINE}"
+          fi
+          echo "engine=$ENGINE" >> "$GITHUB_OUTPUT"
+          echo "Selected engine: $ENGINE"
+
+      - name: Detect main .tex file
+        id: detect_main
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN="${MAIN_TEX}"
+          if [ -z "$MAIN" ]; then
+            # Find a .tex file containing \documentclass at repo root.
+            MAIN_FILE="$(grep -l '^\s*\\documentclass' ./*.tex 2>/dev/null | head -n1 || true)"
+            if [ -z "$MAIN_FILE" ]; then
+              echo "::error::No main .tex file (containing \\documentclass) found in repo root."
+              exit 1
+            fi
+            MAIN="$(basename "$MAIN_FILE" .tex)"
+          fi
+          echo "main=$MAIN" >> "$GITHUB_OUTPUT"
+          echo "Main document: ${MAIN}.tex"
+
+      - name: Detect auxiliary inputs (bib / idx / psfrag)
+        id: detect_aux
+        shell: bash
+        run: |
+          set -euo pipefail
+          MAIN="${{ steps.detect_main.outputs.main }}"
+          TEX="${MAIN}.tex"
+
+          HAS_BIB="false"
+          HAS_BIBLATEX="false"
+          HAS_INDEX="false"
+          HAS_GLOSSARIES="false"
+          HAS_PSFRAG="false"
+
+          # Bibliography: BibTeX (\bibliography{...}) vs biblatex/biber.
+          if grep -Eq '\\bibliography\{' "$TEX"; then
+            HAS_BIB="true"
+          fi
+          if grep -Eq '\\usepackage(\[[^]]*\])?\{biblatex\}' "$TEX"; then
+            HAS_BIBLATEX="true"
+          fi
+
+          # Index (makeindex).
+          if grep -Eq '\\makeindex|\\printindex|\\usepackage(\[[^]]*\])?\{makeidx\}|\\usepackage(\[[^]]*\])?\{imakeidx\}' "$TEX"; then
+            HAS_INDEX="true"
+          fi
+
+          # Glossaries (makeglossaries).
+          if grep -Eq '\\usepackage(\[[^]]*\])?\{glossaries\}|\\makeglossaries' "$TEX"; then
+            HAS_GLOSSARIES="true"
+          fi
+
+          # psfrag: only relevant for the latex->dvips->ps2pdf chain.
+          if grep -Eq '\\usepackage(\[[^]]*\])?\{psfrag\}|\\psfrag\{' "$TEX"; then
+            HAS_PSFRAG="true"
+          fi
+
+          # If any *.bib file is present alongside, treat bibliography as needed.
+          if compgen -G "*.bib" > /dev/null || compgen -G "**/*.bib" > /dev/null; then
+            HAS_BIB_FILES="true"
+          else
+            HAS_BIB_FILES="false"
+          fi
+
+          {
+            echo "has_bib=$HAS_BIB"
+            echo "has_biblatex=$HAS_BIBLATEX"
+            echo "has_index=$HAS_INDEX"
+            echo "has_glossaries=$HAS_GLOSSARIES"
+            echo "has_psfrag=$HAS_PSFRAG"
+            echo "has_bib_files=$HAS_BIB_FILES"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "Detected:"
+          echo "  bibtex     : $HAS_BIB"
+          echo "  biblatex   : $HAS_BIBLATEX"
+          echo "  index      : $HAS_INDEX"
+          echo "  glossaries : $HAS_GLOSSARIES"
+          echo "  psfrag     : $HAS_PSFRAG"
+          echo "  *.bib found: $HAS_BIB_FILES"
+
+      - name: Build with pdflatex chain
+        if: steps.engine.outputs.engine == 'pdflatex'
+        shell: bash
+        env:
+          MAIN: ${{ steps.detect_main.outputs.main }}
+          HAS_BIB: ${{ steps.detect_aux.outputs.has_bib }}
+          HAS_BIBLATEX: ${{ steps.detect_aux.outputs.has_biblatex }}
+          HAS_INDEX: ${{ steps.detect_aux.outputs.has_index }}
+          HAS_GLOSSARIES: ${{ steps.detect_aux.outputs.has_glossaries }}
+          HAS_PSFRAG: ${{ steps.detect_aux.outputs.has_psfrag }}
+        run: |
+          set -euo pipefail
+
+          if [ "$HAS_PSFRAG" = "true" ]; then
+            echo "::warning::psfrag detected. pdflatex does not support psfrag substitutions natively."
+            echo "::warning::Re-run the workflow with engine=latex-chain to use the latex->dvips->ps2pdf path."
+          fi
+
+          # Pass 1
+          pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+
+          # Bibliography
+          if [ "$HAS_BIBLATEX" = "true" ]; then
+            biber "$MAIN" || true
+          elif [ "$HAS_BIB" = "true" ]; then
+            bibtex "$MAIN" || true
+          fi
+
+          # Index
+          if [ "$HAS_INDEX" = "true" ] && [ -f "$MAIN.idx" ]; then
+            makeindex "$MAIN.idx"
+          fi
+
+          # Glossaries
+          if [ "$HAS_GLOSSARIES" = "true" ]; then
+            makeglossaries "$MAIN" || true
+          fi
+
+          # Pass 2 + 3 to resolve refs/TOC/index/bib.
+          pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+          pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+
+      - name: Build with latex -> dvips -> ps2pdf chain
+        if: steps.engine.outputs.engine == 'latex-chain'
+        shell: bash
+        env:
+          MAIN: ${{ steps.detect_main.outputs.main }}
+          HAS_BIB: ${{ steps.detect_aux.outputs.has_bib }}
+          HAS_BIBLATEX: ${{ steps.detect_aux.outputs.has_biblatex }}
+          HAS_INDEX: ${{ steps.detect_aux.outputs.has_index }}
+          HAS_GLOSSARIES: ${{ steps.detect_aux.outputs.has_glossaries }}
+          HAS_PSFRAG: ${{ steps.detect_aux.outputs.has_psfrag }}
+        run: |
+          set -euo pipefail
+
+          if [ "$HAS_BIBLATEX" = "true" ]; then
+            echo "::warning::biblatex detected; using biber. Ensure backend=biber in your preamble."
+          fi
+
+          # Pass 1 (DVI output)
+          latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+
+          # Bibliography
+          if [ "$HAS_BIBLATEX" = "true" ]; then
+            biber "$MAIN" || true
+          elif [ "$HAS_BIB" = "true" ]; then
+            bibtex "$MAIN" || true
+          fi
+
+          # Index
+          if [ "$HAS_INDEX" = "true" ] && [ -f "$MAIN.idx" ]; then
+            makeindex "$MAIN.idx"
+          fi
+
+          # Glossaries
+          if [ "$HAS_GLOSSARIES" = "true" ]; then
+            makeglossaries "$MAIN" || true
+          fi
+
+          # Pass 2 + 3 to resolve refs.
+          latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+          latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+
+          # DVI -> PS (psfrag substitutions are applied here).
+          dvips -Ppdf -G0 -o "$MAIN.ps" "$MAIN.dvi"
+
+          # PS -> PDF
+          ps2pdf -dPDFSETTINGS=/prepress "$MAIN.ps" "$MAIN.pdf"
+
+          if [ "$HAS_PSFRAG" = "true" ]; then
+            echo "psfrag substitutions were processed by dvips."
+          fi
+
+      - name: List build outputs
+        shell: bash
+        run: |
+          ls -la
+          echo "---"
+          echo "PDF info:"
+          MAIN="${{ steps.detect_main.outputs.main }}"
+          [ -f "$MAIN.pdf" ] && stat "$MAIN.pdf" || echo "::error::Expected $MAIN.pdf not produced."
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.detect_main.outputs.main }}
+          path: ${{ steps.detect_main.outputs.main }}.pdf
+          if-no-files-found: error
+
+      - name: Upload build logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: |
+            *.log
+            *.blg
+            *.ilg
+          if-no-files-found: ignore
