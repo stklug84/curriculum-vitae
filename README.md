@@ -5,16 +5,6 @@ compiled in CI with a TeX Live container and can be reproduced locally either
 with a direct `pdflatex` invocation or by running the same GitHub Actions
 workflow under [`nektos/act`](https://github.com/nektos/act) via the GitHub CLI.
 
-## Repository layout
-
-| Path | Purpose |
-| --- | --- |
-| `Lebenslauf-Photo-2Page.tex` | Main LaTeX source for the CV |
-| `images/` | Photo and figures referenced by the document |
-| `.github/workflows/build.yml` | CI pipeline that builds the PDF |
-| `out/` | Output directory produced by local `act` runs (gitignored) |
-| `.gitignore` | Ignores LaTeX aux files, root PDFs and `out/` |
-
 ## Building locally
 
 ### Direct (host TeX Live)
@@ -302,6 +292,9 @@ captures `*.log`, `*.blg` and `*.ilg` on failure to make debugging easier.
     if-no-files-found: ignore
 ```
 
+**Note**: Step 9 is not strictly necessary as we can produce the output in the
+current working directory (as does texlive) and act takes care of the file
+permissions.
 **9. Copy to `./out` (local)** — under `act --bind` the repo is bind-mounted
 into the container, so writing relative to the working directory puts the
 file on the host. The container runs as `root`, so the step `chown`s the
