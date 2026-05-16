@@ -4,24 +4,10 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      engine:
-        description: "LaTeX toolchain to use"
-        required: true
-        default: "latexmk"
-        type: choice
-        options:
-          - latexmk
-          - pdflatex
-          - latex-chain
       local:
-        description: "Set to 'true' when running locally via gh act (skips artifact upload, writes outputs to ./out)"
+        description: "Set to 'true' when running locally via gh act (skips artifact upload)"
         required: false
         default: "false"
-        type: string
-      main_tex:
-        description: "Main document basename without .tex (leave blank to auto-detect)"
-        required: false
-        default: ""
         type: string
 
 # Least-privilege token: this workflow only reads the repo and uploads artifacts.
@@ -35,174 +21,172 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  # Default engine when not triggered via workflow_dispatch.
-  DEFAULT_ENGINE: latexmk
+  # Dynamic artifact-name prefix. Never hardcoded; derived from the
+  # repository name so the workflow is fully portable.
+  # Note: artifact names may not contain '/'. Repo names usually don't either.
+  ARTIFACT_PREFIX: ${{ github.event.repository.name }}
 
 jobs:
   # =====================================================================
-  #  detect
+  #  discover
   #
-  #  Resolves workflow inputs (engine, local-mode flag, main document
-  #  basename) and scans the main .tex for auxiliary toolchain
-  #  requirements (bibtex/biblatex, makeindex, glossaries, psfrag).
-  #  All downstream jobs consume these as `needs.detect.outputs.*` so the
-  #  detection logic lives in exactly one place.
+  #  Auto-discovers every CV variant under cvs/*/.
+  #  Each variant directory must contain exactly one *.tex with
+  #  \documentclass, and may contain a sibling `.engine` dotfile naming
+  #  the engine to use (latexmk | pdflatex | xelatex | latex-chain).
+  #  If `.engine` is missing, the default is latexmk.
+  #
+  #  Per main, the script also detects auxiliary toolchain requirements
+  #  (bibtex/biblatex, makeindex, glossaries, psfrag).
+  #
+  #  Emits a JSON matrix consumed by the `build` job. No filenames are
+  #  hardcoded in this workflow.
   # =====================================================================
-  detect:
+  discover:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
-      main:           ${{ steps.main.outputs.main }}
-      local:          ${{ steps.cfg.outputs.local }}
-      engine:         ${{ steps.cfg.outputs.engine }}
-      has_bib:        ${{ steps.aux.outputs.has_bib }}
-      has_biblatex:   ${{ steps.aux.outputs.has_biblatex }}
-      has_index:      ${{ steps.aux.outputs.has_index }}
-      has_glossaries: ${{ steps.aux.outputs.has_glossaries }}
-      has_psfrag:     ${{ steps.aux.outputs.has_psfrag }}
+      matrix: ${{ steps.scan.outputs.matrix }}
+      local:  ${{ steps.cfg.outputs.local }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Resolve inputs
+      - name: Resolve local mode
         id: cfg
         shell: bash
         env:
-          # `inputs.*` is the canonical accessor for workflow_dispatch.
-          # On non-dispatch events these are empty strings and we fall
-          # back to env defaults / the ACT auto-detect below.
-          ENGINE_IN: ${{ inputs.engine }}
           LOCAL_IN: ${{ inputs.local }}
         run: |
           set -euo pipefail
-          ENGINE="${ENGINE_IN:-$DEFAULT_ENGINE}"
           # nektos/act exports ACT=true; treat that as implicit local mode.
           LOCAL="${LOCAL_IN:-${ACT:+true}}"
           LOCAL="${LOCAL:-false}"
-          echo "engine=$ENGINE" >> "$GITHUB_OUTPUT"
-          echo "local=$LOCAL"   >> "$GITHUB_OUTPUT"
-          echo "Resolved engine=$ENGINE local=$LOCAL (ACT=${ACT:-unset})"
+          echo "local=$LOCAL" >> "$GITHUB_OUTPUT"
+          echo "Resolved local=$LOCAL (ACT=${ACT:-unset})"
 
-      - name: Detect main LaTeX document
-        id: main
+      - name: Scan cvs/*/ and build matrix
+        id: scan
         shell: bash
-        env:
-          MAIN_IN: ${{ inputs.main_tex }}
         run: |
           set -euo pipefail
-          MAIN="${MAIN_IN:-}"
-          if [ -z "$MAIN" ]; then
-            # Auto-detect: pick the first repo-root .tex with \documentclass.
-            MAIN_FILE="$(grep -l '^\s*\\documentclass' ./*.tex 2>/dev/null | head -n1 || true)"
-            if [ -z "$MAIN_FILE" ]; then
-              echo "::error::No main .tex file (containing \\documentclass) found in repo root."
+
+          if [ ! -d cvs ] || [ -z "$(ls -A cvs 2>/dev/null || true)" ]; then
+            echo "::error::No CV variants found. Expected directories under cvs/."
+            exit 1
+          fi
+
+          entries=()
+          for dir in cvs/*/; do
+            [ -d "$dir" ] || continue
+            dir="${dir%/}"
+            name="$(basename "$dir")"
+
+            # Find exactly one *.tex with \documentclass in the directory.
+            mapfile -t tex_files < <(grep -l '^\s*\\documentclass' "$dir"/*.tex 2>/dev/null || true)
+            if [ "${#tex_files[@]}" -eq 0 ]; then
+              echo "::error::$dir contains no main .tex (file with \\documentclass)."
               exit 1
             fi
-            MAIN="$(basename "$MAIN_FILE" .tex)"
+            if [ "${#tex_files[@]}" -gt 1 ]; then
+              echo "::error::$dir contains multiple main .tex files: ${tex_files[*]}"
+              exit 1
+            fi
+            tex="${tex_files[0]}"
+            main="$(basename "$tex" .tex)"
+
+            # Resolve engine from sibling .engine dotfile (default latexmk).
+            engine_file="$dir/.engine"
+            if [ -f "$engine_file" ]; then
+              engine="$(tr -d '[:space:]' < "$engine_file")"
+            else
+              engine="latexmk"
+            fi
+            case "$engine" in
+              latexmk|pdflatex|xelatex|latex-chain) ;;
+              *) echo "::error::Unknown engine '$engine' in $engine_file"; exit 1 ;;
+            esac
+
+            # Auxiliary-tool detection, scoped to the variant's main .tex.
+            has_bib="false"
+            has_biblatex="false"
+            has_index="false"
+            has_glossaries="false"
+            has_psfrag="false"
+            if grep -Eq '\\bibliography\{' "$tex"; then has_bib="true"; fi
+            if grep -Eq '\\usepackage(\[[^]]*\])?\{biblatex\}' "$tex"; then has_biblatex="true"; fi
+            if grep -Eq '\\makeindex|\\printindex|\\usepackage(\[[^]]*\])?\{makeidx\}|\\usepackage(\[[^]]*\])?\{imakeidx\}' "$tex"; then has_index="true"; fi
+            if grep -Eq '\\usepackage(\[[^]]*\])?\{glossaries\}|\\makeglossaries' "$tex"; then has_glossaries="true"; fi
+            if grep -Eq '\\usepackage(\[[^]]*\])?\{psfrag\}|\\psfrag\{' "$tex"; then has_psfrag="true"; fi
+
+            entry=$(printf '{"name":"%s","dir":"%s","main":"%s","engine":"%s","has_bib":"%s","has_biblatex":"%s","has_index":"%s","has_glossaries":"%s","has_psfrag":"%s"}' \
+              "$name" "$dir" "$main" "$engine" "$has_bib" "$has_biblatex" "$has_index" "$has_glossaries" "$has_psfrag")
+            entries+=("$entry")
+
+            echo "  - $name  dir=$dir  main=$main.tex  engine=$engine"
+          done
+
+          if [ "${#entries[@]}" -eq 0 ]; then
+            echo "::error::No CV variants discovered under cvs/."
+            exit 1
           fi
-          echo "main=$MAIN" >> "$GITHUB_OUTPUT"
-          echo "Main document: ${MAIN}.tex"
 
-      - name: Detect auxiliary inputs (bib / idx / glossaries / psfrag)
-        id: aux
-        shell: bash
-        env:
-          MAIN: ${{ steps.main.outputs.main }}
-        run: |
-          set -euo pipefail
-          TEX="${MAIN}.tex"
-
-          HAS_BIB="false"
-          HAS_BIBLATEX="false"
-          HAS_INDEX="false"
-          HAS_GLOSSARIES="false"
-          HAS_PSFRAG="false"
-
-          # Bibliography: BibTeX (\bibliography{...}) vs biblatex/biber.
-          if grep -Eq '\\bibliography\{' "$TEX"; then
-            HAS_BIB="true"
-          fi
-          if grep -Eq '\\usepackage(\[[^]]*\])?\{biblatex\}' "$TEX"; then
-            HAS_BIBLATEX="true"
-          fi
-
-          # Index (makeindex).
-          if grep -Eq '\\makeindex|\\printindex|\\usepackage(\[[^]]*\])?\{makeidx\}|\\usepackage(\[[^]]*\])?\{imakeidx\}' "$TEX"; then
-            HAS_INDEX="true"
-          fi
-
-          # Glossaries (makeglossaries).
-          if grep -Eq '\\usepackage(\[[^]]*\])?\{glossaries\}|\\makeglossaries' "$TEX"; then
-            HAS_GLOSSARIES="true"
-          fi
-
-          # psfrag: only relevant for the latex->dvips->ps2pdf chain.
-          if grep -Eq '\\usepackage(\[[^]]*\])?\{psfrag\}|\\psfrag\{' "$TEX"; then
-            HAS_PSFRAG="true"
-          fi
-
-          {
-            echo "has_bib=$HAS_BIB"
-            echo "has_biblatex=$HAS_BIBLATEX"
-            echo "has_index=$HAS_INDEX"
-            echo "has_glossaries=$HAS_GLOSSARIES"
-            echo "has_psfrag=$HAS_PSFRAG"
-          } >> "$GITHUB_OUTPUT"
-
-          echo "Detected:"
-          echo "  bibtex     : $HAS_BIB"
-          echo "  biblatex   : $HAS_BIBLATEX"
-          echo "  index      : $HAS_INDEX"
-          echo "  glossaries : $HAS_GLOSSARIES"
-          echo "  psfrag     : $HAS_PSFRAG"
+          # Build "{\"include\":[ ... ]}" JSON.
+          joined="$(IFS=,; echo "${entries[*]}")"
+          matrix_json="{\"include\":[${joined}]}"
+          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+          echo "Discovered ${#entries[@]} CV variant(s)."
+          echo "matrix=$matrix_json"
 
   # =====================================================================
   #  build
   #
-  #  Compiles the print-ready PDF using the engine selected by `detect`.
-  #  The default engine (`latexmk`) is driven by latexmkrc; the other
-  #  two are kept as escape hatches for users who reintroduce psfrag or
-  #  prefer the plain pdfLaTeX three-pass workflow.
+  #  Matrix build, one leg per discovered CV variant. The engine, main
+  #  filename, working directory, and aux-tool flags are all driven by
+  #  the matrix entry produced by `discover`. TEXINPUTS lets each main
+  #  resolve repo-root shared assets (personal-info.tex, *.sty, images/)
+  #  without any path edits inside the .tex source.
   # =====================================================================
   build:
-    needs: detect
+    needs: discover
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
       image: texlive/texlive:latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ matrix.dir }}
+    env:
+      # Append repo root and images/ to kpathsea search so
+      # \input{personal-info}, \usepackage{cv-sidebar}, and
+      # \includegraphics{images/...} resolve from inside cvs/<name>/.
+      TEXINPUTS: ".:../..:../../images:"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # latexmk drives pdflatex per latexmkrc (which registers the
-      # glossaries cus_dep). The map is included via \includegraphics,
-      # so no shell-escape is needed.
       - name: Build with latexmk
-        if: needs.detect.outputs.engine == 'latexmk'
-        shell: bash
-        env:
-          MAIN: ${{ needs.detect.outputs.main }}
+        if: matrix.engine == 'latexmk'
         run: |
           set -euo pipefail
           latexmk -pdf \
                   -interaction=nonstopmode -halt-on-error -file-line-error \
-                  -g "$MAIN.tex"
+                  -g "${{ matrix.main }}.tex"
 
-      # The pdflatex and latex-chain engines share their bibliography,
-      # index, and glossaries handling. The compiler binary (pdflatex
-      # produces PDF directly; latex produces DVI) and post-processing
-      # (dvips + ps2pdf when DVI) are the only per-engine differences.
-      - name: Build with pdflatex or latex-chain
-        if: needs.detect.outputs.engine == 'pdflatex' || needs.detect.outputs.engine == 'latex-chain'
-        shell: bash
+      - name: Build with pdflatex, latex-chain, or xelatex
+        if: matrix.engine == 'pdflatex' || matrix.engine == 'latex-chain' || matrix.engine == 'xelatex'
         env:
-          ENGINE: ${{ needs.detect.outputs.engine }}
-          MAIN: ${{ needs.detect.outputs.main }}
-          HAS_BIB: ${{ needs.detect.outputs.has_bib }}
-          HAS_BIBLATEX: ${{ needs.detect.outputs.has_biblatex }}
-          HAS_INDEX: ${{ needs.detect.outputs.has_index }}
-          HAS_GLOSSARIES: ${{ needs.detect.outputs.has_glossaries }}
-          HAS_PSFRAG: ${{ needs.detect.outputs.has_psfrag }}
+          ENGINE: ${{ matrix.engine }}
+          MAIN: ${{ matrix.main }}
+          HAS_BIB: ${{ matrix.has_bib }}
+          HAS_BIBLATEX: ${{ matrix.has_biblatex }}
+          HAS_INDEX: ${{ matrix.has_index }}
+          HAS_GLOSSARIES: ${{ matrix.has_glossaries }}
+          HAS_PSFRAG: ${{ matrix.has_psfrag }}
         run: |
           set -euo pipefail
 
@@ -212,7 +196,7 @@ jobs:
               if [ "$HAS_PSFRAG" = "true" ]; then
                 echo "::error::psfrag detected. pdflatex cannot perform psfrag substitutions."
                 echo "::error::psfrag requires the classic latex -> dvips -> ps2pdf chain;"
-                echo "::error::re-run the workflow with engine=latex-chain."
+                echo "::error::set .engine to 'latex-chain' for this variant."
                 exit 1
               fi
               ;;
@@ -220,6 +204,15 @@ jobs:
               LATEX_CMD="latex"
               if [ "$HAS_BIBLATEX" = "true" ]; then
                 echo "::warning::biblatex detected; using biber. Ensure backend=biber in your preamble."
+              fi
+              ;;
+            xelatex)
+              LATEX_CMD="xelatex"
+              if [ "$HAS_PSFRAG" = "true" ]; then
+                echo "::error::psfrag detected. xelatex does not support psfrag substitutions."
+                echo "::error::psfrag requires the classic latex -> dvips -> ps2pdf chain;"
+                echo "::error::set .engine to 'latex-chain' for this variant."
+                exit 1
               fi
               ;;
           esac
@@ -260,62 +253,61 @@ jobs:
           fi
 
       - name: Verify PDF
-        shell: bash
         env:
-          MAIN: ${{ needs.detect.outputs.main }}
+          MAIN: ${{ matrix.main }}
         run: |
           set -euo pipefail
           if [ ! -s "$MAIN.pdf" ]; then
-            echo "::error::Expected $MAIN.pdf was not produced or is empty."
+            echo "::error::Expected ${{ matrix.dir }}/$MAIN.pdf was not produced or is empty."
             exit 1
           fi
           ls -la "$MAIN.pdf"
 
-      # Intermediate PDF artifact; repackaged into the final
-      # `book` artifact by the package job.
       - name: Upload PDF artifact
-        if: needs.detect.outputs.local != 'true'
+        if: needs.discover.outputs.local != 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: book-pdf-intermediate
-          path: ${{ needs.detect.outputs.main }}.pdf
+          name: ${{ env.ARTIFACT_PREFIX }}-${{ matrix.name }}-pdf
+          path: ${{ matrix.dir }}/${{ matrix.main }}.pdf
           if-no-files-found: error
 
       - name: Upload build logs on failure
-        if: failure() && needs.detect.outputs.local != 'true'
+        if: failure() && needs.discover.outputs.local != 'true'
         uses: ./.github/actions/upload-build-logs
         with:
-          artifact-name: build-logs
+          artifact-name: ${{ env.ARTIFACT_PREFIX }}-${{ matrix.name }}-logs
           paths: |
-            *.log
-            *.blg
-            *.ilg
-
+            ${{ matrix.dir }}/*.log
+            ${{ matrix.dir }}/*.blg
+            ${{ matrix.dir }}/*.ilg
 
   # =====================================================================
   #  package
   #
-  #  Wraps the PDF (from `build`) into the user-facing `book` artifact.
-  #  This is the artifact a downstream consumer should fetch.
+  #  Collects every per-CV PDF artifact (<repo>-<name>-pdf) into a
+  #  single combined artifact named after the repo. Each PDF is placed
+  #  in its own subfolder (the artifact name) to avoid collisions.
   # =====================================================================
   package:
-    needs: [detect, build]
-    if: needs.detect.outputs.local != 'true'
+    needs: [discover, build]
+    if: needs.discover.outputs.local != 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Download PDF artifact
+      - name: Download all per-CV PDF artifacts
         uses: actions/download-artifact@v6
         with:
-          name: book-pdf-intermediate
+          pattern: ${{ env.ARTIFACT_PREFIX }}-*-pdf
           path: ./dist
 
       - name: List combined artifact contents
         shell: bash
-        run: ls -la ./dist
+        run: |
+          set -euo pipefail
+          find ./dist -type f -print
 
-      - name: Upload combined artifact (book)
+      - name: Upload combined artifact
         uses: actions/upload-artifact@v7
         with:
-          name: book
+          name: ${{ env.ARTIFACT_PREFIX }}
           path: ./dist/*
           if-no-files-found: error

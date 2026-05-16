@@ -20,8 +20,10 @@
 *.vrb
 *.xdv
 
-# Generated PDFs in repo root (keep source PDFs in images/)
+# Generated PDFs (keep source PDFs in images/)
 /*.pdf
+cvs/*/*.pdf
+cvs/*/*.synctex.gz
 
 # Editor / OS
 .DS_Store

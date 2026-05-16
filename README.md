@@ -1,41 +1,105 @@
 # Curriculum Vitae (LaTeX)
 
-A two-page LaTeX CV built from `Lebenslauf-Photo-2Page.tex`. The document is
-compiled in CI with a TeX Live container and can be reproduced locally either
-with a direct `pdflatex` invocation or by running the same GitHub Actions
-workflow under [`nektos/act`](https://github.com/nektos/act) via the GitHub CLI.
+A multi-variant LaTeX CV repository. Every directory under `cvs/<name>/`
+contains exactly one CV main document plus a hidden `.engine` file that
+declares the LaTeX engine to use. CI auto-discovers every variant and builds
+them in parallel inside a TeX Live container. Any build can be reproduced
+locally with the host TeX Live install or by replaying the workflow with
+[`nektos/act`](https://github.com/nektos/act) via the GitHub CLI.
+
+Today the repo ships two variants:
+
+| Variant            | Folder              | Engine    | Style file         |
+| ------------------ | ------------------- | --------- | ------------------ |
+| Classic two-page   | `cvs/photo-2page/`  | pdflatex  | `cv-plain-style.sty` |
+| Sidebar two-column | `cvs/sidebar/`      | xelatex   | `cv-sidebar.sty`   |
+
+## Repository layout
+
+```
+.
+├── cv-plain-style.sty            # Classic two-page CV style (pdflatex)
+├── cv-sidebar.sty                # Sidebar CV style (xelatex, FiraSans)
+├── personal-info.tex             # Shared name / contact / asset paths
+├── images/                       # Shared assets (photo, signature)
+├── cvs/
+│   ├── photo-2page/
+│   │   ├── lebenslauf-photo-2page.tex
+│   │   └── .engine               # contents: pdflatex
+│   └── sidebar/
+│       ├── lebenslauf-sidebar.tex
+│       └── .engine               # contents: xelatex
+└── .github/workflows/build.yml
+```
+
+Shared assets (`personal-info.tex`, `images/`, and the two `*.sty` files)
+live at the repo root and are resolved from inside each variant directory
+via `TEXINPUTS=.:../..:../../images:`. That setting is applied automatically
+by the workflow and is the only thing you need locally as well.
+
+## Adding a new CV variant
+
+The workflow is fully data-driven — there is no list of variants to update.
+To add a third CV:
+
+1. `mkdir cvs/<name>`
+2. Drop exactly one `*.tex` file with `\documentclass{...}` into it. Reference
+   shared assets normally (`\input{personal-info}`, `\usepackage{cv-sidebar}`,
+   `\includegraphics{images/photo.jpg}`).
+3. `echo <engine> > cvs/<name>/.engine` — one of `latexmk`, `pdflatex`,
+   `xelatex`, `latex-chain`. If `.engine` is missing, `latexmk` is used.
+4. Commit and push. CI picks the new variant up automatically and uploads
+   `<repo>-<name>-pdf` as a workflow artifact.
 
 ## Building locally
 
 ### Direct (host TeX Live)
 
+`cd` into the variant directory and invoke the engine matching its `.engine`
+file. The `TEXINPUTS` setting lets the main `.tex` resolve `personal-info.tex`,
+the shared `*.sty` files, and `images/` from the repo root.
+
 ```sh
-pdflatex -interaction=nonstopmode -halt-on-error Lebenslauf-Photo-2Page.tex
+# Classic two-page CV (pdflatex)
+cd cvs/photo-2page
+TEXINPUTS=.:../..:../../images: pdflatex -interaction=nonstopmode -halt-on-error lebenslauf-photo-2page.tex
+
+# Sidebar variant (xelatex)
+cd cvs/sidebar
+TEXINPUTS=.:../..:../../images: xelatex -interaction=nonstopmode -halt-on-error lebenslauf-sidebar.tex
 ```
+
+`latexmk` users can equivalently run:
+
+```sh
+cd cvs/<variant>
+TEXINPUTS=.:../..:../../images: latexmk -pdf -interaction=nonstopmode -halt-on-error -g <main>.tex
+```
+
+The PDF lands next to the source: `cvs/<variant>/<main>.pdf`.
 
 ### Via the CI workflow with `gh act`
 
 This replays the exact CI logic on your machine inside the
-`texlive/texlive:latest` container, so you do not need TeX Live installed on the
-host:
+`texlive/texlive:latest` container, so you do not need TeX Live installed on
+the host. `act` builds the **full matrix** — every CV variant in one run.
 
 ```sh
-gh act workflow_dispatch \
-  -W .github/workflows/build.yml \
-  --input engine=pdflatex \
-  --input local=true
+gh act workflow_dispatch -W .github/workflows/build.yml --input local=true
 ```
 
-`act` exports `ACT=true` automatically, so the workflow also auto-detects local
-mode even if you omit `--input local=true`. The resulting PDF is written to
-`./out/Lebenslauf-Photo-2Page.pdf` and is chowned back to your host user.
+`act` exports `ACT=true` automatically, so the workflow also auto-detects
+local mode even if you omit `--input local=true`. In local mode the PDFs land
+in their variant folders via the bind mount; no separate upload or `./out/`
+copy step is needed.
 
 ## CI workflow explained
 
-The `.github/workflows/build.yml` workflow turns the `.tex` source into a PDF
-on every pull request and on demand via the Actions UI. It is intentionally
-generic: rather than hardcoding the document name or the build steps, it
-detects what the source needs and chooses the appropriate toolchain.
+The `.github/workflows/build.yml` workflow turns every CV variant under
+`cvs/*/` into a PDF on every pull request and on demand via the Actions UI.
+It is intentionally generic: it auto-discovers what to build, picks the
+right engine per variant from each `.engine` dotfile, and runs the legs in
+parallel.
 
 ### Triggers
 
@@ -44,25 +108,17 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
-      engine:
-        description: "LaTeX toolchain to use"
-        required: true
-        default: "pdflatex"
-        type: choice
-        options:
-          - pdflatex
-          - latex-chain
       local:
-        description: "Set to 'true' when running locally via gh act ..."
+        description: "Set to 'true' when running locally via gh act"
         required: false
         default: "false"
         type: string
 ```
 
-- `pull_request` — builds the CV for every PR so reviewers can download the
-  rendered PDF as an artifact before merging.
-- `workflow_dispatch` — lets you trigger a manual build with two inputs
-  (`engine` and `local`).
+- `pull_request` — builds every CV for every PR so reviewers can download
+  the rendered PDFs as artifacts before merging.
+- `workflow_dispatch` — lets you trigger a manual build. The only input is
+  `local`, used by `gh act` to skip artifact upload steps.
 
 There is intentionally no `push` trigger; the workflow only runs on PRs and
 manual dispatch.
@@ -71,11 +127,13 @@ manual dispatch.
 
 | Name | Source | Default | Purpose |
 | --- | --- | --- | --- |
-| `engine` | `workflow_dispatch` input | `pdflatex` | Picks `pdflatex` or `latex-chain` (`latex` → `dvips` → `ps2pdf`) |
-| `local` | `workflow_dispatch` input | `"false"` | Forces local mode for `gh act` |
-| `DEFAULT_ENGINE` | workflow `env` | `pdflatex` | Engine used when no input is provided |
-| `MAIN_TEX` | workflow `env` | `""` | Optional override for the main document basename; auto-detected when empty |
+| `local` | `workflow_dispatch` input | `"false"` | Forces local mode for `gh act` (skips artifact upload) |
+| `ARTIFACT_PREFIX` | workflow `env` | `${{ github.event.repository.name }}` | Dynamic artifact-name prefix; never hardcoded |
+| `TEXINPUTS` | `build` job `env` | `.:../..:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
 | `ACT` | runner env (set by `nektos/act`) | unset | Auto-detected to switch into local mode |
+
+The engine is **not** a workflow input. It is declared per variant via the
+`.engine` dotfile and picked up automatically by `discover`.
 
 ### Permissions, timeout, concurrency
 
@@ -98,269 +156,160 @@ jobs:
 - `permissions: contents: read` — the build only needs to read the repo and
   upload artifacts, so the `GITHUB_TOKEN` is scoped to the minimum required.
 - `concurrency` — if you push several commits to the same PR in quick
-  succession, in-flight builds for older commits are cancelled, saving runner
-  minutes.
-- `timeout-minutes: 15` — guards against a runaway LaTeX loop or a broken
-  package burning a full hour of runner time.
-- `container: texlive/texlive:latest` — runs every step inside the official
-  TeX Live image so `pdflatex`, `latex`, `dvips`, `ps2pdf`, `biber`,
-  `bibtex`, `makeindex` and `makeglossaries` are all available without
-  installation.
+  succession, in-flight builds for older commits are cancelled, saving
+  runner minutes.
+- `timeout-minutes: 15` per matrix leg — guards against a runaway LaTeX
+  loop or a broken package burning a full hour of runner time.
+- `container: texlive/texlive:latest` — every build step runs inside the
+  official TeX Live image, so `latexmk`, `pdflatex`, `xelatex`, `latex`,
+  `dvips`, `ps2pdf`, `biber`, `bibtex`, `makeindex` and `makeglossaries`
+  are all available without installation.
 
 ### Workflow diagram
 
 ```mermaid
 flowchart TD
-  A[Trigger: PR or workflow_dispatch] --> B[Checkout]
-  B --> C[Resolve inputs<br/>engine and local]
-  C --> D[Detect main .tex]
-  D --> E[Detect aux features<br/>bib / index / glossaries / psfrag]
-  E --> F{engine?}
-  F -- pdflatex --> G[pdflatex x3<br/>+ bibtex/biber/makeindex/makeglossaries]
-  F -- latex-chain --> H[latex x3 -> dvips -> ps2pdf]
-  G --> I[Verify PDF]
-  H --> I
-  I --> J{local?}
-  J -- false --> K[Upload artifact]
-  J -- true  --> L[Copy to ./out<br/>chown to host UID]
+  A[Trigger: PR or workflow_dispatch] --> B[discover]
+  B --> C[Scan cvs/*/ : read .engine + .tex]
+  C --> D[Emit matrix JSON]
+  D --> E[build matrix: one job per cvs/&lt;name&gt;/]
+  E --> F{matrix.engine?}
+  F -- latexmk     --> G[latexmk -pdf]
+  F -- pdflatex    --> H[pdflatex x3 + aux tools]
+  F -- xelatex     --> I[xelatex x3 + aux tools]
+  F -- latex-chain --> J[latex x3 -> dvips -> ps2pdf]
+  G --> K[Verify PDF]
+  H --> K
+  I --> K
+  J --> K
+  K --> L{local?}
+  L -- false --> M[Upload &lt;repo&gt;-&lt;name&gt;-pdf]
+  L -- true  --> N[PDF stays in cvs/&lt;name&gt;/ via act bind mount]
+  M --> O[package: download &lt;repo&gt;-*-pdf]
+  O --> P[Upload combined &lt;repo&gt; artifact]
 ```
 
 ### Step-by-step walkthrough
 
-**1. Checkout** — pulls the repository into the runner.
+**1. `discover`** — scans every directory under `cvs/`, locates exactly one
+`*.tex` with `\documentclass` per folder, reads the sibling `.engine`
+dotfile (default `latexmk` if absent), and detects per-main auxiliary
+toolchain requirements (`bibtex`, `biblatex`, `makeindex`, `glossaries`,
+`psfrag`). The result is emitted as a JSON matrix consumed by `build`.
 
 ```yaml
-- name: Checkout
-  uses: actions/checkout@v6
+- name: Scan cvs/*/ and build matrix
+  id: scan
+  run: |
+    set -euo pipefail
+    for dir in cvs/*/; do
+      # find the unique main .tex; read .engine; detect aux features;
+      # append a JSON entry to the matrix.
+      ...
+    done
+    matrix_json="{\"include\":[${joined}]}"
+    echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
 ```
 
-**2. Resolve inputs** — picks the active `engine` and `local` flag from the
-`workflow_dispatch` inputs, falling back to `DEFAULT_ENGINE` and the `ACT`
-environment variable. The values are exposed as step outputs so every later
-step can branch on them.
+**2. `build` (matrix)** — `strategy.matrix: ${{ fromJson(needs.discover.outputs.matrix) }}`,
+`fail-fast: false`. Each leg runs in `texlive/texlive:latest` with
+`working-directory: ${{ matrix.dir }}` and `env.TEXINPUTS: .:../..:../../images:`.
+The engine branch (`latexmk` / `pdflatex` / `xelatex` / `latex-chain`) is
+driven entirely by `matrix.engine`, and aux tools run only when
+`matrix.has_*` flags say they are needed.
 
 ```yaml
-- name: Resolve inputs
-  id: cfg
+build:
+  needs: discover
+  strategy:
+    fail-fast: false
+    matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+  defaults:
+    run:
+      working-directory: ${{ matrix.dir }}
   env:
-    ENGINE_IN: ${{ inputs.engine }}
-    LOCAL_IN: ${{ inputs.local }}
-  run: |
-    set -euo pipefail
-    ENGINE="${ENGINE_IN:-$DEFAULT_ENGINE}"
-    LOCAL="${LOCAL_IN:-${ACT:+true}}"
-    LOCAL="${LOCAL:-false}"
-    echo "engine=$ENGINE" >> "$GITHUB_OUTPUT"
-    echo "local=$LOCAL"   >> "$GITHUB_OUTPUT"
+    TEXINPUTS: ".:../..:../../images:"
+  steps:
+    - name: Build with latexmk
+      if: matrix.engine == 'latexmk'
+      run: latexmk -pdf -interaction=nonstopmode -halt-on-error -g "${{ matrix.main }}.tex"
+    # ... pdflatex / xelatex / latex-chain branches ...
+    - name: Upload PDF artifact
+      if: needs.discover.outputs.local != 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.ARTIFACT_PREFIX }}-${{ matrix.name }}-pdf
+        path: ${{ matrix.dir }}/${{ matrix.main }}.pdf
 ```
 
-**3. Detect main LaTeX document** — if `MAIN_TEX` is set in `env`, that
-basename wins. Otherwise the step greps every `*.tex` file in the repo root
-for `\documentclass` and uses the first match. This keeps the workflow
-portable across CV variants.
+**3. `package`** — runs after all matrix legs succeed and downloads every
+`${{ env.ARTIFACT_PREFIX }}-*-pdf` artifact, then republishes them as a
+single combined `${{ env.ARTIFACT_PREFIX }}` artifact with each PDF in its
+own subdirectory.
 
 ```yaml
-- name: Detect main LaTeX document
-  id: detect_main
-  run: |
-    set -euo pipefail
-    MAIN="${MAIN_TEX:-}"
-    if [ -z "$MAIN" ]; then
-      MAIN_FILE="$(grep -l '^\s*\\documentclass' ./*.tex 2>/dev/null | head -n1 || true)"
-      if [ -z "$MAIN_FILE" ]; then
-        echo "::error::No main .tex file (containing \\documentclass) found in repo root."
-        exit 1
-      fi
-      MAIN="$(basename "$MAIN_FILE" .tex)"
-    fi
-    echo "main=$MAIN" >> "$GITHUB_OUTPUT"
+package:
+  needs: [discover, build]
+  if: needs.discover.outputs.local != 'true'
+  steps:
+    - uses: actions/download-artifact@v6
+      with:
+        pattern: ${{ env.ARTIFACT_PREFIX }}-*-pdf
+        path: ./dist
+    - uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.ARTIFACT_PREFIX }}
+        path: ./dist/*
 ```
 
-**4. Detect auxiliary inputs** — greps the main `.tex` for features that
-require extra build tools, plus checks for `*.bib` files. The booleans are
-exported as step outputs and consumed by the build steps so we only invoke
-`bibtex`, `biber`, `makeindex` and `makeglossaries` when they are actually
-needed.
+### Artifact names
 
-```yaml
-# Bibliography: BibTeX (\bibliography{...}) vs biblatex/biber.
-if grep -Eq '\\bibliography\{' "$TEX"; then
-  HAS_BIB="true"
-fi
-if grep -Eq '\\usepackage(\[[^]]*\])?\{biblatex\}' "$TEX"; then
-  HAS_BIBLATEX="true"
-fi
+All artifact names are derived from `${{ github.event.repository.name }}`
+(the workflow-level `ARTIFACT_PREFIX`) and the per-folder variant name. No
+artifact name is hardcoded; adding a new `cvs/<X>/` folder automatically
+yields a corresponding artifact.
 
-# psfrag: only relevant for the latex->dvips->ps2pdf chain.
-if grep -Eq '\\usepackage(\[[^]]*\])?\{psfrag\}|\\psfrag\{' "$TEX"; then
-  HAS_PSFRAG="true"
-fi
-```
-
-**5. Build — pdflatex chain** (runs when `engine=pdflatex`). The classic
-three-pass `pdflatex` cycle interleaved with bibliography, index and
-glossary tools. `psfrag` is incompatible with `pdflatex`, so the step fails
-fast with a clear remediation hint rather than producing a silently broken
-PDF.
-
-```yaml
-- name: Build with pdflatex chain
-  if: steps.cfg.outputs.engine == 'pdflatex'
-  run: |
-    set -euo pipefail
-    if [ "$HAS_PSFRAG" = "true" ]; then
-      echo "::error::psfrag detected. pdflatex cannot perform psfrag substitutions."
-      echo "::error::Re-run the workflow with engine=latex-chain (latex -> dvips -> ps2pdf)."
-      exit 1
-    fi
-
-    pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-
-    if [ "$HAS_BIBLATEX" = "true" ]; then
-      biber "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-    elif [ "$HAS_BIB" = "true" ]; then
-      bibtex "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-    fi
-    # ... makeindex / makeglossaries ...
-
-    pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-    pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-```
-
-The `rc=$?; [ "$rc" -ge 2 ] && exit "$rc"` pattern tolerates the harmless
-"no citations" warnings that `bibtex`/`biber` return as exit code 1, but
-still fails the build on real errors (exit code 2 or higher).
-
-**6. Build — `latex` → `dvips` → `ps2pdf` chain** (runs when
-`engine=latex-chain`). This route is required whenever the document uses
-`psfrag`, because `psfrag` substitutions are applied at the PostScript stage
-by `dvips`.
-
-```yaml
-- name: Build with latex -> dvips -> ps2pdf chain
-  if: steps.cfg.outputs.engine == 'latex-chain'
-  run: |
-    set -euo pipefail
-    latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-    # ... bibtex/biber, makeindex, makeglossaries (same hardening as above) ...
-    latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-    latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-
-    dvips -Ppdf -G0 -o "$MAIN.ps" "$MAIN.dvi"
-    ps2pdf -dPDFSETTINGS=/prepress "$MAIN.ps" "$MAIN.pdf"
-```
-
-**7. Verify PDF** — fails the job if the expected PDF is missing or
-zero-byte. Without this guard, a silent LaTeX failure could pass CI green
-just because no step explicitly exited non-zero.
-
-```yaml
-- name: Verify PDF
-  env:
-    MAIN: ${{ steps.detect_main.outputs.main }}
-  run: |
-    set -euo pipefail
-    if [ ! -s "$MAIN.pdf" ]; then
-      echo "::error::Expected $MAIN.pdf was not produced or is empty."
-      exit 1
-    fi
-    ls -la "$MAIN.pdf"
-```
-
-**8. Upload artifact (remote)** — on GitHub-hosted runs the PDF is published
-as a workflow artifact named after the main document. A separate step
-captures `*.log`, `*.blg` and `*.ilg` on failure to make debugging easier.
-
-```yaml
-- name: Upload PDF artifact (remote)
-  if: steps.cfg.outputs.local != 'true'
-  uses: actions/upload-artifact@v7
-  with:
-    name: ${{ steps.detect_main.outputs.main }}
-    path: ${{ steps.detect_main.outputs.main }}.pdf
-    if-no-files-found: error
-
-- name: Upload build logs on failure (remote)
-  if: failure() && steps.cfg.outputs.local != 'true'
-  uses: actions/upload-artifact@v7
-  with:
-    name: build-logs
-    path: |
-      *.log
-      *.blg
-      *.ilg
-    if-no-files-found: ignore
-```
-
-**Note**: Step 9 is not strictly necessary as we can produce the output in the
-current working directory (as does texlive) and act takes care of the file
-permissions.
-**9. Copy to `./out` (local)** — under `act --bind` the repo is bind-mounted
-into the container, so writing relative to the working directory puts the
-file on the host. The container runs as `root`, so the step `chown`s the
-output back to whoever owns the source `.tex` (which reflects the host
-UID/GID through the bind mount). A second step does the same for log files
-on failure.
-
-```yaml
-- name: Copy PDF to workspace ./out (local)
-  if: steps.cfg.outputs.local == 'true'
-  env:
-    MAIN: ${{ steps.detect_main.outputs.main }}
-  run: |
-    set -euo pipefail
-    mkdir -p ./out
-    cp -f "$MAIN.pdf" "./out/$MAIN.pdf"
-    REF_OWNER="$(stat -c '%u:%g' "$MAIN.tex")"
-    chown -R "$REF_OWNER" ./out
-
-- name: Copy build logs to workspace ./out (local, on failure)
-  if: failure() && steps.cfg.outputs.local == 'true'
-  run: |
-    set -euo pipefail
-    mkdir -p ./out/logs
-    shopt -s nullglob
-    logs=( *.log *.blg *.ilg )
-    if [ ${#logs[@]} -gt 0 ]; then
-      cp -f "${logs[@]}" ./out/logs/
-    fi
-    REF_OWNER="$(stat -c '%u:%g' .gitignore 2>/dev/null || echo 0:0)"
-    chown -R "$REF_OWNER" ./out
-```
+| Artifact | Pattern | Example (this repo, `curriculum-vitae`) |
+| --- | --- | --- |
+| Per-CV PDF | `<repo>-<name>-pdf` | `curriculum-vitae-photo-2page-pdf`, `curriculum-vitae-sidebar-pdf` |
+| Per-CV logs (failure) | `<repo>-<name>-logs` | `curriculum-vitae-photo-2page-logs` |
+| Combined | `<repo>` | `curriculum-vitae` |
 
 ### Engine selection guide
 
-| Situation | Engine | Why |
-| --- | --- | --- |
-| Default CV builds | `pdflatex` | Fastest path; direct `.tex` → `.pdf` |
-| Document uses `psfrag` | `latex-chain` | `psfrag` substitutions are applied by `dvips` at the PostScript stage; `pdflatex` skips them |
-| Need finer PDF/X-style control via `ps2pdf` | `latex-chain` | The chain ends in `ps2pdf -dPDFSETTINGS=/prepress` |
+Set the engine per variant by writing one of the following keywords into
+`cvs/<name>/.engine`:
 
-If you select `pdflatex` but the document `\usepackage{psfrag}`s anything,
-the workflow now fails with an explicit error instead of producing a PDF
-with un-substituted markers.
+| Engine value | When to use | Why |
+| --- | --- | --- |
+| `latexmk`     | Default for most CVs | Auto-runs the right number of passes plus `biber` / `bibtex` / `makeindex` / `makeglossaries` |
+| `pdflatex`    | Classic pdfLaTeX three-pass build | Lower-level; useful for debugging pass-by-pass |
+| `xelatex`     | Documents using OpenType fonts (e.g. Fira Sans via `fontspec`) | Required by `cv-sidebar.sty` and any `fontspec`-based style |
+| `latex-chain` | Documents using `psfrag` | `psfrag` substitutions are applied by `dvips` at the PostScript stage; `pdflatex` / `xelatex` skip them |
+
+If you select `pdflatex` or `xelatex` but the document `\usepackage{psfrag}`s
+anything, the workflow fails fast with a clear remediation hint instead of
+producing a PDF with un-substituted markers.
 
 ### Where the PDF lands
 
 | Run mode | Location |
 | --- | --- |
-| GitHub Actions (PR or `workflow_dispatch`) | Workflow artifact named `<MAIN>` (e.g. `Lebenslauf-Photo-2Page`) |
-| `gh act` (local) | `./out/<MAIN>.pdf` in the repo root, owned by your host user |
+| GitHub Actions (PR or `workflow_dispatch`) | Workflow artifacts `<repo>-<name>-pdf` per variant, plus combined `<repo>` |
+| `gh act` (local) | `cvs/<name>/<main>.pdf` in your working tree (via bind mount) |
 
 ## Known caveats and future improvements
 
 - **Container tag**: `texlive/texlive:latest` is mutable. For strict
   reproducibility, pin to a dated tag (e.g. `texlive/texlive:TL2024-historic`)
   or to an image digest.
-- **Action pinning**: `actions/checkout@v6` and `actions/upload-artifact@v7`
-  are pinned by major version. Pin to a commit SHA for stricter supply-chain
-  hardening.
-- **`latexmk`**: the manual three-pass `pdflatex` plus
-  `bibtex`/`biber`/`makeindex`/`makeglossaries` orchestration could be
-  replaced by a single `latexmk -pdf` (or `latexmk -pdfps` for the PostScript
-  chain) invocation, which auto-decides how many passes are needed.
+- **Action pinning**: `actions/checkout@v6`, `actions/upload-artifact@v7`,
+  and `actions/download-artifact@v6` are pinned by major version. Pin to a
+  commit SHA for stricter supply-chain hardening.
 - **No `push` trigger**: by design, CI runs only on PRs and manual dispatch;
   there is no automatic build of the default branch.
 - **No `tlmgr` cache**: the workflow does not install extra TeX packages, so
   no caching is needed today. Add an `actions/cache` step if package
   installation is introduced later.
+- **One main per folder**: `discover` enforces exactly one `*.tex` with
+  `\documentclass` per `cvs/<name>/`. Use one folder per CV variant.
