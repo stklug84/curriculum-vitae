@@ -1,0 +1,69 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-style}[2026/05/16 CV styling package]
+
+\RequirePackage{babel}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage[T1]{fontenc}
+\RequirePackage{charter}
+\RequirePackage{MnSymbol}
+\RequirePackage{array,caption,enumitem,fancyhdr,floatrow,longtable,graphicx,xcolor,url}
+\RequirePackage[top=28mm,bottom=16mm,left=2cm,right=2cm]{geometry}
+\RequirePackage[version=3]{mhchem}
+\RequirePackage[colorlinks]{hyperref}
+\RequirePackage{lipsum}
+
+\DeclareFloatSeparators{capsep}{\hspace{5cm}}
+
+\newcommand\CRule[4][]{{\color{#2}\rule[#1]{#3}{#4}}}
+\renewcommand\headrulewidth{0pt}
+
+\fancyhead{}
+\fancyheadoffset[LE,RO]{2cm}
+\fancyhead[RO]{
+  {\small\nouppercase\rightmark}\parbox[b]{2cm}{\rule{0em}{0em}
+    \qquad\CRule[-1em]{lightgray}{1.2pt}{1.75em}\hspace{1ex}\thepage}
+}
+\fancyhead[RE]{\small \cvauthor}
+\fancyhead[LO]{\small \cvauthor}
+\fancyhead[LE]{
+  \parbox[b]{2cm}{~\hfill\thepage\hspace{1ex}\CRule[-1em]{lightgray}{1.2pt}{1.75em}
+    \qquad\rule{0em}{0em}}{\small\nouppercase\leftmark}
+}
+\fancyfoot{}
+
+\setlist{topsep=.2\baselineskip,itemsep=2pt,parsep=2pt,
+  beginpenalty=0,midpenalty=0,endpenalty=0,
+  leftmargin=1.5em}
+\setlist[itemize,1]{itemsep=0pt,parsep=0pt,
+  label=\raisebox{1pt}{$\blacktriangleright$}}
+\setlist[itemize,2]{itemsep=0pt,parsep=0pt,
+  label=\raisebox{1pt}{$\filledsquare$}}
+
+\newlength\head{}
+\setlength\head{\headsep}
+\setlength\headsep{0pt}
+
+\newlength\separation{}
+\setlength\separation{.025\textwidth}
+\newlength\parwidth{}
+\setlength\parwidth{.75\textwidth}
+
+\newcolumntype{L}{>{\raggedleft}p{.19\textwidth}@{\hspace{\separation}}}
+\newcolumntype{A}{>{\raggedleft}p{.175\textwidth}@{\hspace{\separation}}}
+\newcolumntype{R}{@{\hspace{\separation}}p{\parwidth}}
+\newcolumntype{M}{@{\hspace{\separation}}>{\begin{minipage}[t]{\parwidth}}l<{\end{minipage}}}
+\newcolumntype{H}{@{\hspace{\separation}}l}
+
+
+\newcommand\VRule{\color{lightgray}\vrule width .8pt}
+\renewcommand\arraystretch{.8}
+
+\definecolor{darkred}{rgb}{.7,0,0}
+\definecolor{darkgreen}{rgb}{0,.5,0}
+\definecolor{darkblue}{rgb}{0,0,.55}
+\definecolor{lightgray}{gray}{.8}
+
+\hypersetup{pdftitle={\cvtitle},pdfauthor={\cvpdfauthor},
+  pdfsubject={\cvsubject},linkcolor=darkred,citecolor=darkgreen,urlcolor=darkblue}
+
+\endinput

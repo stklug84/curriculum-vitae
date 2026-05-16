@@ -1,4 +1,4 @@
-name: Build CV
+name: Build Document
 
 on:
   pull_request:
@@ -7,9 +7,10 @@ on:
       engine:
         description: "LaTeX toolchain to use"
         required: true
-        default: "pdflatex"
+        default: "latexmk"
         type: choice
         options:
+          - latexmk
           - pdflatex
           - latex-chain
       local:
@@ -17,12 +18,17 @@ on:
         required: false
         default: "false"
         type: string
+      main_tex:
+        description: "Main document basename without .tex (leave blank to auto-detect)"
+        required: false
+        default: ""
+        type: string
 
 # Least-privilege token: this workflow only reads the repo and uploads artifacts.
 permissions:
   contents: read
 
-# Cancel superseded runs on the same ref (e.g. rapid PR pushes) to save runner minutes.
+# Cancel outdated runs on the same ref.
 concurrency:
   group: build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -30,17 +36,30 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   # Default engine when not triggered via workflow_dispatch.
-  # Override here or via the workflow_dispatch input above.
-  DEFAULT_ENGINE: pdflatex
-  # Main document basename (without .tex). Discovered automatically if empty.
-  MAIN_TEX: ""
+  DEFAULT_ENGINE: latexmk
 
 jobs:
-  build:
+  # =====================================================================
+  #  detect
+  #
+  #  Resolves workflow inputs (engine, local-mode flag, main document
+  #  basename) and scans the main .tex for auxiliary toolchain
+  #  requirements (bibtex/biblatex, makeindex, glossaries, psfrag).
+  #  All downstream jobs consume these as `needs.detect.outputs.*` so the
+  #  detection logic lives in exactly one place.
+  # =====================================================================
+  detect:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    container:
-      image: texlive/texlive:latest
+    timeout-minutes: 2
+    outputs:
+      main:           ${{ steps.main.outputs.main }}
+      local:          ${{ steps.cfg.outputs.local }}
+      engine:         ${{ steps.cfg.outputs.engine }}
+      has_bib:        ${{ steps.aux.outputs.has_bib }}
+      has_biblatex:   ${{ steps.aux.outputs.has_biblatex }}
+      has_index:      ${{ steps.aux.outputs.has_index }}
+      has_glossaries: ${{ steps.aux.outputs.has_glossaries }}
+      has_psfrag:     ${{ steps.aux.outputs.has_psfrag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -49,15 +68,15 @@ jobs:
         id: cfg
         shell: bash
         env:
-          # Use the modern `inputs.*` accessor (canonical for workflow_dispatch).
-          # For non-dispatch events these are empty strings, and we fall back to
-          # env defaults / the ACT auto-detect below.
+          # `inputs.*` is the canonical accessor for workflow_dispatch.
+          # On non-dispatch events these are empty strings and we fall
+          # back to env defaults / the ACT auto-detect below.
           ENGINE_IN: ${{ inputs.engine }}
           LOCAL_IN: ${{ inputs.local }}
         run: |
           set -euo pipefail
           ENGINE="${ENGINE_IN:-$DEFAULT_ENGINE}"
-          # Detect `nektos/act` automatically via the ACT=true env it exports.
+          # nektos/act exports ACT=true; treat that as implicit local mode.
           LOCAL="${LOCAL_IN:-${ACT:+true}}"
           LOCAL="${LOCAL:-false}"
           echo "engine=$ENGINE" >> "$GITHUB_OUTPUT"
@@ -65,13 +84,15 @@ jobs:
           echo "Resolved engine=$ENGINE local=$LOCAL (ACT=${ACT:-unset})"
 
       - name: Detect main LaTeX document
-        id: detect_main
+        id: main
         shell: bash
+        env:
+          MAIN_IN: ${{ inputs.main_tex }}
         run: |
           set -euo pipefail
-          MAIN="${MAIN_TEX:-}"
+          MAIN="${MAIN_IN:-}"
           if [ -z "$MAIN" ]; then
-            # Find a .tex file containing \documentclass at repo root.
+            # Auto-detect: pick the first repo-root .tex with \documentclass.
             MAIN_FILE="$(grep -l '^\s*\\documentclass' ./*.tex 2>/dev/null | head -n1 || true)"
             if [ -z "$MAIN_FILE" ]; then
               echo "::error::No main .tex file (containing \\documentclass) found in repo root."
@@ -82,12 +103,13 @@ jobs:
           echo "main=$MAIN" >> "$GITHUB_OUTPUT"
           echo "Main document: ${MAIN}.tex"
 
-      - name: Detect auxiliary inputs (bib / idx / psfrag)
-        id: detect_aux
+      - name: Detect auxiliary inputs (bib / idx / glossaries / psfrag)
+        id: aux
         shell: bash
+        env:
+          MAIN: ${{ steps.main.outputs.main }}
         run: |
           set -euo pipefail
-          MAIN="${{ steps.detect_main.outputs.main }}"
           TEX="${MAIN}.tex"
 
           HAS_BIB="false"
@@ -119,22 +141,12 @@ jobs:
             HAS_PSFRAG="true"
           fi
 
-          # If any *.bib file is present alongside (root or nested), treat bibliography as needed.
-          # Note: bash's `**` requires `shopt -s globstar`, so we use `find` for the recursive check.
-          if compgen -G "*.bib" > /dev/null \
-             || [ -n "$(find . -maxdepth 3 -name '*.bib' -print -quit)" ]; then
-            HAS_BIB_FILES="true"
-          else
-            HAS_BIB_FILES="false"
-          fi
-
           {
             echo "has_bib=$HAS_BIB"
             echo "has_biblatex=$HAS_BIBLATEX"
             echo "has_index=$HAS_INDEX"
             echo "has_glossaries=$HAS_GLOSSARIES"
             echo "has_psfrag=$HAS_PSFRAG"
-            echo "has_bib_files=$HAS_BIB_FILES"
           } >> "$GITHUB_OUTPUT"
 
           echo "Detected:"
@@ -143,38 +155,87 @@ jobs:
           echo "  index      : $HAS_INDEX"
           echo "  glossaries : $HAS_GLOSSARIES"
           echo "  psfrag     : $HAS_PSFRAG"
-          echo "  *.bib found: $HAS_BIB_FILES"
 
-      - name: Build with pdflatex chain
-        if: steps.cfg.outputs.engine == 'pdflatex'
+  # =====================================================================
+  #  build
+  #
+  #  Compiles the print-ready PDF using the engine selected by `detect`.
+  #  The default engine (`latexmk`) is driven by latexmkrc; the other
+  #  two are kept as escape hatches for users who reintroduce psfrag or
+  #  prefer the plain pdfLaTeX three-pass workflow.
+  # =====================================================================
+  build:
+    needs: detect
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: texlive/texlive:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # latexmk drives pdflatex per latexmkrc (which registers the
+      # glossaries cus_dep). The map is included via \includegraphics,
+      # so no shell-escape is needed.
+      - name: Build with latexmk
+        if: needs.detect.outputs.engine == 'latexmk'
         shell: bash
         env:
-          MAIN: ${{ steps.detect_main.outputs.main }}
-          HAS_BIB: ${{ steps.detect_aux.outputs.has_bib }}
-          HAS_BIBLATEX: ${{ steps.detect_aux.outputs.has_biblatex }}
-          HAS_INDEX: ${{ steps.detect_aux.outputs.has_index }}
-          HAS_GLOSSARIES: ${{ steps.detect_aux.outputs.has_glossaries }}
-          HAS_PSFRAG: ${{ steps.detect_aux.outputs.has_psfrag }}
+          MAIN: ${{ needs.detect.outputs.main }}
+        run: |
+          set -euo pipefail
+          latexmk -pdf \
+                  -interaction=nonstopmode -halt-on-error -file-line-error \
+                  -g "$MAIN.tex"
+
+      # The pdflatex and latex-chain engines share their bibliography,
+      # index, and glossaries handling. The compiler binary (pdflatex
+      # produces PDF directly; latex produces DVI) and post-processing
+      # (dvips + ps2pdf when DVI) are the only per-engine differences.
+      - name: Build with pdflatex or latex-chain
+        if: needs.detect.outputs.engine == 'pdflatex' || needs.detect.outputs.engine == 'latex-chain'
+        shell: bash
+        env:
+          ENGINE: ${{ needs.detect.outputs.engine }}
+          MAIN: ${{ needs.detect.outputs.main }}
+          HAS_BIB: ${{ needs.detect.outputs.has_bib }}
+          HAS_BIBLATEX: ${{ needs.detect.outputs.has_biblatex }}
+          HAS_INDEX: ${{ needs.detect.outputs.has_index }}
+          HAS_GLOSSARIES: ${{ needs.detect.outputs.has_glossaries }}
+          HAS_PSFRAG: ${{ needs.detect.outputs.has_psfrag }}
         run: |
           set -euo pipefail
 
-          if [ "$HAS_PSFRAG" = "true" ]; then
-            echo "::error::psfrag detected. pdflatex cannot perform psfrag substitutions."
-            echo "::error::Re-run the workflow with engine=latex-chain (latex -> dvips -> ps2pdf)."
-            exit 1
-          fi
+          case "$ENGINE" in
+            pdflatex)
+              LATEX_CMD="pdflatex"
+              if [ "$HAS_PSFRAG" = "true" ]; then
+                echo "::error::psfrag detected. pdflatex cannot perform psfrag substitutions."
+                echo "::error::psfrag requires the classic latex -> dvips -> ps2pdf chain;"
+                echo "::error::re-run the workflow with engine=latex-chain."
+                exit 1
+              fi
+              ;;
+            latex-chain)
+              LATEX_CMD="latex"
+              if [ "$HAS_BIBLATEX" = "true" ]; then
+                echo "::warning::biblatex detected; using biber. Ensure backend=biber in your preamble."
+              fi
+              ;;
+          esac
 
-          # Pass 1
-          pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+          # Pass 1.
+          "$LATEX_CMD" -interaction=nonstopmode -halt-on-error "$MAIN.tex"
 
-          # Bibliography: tolerate "no citations" warnings (exit 1) but fail on real errors (>=2).
+          # Bibliography: tolerate "no citations" warnings (exit 1) but
+          # fail on real errors (>=2).
           if [ "$HAS_BIBLATEX" = "true" ]; then
             biber "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
           elif [ "$HAS_BIB" = "true" ]; then
             bibtex "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
           fi
 
-          # Index
+          # Index.
           if [ "$HAS_INDEX" = "true" ] && [ -f "$MAIN.idx" ]; then
             makeindex "$MAIN.idx"
           fi
@@ -184,65 +245,24 @@ jobs:
             makeglossaries "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
           fi
 
-          # Pass 2 + 3 to resolve refs/TOC/index/bib.
-          pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-          pdflatex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+          # Pass 2 + 3 to resolve refs / TOC / index / bibliography.
+          "$LATEX_CMD" -interaction=nonstopmode -halt-on-error "$MAIN.tex"
+          "$LATEX_CMD" -interaction=nonstopmode -halt-on-error "$MAIN.tex"
 
-      - name: Build with latex -> dvips -> ps2pdf chain
-        if: steps.cfg.outputs.engine == 'latex-chain'
-        shell: bash
-        env:
-          MAIN: ${{ steps.detect_main.outputs.main }}
-          HAS_BIB: ${{ steps.detect_aux.outputs.has_bib }}
-          HAS_BIBLATEX: ${{ steps.detect_aux.outputs.has_biblatex }}
-          HAS_INDEX: ${{ steps.detect_aux.outputs.has_index }}
-          HAS_GLOSSARIES: ${{ steps.detect_aux.outputs.has_glossaries }}
-          HAS_PSFRAG: ${{ steps.detect_aux.outputs.has_psfrag }}
-        run: |
-          set -euo pipefail
-
-          if [ "$HAS_BIBLATEX" = "true" ]; then
-            echo "::warning::biblatex detected; using biber. Ensure backend=biber in your preamble."
-          fi
-
-          # Pass 1 (DVI output)
-          latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-
-          # Bibliography: tolerate "no citations" warnings (exit 1) but fail on real errors (>=2).
-          if [ "$HAS_BIBLATEX" = "true" ]; then
-            biber "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-          elif [ "$HAS_BIB" = "true" ]; then
-            bibtex "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-          fi
-
-          # Index
-          if [ "$HAS_INDEX" = "true" ] && [ -f "$MAIN.idx" ]; then
-            makeindex "$MAIN.idx"
-          fi
-
-          # Glossaries: tolerate missing glossary files but surface real failures.
-          if [ "$HAS_GLOSSARIES" = "true" ]; then
-            makeglossaries "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-          fi
-
-          # Pass 2 + 3 to resolve refs.
-          latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-          latex -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-
-          # DVI -> PS (psfrag substitutions are applied here).
-          dvips -Ppdf -G0 -o "$MAIN.ps" "$MAIN.dvi"
-
-          # PS -> PDF
-          ps2pdf -dPDFSETTINGS=/prepress "$MAIN.ps" "$MAIN.pdf"
-
-          if [ "$HAS_PSFRAG" = "true" ]; then
-            echo "psfrag substitutions were processed by dvips."
+          # latex-chain only: convert DVI -> PS (where psfrag substitutions
+          # are performed) -> PDF.
+          if [ "$ENGINE" = "latex-chain" ]; then
+            dvips -Ppdf -G0 -o "$MAIN.ps" "$MAIN.dvi"
+            ps2pdf -dPDFSETTINGS=/prepress "$MAIN.ps" "$MAIN.pdf"
+            if [ "$HAS_PSFRAG" = "true" ]; then
+              echo "psfrag substitutions were processed by dvips."
+            fi
           fi
 
       - name: Verify PDF
         shell: bash
         env:
-          MAIN: ${{ steps.detect_main.outputs.main }}
+          MAIN: ${{ needs.detect.outputs.main }}
         run: |
           set -euo pipefail
           if [ ! -s "$MAIN.pdf" ]; then
@@ -251,61 +271,51 @@ jobs:
           fi
           ls -la "$MAIN.pdf"
 
-      # ---------- Remote (GitHub-hosted) artifact upload ----------
-      - name: Upload PDF artifact (remote)
-        if: steps.cfg.outputs.local != 'true'
+      # Intermediate PDF artifact; repackaged into the final
+      # `book` artifact by the package job.
+      - name: Upload PDF artifact
+        if: needs.detect.outputs.local != 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ steps.detect_main.outputs.main }}
-          path: ${{ steps.detect_main.outputs.main }}.pdf
+          name: book-pdf-intermediate
+          path: ${{ needs.detect.outputs.main }}.pdf
           if-no-files-found: error
 
-      - name: Upload build logs on failure (remote)
-        if: failure() && steps.cfg.outputs.local != 'true'
-        uses: actions/upload-artifact@v7
+      - name: Upload build logs on failure
+        if: failure() && needs.detect.outputs.local != 'true'
+        uses: ./.github/actions/upload-build-logs
         with:
-          name: build-logs
-          path: |
+          artifact-name: build-logs
+          paths: |
             *.log
             *.blg
             *.ilg
-          if-no-files-found: ignore
 
-      # ---------- Local (gh act) output ----------
-      # The PDF is built in the step CWD. Under `act --bind`, the host repo
-      # directory is bind-mounted into the container; writing relative to CWD
-      # (the same place pdflatex wrote the PDF) guarantees the file lands on
-      # the host. The container runs as root, so we restore ownership to the
-      # host user by chowning to whoever owns existing source files (e.g. the
-      # checked-out .tex), since that reflects the host UID/GID through the
-      # bind mount.
-      # - name: Copy PDF to workspace ./out (local)
-      #   if: steps.cfg.outputs.local == 'true'
-      #   shell: bash
-      #   env:
-      #     MAIN: ${{ steps.detect_main.outputs.main }}
-      #   run: |
-      #     set -euo pipefail
-      #     mkdir -p ./out
-      #     cp -f "$MAIN.pdf" "./out/$MAIN.pdf"
-      #     # Restore host ownership: the container runs as root, but under `act --bind`
-      #     # the host repo is bind-mounted. Chown to whoever owns the source .tex
-      #     # (which reflects the host UID/GID through the bind mount).
-      #     REF_OWNER="$(stat -c '%u:%g' "$MAIN.tex")"
-      #     chown -R "$REF_OWNER" ./out
-      #     echo "Wrote ./out/$MAIN.pdf (owner $REF_OWNER)"
 
-      # - name: Copy build logs to workspace ./out (local, on failure)
-      #   if: failure() && steps.cfg.outputs.local == 'true'
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     mkdir -p ./out/logs
-      #     # Use shopt+nullglob so missing files don't break the copy.
-      #     shopt -s nullglob
-      #     logs=( *.log *.blg *.ilg )
-      #     if [ ${#logs[@]} -gt 0 ]; then
-      #       cp -f "${logs[@]}" ./out/logs/
-      #     fi
-      #     REF_OWNER="$(stat -c '%u:%g' .gitignore 2>/dev/null || echo 0:0)"
-      #     chown -R "$REF_OWNER" ./out
+  # =====================================================================
+  #  package
+  #
+  #  Wraps the PDF (from `build`) into the user-facing `book` artifact.
+  #  This is the artifact a downstream consumer should fetch.
+  # =====================================================================
+  package:
+    needs: [detect, build]
+    if: needs.detect.outputs.local != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download PDF artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: book-pdf-intermediate
+          path: ./dist
+
+      - name: List combined artifact contents
+        shell: bash
+        run: ls -la ./dist
+
+      - name: Upload combined artifact (book)
+        uses: actions/upload-artifact@v7
+        with:
+          name: book
+          path: ./dist/*
+          if-no-files-found: error
