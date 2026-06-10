@@ -1,5 +1,9 @@
 # Curriculum Vitae (LaTeX)
 
+[![Build Document](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml/badge.svg?event=pull_request)](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml)
+[![Dependabot Updates](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates)
+[![Made with LaTeX](https://img.shields.io/badge/Made%20with-LaTeX-008080.svg)](https://www.latex-project.org/)
+
 A multi-variant LaTeX CV repository. Every directory under `cvs/<name>/`
 contains exactly one CV main document plus a hidden `.engine` file that
 declares the LaTeX engine to use. CI auto-discovers every variant and builds
@@ -80,9 +84,8 @@ The PDF lands next to the source: `cvs/<variant>/<main>.pdf`.
 
 ### Via the CI workflow with `gh act`
 
-This replays the exact CI logic on your machine inside the
-`texlive/texlive:latest` container, so you do not need TeX Live installed on
-the host. `act` builds the **full matrix** — every CV variant in one run.
+This replays the exact CI logic on your machine inside the digest-pinned
+TeX Live container, so you do not need TeX Live installed on the host. `act` builds the **full matrix** — every CV variant in one run.
 
 ```sh
 gh act workflow_dispatch -W .github/workflows/build.yml --input local=true
@@ -150,7 +153,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
-      image: texlive/texlive:latest
+      image: ${{ needs.discover.outputs.texlive-image }}
 ```
 
 - `permissions: contents: read` — the build only needs to read the repo and
@@ -160,10 +163,11 @@ jobs:
   runner minutes.
 - `timeout-minutes: 15` per matrix leg — guards against a runaway LaTeX
   loop or a broken package burning a full hour of runner time.
-- `container: texlive/texlive:latest` — every build step runs inside the
-  official TeX Live image, so `latexmk`, `pdflatex`, `xelatex`, `latex`,
-  `dvips`, `ps2pdf`, `biber`, `bibtex`, `makeindex` and `makeglossaries`
-  are all available without installation.
+- `container` — every build step runs inside the official TeX Live image
+  (digest-pinned via `.github/docker/texlive/Dockerfile`, resolved by the
+  `discover` job), so `latexmk`, `pdflatex`, `xelatex`, `latex`, `dvips`,
+  `ps2pdf`, `biber`, `bibtex`, `makeindex` and `makeglossaries` are all
+  available without installation.
 
 ### Workflow diagram
 
@@ -300,9 +304,12 @@ producing a PDF with un-substituted markers.
 
 ## Known caveats and future improvements
 
-- **Container tag**: `texlive/texlive:latest` is mutable. For strict
-  reproducibility, pin to a dated tag (e.g. `texlive/texlive:TL2024-historic`)
-  or to an image digest.
+- **Container pinning**: the TeX Live image is pinned by digest in
+  `.github/docker/texlive/Dockerfile` (single source of truth; the workflow
+  reads its `FROM` line). Dependabot's docker ecosystem bumps the digest as
+  upstream `texlive/texlive:latest` moves. Dependabot has no CTAN / TeX Live
+  package ecosystem, so individual LaTeX packages are not tracked — the
+  container digest is the LaTeX-toolchain version pin.
 - **Action pinning**: `actions/checkout@v6`, `actions/upload-artifact@v7`,
   and `actions/download-artifact@v6` are pinned by major version. Pin to a
   commit SHA for stricter supply-chain hardening.
