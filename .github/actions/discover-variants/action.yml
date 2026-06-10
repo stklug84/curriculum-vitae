@@ -1,0 +1,44 @@
+name: Discover CV variants
+description: |
+  Scans <root>/*/ for CV variants and emits a JSON build matrix.
+  Each variant directory must contain exactly one *.tex with
+  \documentclass, and may contain a sibling `.engine` dotfile naming
+  the engine to use (latexmk | pdflatex | xelatex | latex-chain).
+  If `.engine` is missing, `default-engine` is used.
+
+  The scan also detects auxiliary toolchain requirements per variant
+  (bibtex/biblatex, makeindex, glossaries, psfrag) and includes them
+  as boolean string flags in each matrix entry.
+
+inputs:
+  root:
+    description: Directory containing one subdirectory per CV variant.
+    required: false
+    default: cvs
+  default-engine:
+    description: Engine used when a variant has no `.engine` dotfile.
+    required: false
+    default: latexmk
+
+outputs:
+  matrix:
+    description: >-
+      JSON object of the form {"include":[...]} suitable for
+      `strategy.matrix` via fromJson(). Each entry carries
+      name, dir, main, engine, and has_* aux-tool flags.
+    value: ${{ steps.scan.outputs.matrix }}
+
+runs:
+  using: composite
+  steps:
+    - name: Scan variants and build matrix
+      id: scan
+      shell: bash
+      env:
+        ROOT: ${{ inputs.root }}
+        DEFAULT_ENGINE: ${{ inputs.default-engine }}
+      run: |
+        set -euo pipefail
+        matrix="$("$GITHUB_ACTION_PATH/scripts/scan.sh" "$ROOT" "$DEFAULT_ENGINE")"
+        echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+        echo "matrix=$matrix"

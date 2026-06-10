@@ -30,17 +30,10 @@ jobs:
   # =====================================================================
   #  discover
   #
-  #  Auto-discovers every CV variant under cvs/*/.
-  #  Each variant directory must contain exactly one *.tex with
-  #  \documentclass, and may contain a sibling `.engine` dotfile naming
-  #  the engine to use (latexmk | pdflatex | xelatex | latex-chain).
-  #  If `.engine` is missing, the default is latexmk.
-  #
-  #  Per main, the script also detects auxiliary toolchain requirements
-  #  (bibtex/biblatex, makeindex, glossaries, psfrag).
-  #
-  #  Emits a JSON matrix consumed by the `build` job. No filenames are
-  #  hardcoded in this workflow.
+  #  Delegates variant discovery to the discover-variants composite
+  #  action, which scans cvs/*/ and emits a JSON matrix consumed by the
+  #  `build` job. No filenames are hardcoded in this workflow.
+  #  See .github/actions/discover-variants/ for the discovery rules.
   # =====================================================================
   discover:
     runs-on: ubuntu-latest
@@ -48,9 +41,26 @@ jobs:
     outputs:
       matrix: ${{ steps.scan.outputs.matrix }}
       local:  ${{ steps.cfg.outputs.local }}
+      texlive-image: ${{ steps.texlive.outputs.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+
+      - name: Resolve pinned TeX Live image
+        id: texlive
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Single source of truth for the TeX Live container image. The
+          # Dockerfile exists so Dependabot (docker ecosystem) can keep the
+          # digest pin current; we only consume its FROM reference here.
+          image="$(awk '/^FROM /{print $2; exit}' .github/docker/texlive/Dockerfile)"
+          if [ -z "$image" ]; then
+            echo "::error::No FROM line found in .github/docker/texlive/Dockerfile"
+            exit 1
+          fi
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+          echo "Resolved TeX Live image: $image"
 
       - name: Resolve local mode
         id: cfg
@@ -65,203 +75,47 @@ jobs:
           echo "local=$LOCAL" >> "$GITHUB_OUTPUT"
           echo "Resolved local=$LOCAL (ACT=${ACT:-unset})"
 
-      - name: Scan cvs/*/ and build matrix
+      - name: Discover CV variants
         id: scan
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [ ! -d cvs ] || [ -z "$(ls -A cvs 2>/dev/null || true)" ]; then
-            echo "::error::No CV variants found. Expected directories under cvs/."
-            exit 1
-          fi
-
-          entries=()
-          for dir in cvs/*/; do
-            [ -d "$dir" ] || continue
-            dir="${dir%/}"
-            name="$(basename "$dir")"
-
-            # Find exactly one *.tex with \documentclass in the directory.
-            mapfile -t tex_files < <(grep -l '^\s*\\documentclass' "$dir"/*.tex 2>/dev/null || true)
-            if [ "${#tex_files[@]}" -eq 0 ]; then
-              echo "::error::$dir contains no main .tex (file with \\documentclass)."
-              exit 1
-            fi
-            if [ "${#tex_files[@]}" -gt 1 ]; then
-              echo "::error::$dir contains multiple main .tex files: ${tex_files[*]}"
-              exit 1
-            fi
-            tex="${tex_files[0]}"
-            main="$(basename "$tex" .tex)"
-
-            # Resolve engine from sibling .engine dotfile (default latexmk).
-            engine_file="$dir/.engine"
-            if [ -f "$engine_file" ]; then
-              engine="$(tr -d '[:space:]' < "$engine_file")"
-            else
-              engine="latexmk"
-            fi
-            case "$engine" in
-              latexmk|pdflatex|xelatex|latex-chain) ;;
-              *) echo "::error::Unknown engine '$engine' in $engine_file"; exit 1 ;;
-            esac
-
-            # Auxiliary-tool detection, scoped to the variant's main .tex.
-            has_bib="false"
-            has_biblatex="false"
-            has_index="false"
-            has_glossaries="false"
-            has_psfrag="false"
-            if grep -Eq '\\bibliography\{' "$tex"; then has_bib="true"; fi
-            if grep -Eq '\\usepackage(\[[^]]*\])?\{biblatex\}' "$tex"; then has_biblatex="true"; fi
-            if grep -Eq '\\makeindex|\\printindex|\\usepackage(\[[^]]*\])?\{makeidx\}|\\usepackage(\[[^]]*\])?\{imakeidx\}' "$tex"; then has_index="true"; fi
-            if grep -Eq '\\usepackage(\[[^]]*\])?\{glossaries\}|\\makeglossaries' "$tex"; then has_glossaries="true"; fi
-            if grep -Eq '\\usepackage(\[[^]]*\])?\{psfrag\}|\\psfrag\{' "$tex"; then has_psfrag="true"; fi
-
-            entry=$(printf '{"name":"%s","dir":"%s","main":"%s","engine":"%s","has_bib":"%s","has_biblatex":"%s","has_index":"%s","has_glossaries":"%s","has_psfrag":"%s"}' \
-              "$name" "$dir" "$main" "$engine" "$has_bib" "$has_biblatex" "$has_index" "$has_glossaries" "$has_psfrag")
-            entries+=("$entry")
-
-            echo "  - $name  dir=$dir  main=$main.tex  engine=$engine"
-          done
-
-          if [ "${#entries[@]}" -eq 0 ]; then
-            echo "::error::No CV variants discovered under cvs/."
-            exit 1
-          fi
-
-          # Build "{\"include\":[ ... ]}" JSON.
-          joined="$(IFS=,; echo "${entries[*]}")"
-          matrix_json="{\"include\":[${joined}]}"
-          echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
-          echo "Discovered ${#entries[@]} CV variant(s)."
-          echo "matrix=$matrix_json"
+        uses: ./.github/actions/discover-variants
+        with:
+          root: cvs
+          default-engine: latexmk
 
   # =====================================================================
   #  build
   #
-  #  Matrix build, one leg per discovered CV variant. The engine, main
-  #  filename, working directory, and aux-tool flags are all driven by
-  #  the matrix entry produced by `discover`. TEXINPUTS lets each main
-  #  resolve repo-root shared assets (personal-info.tex, *.sty, images/)
-  #  without any path edits inside the .tex source.
+  #  Matrix build, one leg per discovered CV variant. The matrix entry
+  #  is pure data (name, dir, main, engine, aux-tool flags); all build
+  #  behavior lives in the build-latex composite action. Adding a new
+  #  engine or aux tool means editing the action, never this workflow.
   # =====================================================================
   build:
     needs: discover
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
-      image: texlive/texlive:latest
+      # Digest-pinned via .github/docker/texlive/Dockerfile; kept current
+      # by Dependabot's docker ecosystem.
+      image: ${{ needs.discover.outputs.texlive-image }}
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: ${{ matrix.dir }}
-    env:
-      # Append repo root and images/ to kpathsea search so
-      # \input{personal-info}, \usepackage{cv-sidebar}, and
-      # \includegraphics{images/...} resolve from inside cvs/<name>/.
-      TEXINPUTS: ".:../..:../../images:"
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Build with latexmk
-        if: matrix.engine == 'latexmk'
-        run: |
-          set -euo pipefail
-          latexmk -pdf \
-                  -interaction=nonstopmode -halt-on-error -file-line-error \
-                  -g "${{ matrix.main }}.tex"
-
-      - name: Build with pdflatex, latex-chain, or xelatex
-        if: matrix.engine == 'pdflatex' || matrix.engine == 'latex-chain' || matrix.engine == 'xelatex'
-        env:
-          ENGINE: ${{ matrix.engine }}
-          MAIN: ${{ matrix.main }}
-          HAS_BIB: ${{ matrix.has_bib }}
-          HAS_BIBLATEX: ${{ matrix.has_biblatex }}
-          HAS_INDEX: ${{ matrix.has_index }}
-          HAS_GLOSSARIES: ${{ matrix.has_glossaries }}
-          HAS_PSFRAG: ${{ matrix.has_psfrag }}
-        run: |
-          set -euo pipefail
-
-          case "$ENGINE" in
-            pdflatex)
-              LATEX_CMD="pdflatex"
-              if [ "$HAS_PSFRAG" = "true" ]; then
-                echo "::error::psfrag detected. pdflatex cannot perform psfrag substitutions."
-                echo "::error::psfrag requires the classic latex -> dvips -> ps2pdf chain;"
-                echo "::error::set .engine to 'latex-chain' for this variant."
-                exit 1
-              fi
-              ;;
-            latex-chain)
-              LATEX_CMD="latex"
-              if [ "$HAS_BIBLATEX" = "true" ]; then
-                echo "::warning::biblatex detected; using biber. Ensure backend=biber in your preamble."
-              fi
-              ;;
-            xelatex)
-              LATEX_CMD="xelatex"
-              if [ "$HAS_PSFRAG" = "true" ]; then
-                echo "::error::psfrag detected. xelatex does not support psfrag substitutions."
-                echo "::error::psfrag requires the classic latex -> dvips -> ps2pdf chain;"
-                echo "::error::set .engine to 'latex-chain' for this variant."
-                exit 1
-              fi
-              ;;
-          esac
-
-          # Pass 1.
-          "$LATEX_CMD" -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-
-          # Bibliography: tolerate "no citations" warnings (exit 1) but
-          # fail on real errors (>=2).
-          if [ "$HAS_BIBLATEX" = "true" ]; then
-            biber "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-          elif [ "$HAS_BIB" = "true" ]; then
-            bibtex "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-          fi
-
-          # Index.
-          if [ "$HAS_INDEX" = "true" ] && [ -f "$MAIN.idx" ]; then
-            makeindex "$MAIN.idx"
-          fi
-
-          # Glossaries: tolerate missing glossary files but surface real failures.
-          if [ "$HAS_GLOSSARIES" = "true" ]; then
-            makeglossaries "$MAIN" || { rc=$?; [ "$rc" -ge 2 ] && exit "$rc"; }
-          fi
-
-          # Pass 2 + 3 to resolve refs / TOC / index / bibliography.
-          "$LATEX_CMD" -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-          "$LATEX_CMD" -interaction=nonstopmode -halt-on-error "$MAIN.tex"
-
-          # latex-chain only: convert DVI -> PS (where psfrag substitutions
-          # are performed) -> PDF.
-          if [ "$ENGINE" = "latex-chain" ]; then
-            dvips -Ppdf -G0 -o "$MAIN.ps" "$MAIN.dvi"
-            ps2pdf -dPDFSETTINGS=/prepress "$MAIN.ps" "$MAIN.pdf"
-            if [ "$HAS_PSFRAG" = "true" ]; then
-              echo "psfrag substitutions were processed by dvips."
-            fi
-          fi
-
-      - name: Verify PDF
-        env:
-          MAIN: ${{ matrix.main }}
-        run: |
-          set -euo pipefail
-          if [ ! -s "$MAIN.pdf" ]; then
-            echo "::error::Expected ${{ matrix.dir }}/$MAIN.pdf was not produced or is empty."
-            exit 1
-          fi
-          ls -la "$MAIN.pdf"
+      - name: Build ${{ matrix.name }} (${{ matrix.engine }})
+        uses: ./.github/actions/build-latex
+        with:
+          dir: ${{ matrix.dir }}
+          main: ${{ matrix.main }}
+          engine: ${{ matrix.engine }}
+          has-bib: ${{ matrix.has_bib }}
+          has-biblatex: ${{ matrix.has_biblatex }}
+          has-index: ${{ matrix.has_index }}
+          has-glossaries: ${{ matrix.has_glossaries }}
+          has-psfrag: ${{ matrix.has_psfrag }}
 
       - name: Upload PDF artifact
         if: needs.discover.outputs.local != 'true'

@@ -1,0 +1,79 @@
+name: Build LaTeX document
+description: |
+  Compiles a single CV variant to PDF and verifies the result.
+  Engine dispatch (latexmk | pdflatex | xelatex | latex-chain) and
+  auxiliary-tool handling (bibtex/biber, makeindex, glossaries,
+  psfrag) happen inside scripts/build.sh, so the calling workflow
+  stays a pure matrix orchestrator.
+
+  Note: composite steps do not inherit the job's
+  `defaults.run.working-directory`, so each step sets
+  `working-directory: ${{ inputs.dir }}` explicitly.
+
+inputs:
+  dir:
+    description: Variant directory (working directory for the build).
+    required: true
+  main:
+    description: Main .tex basename without extension.
+    required: true
+  engine:
+    description: One of latexmk | pdflatex | xelatex | latex-chain.
+    required: true
+  has-bib:
+    description: "'true' if the document uses \\bibliography{} (bibtex)."
+    required: false
+    default: "false"
+  has-biblatex:
+    description: "'true' if the document uses biblatex (biber)."
+    required: false
+    default: "false"
+  has-index:
+    description: "'true' if the document uses makeindex."
+    required: false
+    default: "false"
+  has-glossaries:
+    description: "'true' if the document uses glossaries."
+    required: false
+    default: "false"
+  has-psfrag:
+    description: "'true' if the document uses psfrag (requires latex-chain)."
+    required: false
+    default: "false"
+  texinputs:
+    description: >-
+      TEXINPUTS search path so the main .tex resolves repo-root shared
+      assets (personal-info.tex, *.sty, images/) without path edits.
+    required: false
+    default: ".:../..:../../images:"
+
+runs:
+  using: composite
+  steps:
+    - name: Build (${{ inputs.engine }})
+      shell: bash
+      working-directory: ${{ inputs.dir }}
+      env:
+        ENGINE: ${{ inputs.engine }}
+        MAIN: ${{ inputs.main }}
+        HAS_BIB: ${{ inputs.has-bib }}
+        HAS_BIBLATEX: ${{ inputs.has-biblatex }}
+        HAS_INDEX: ${{ inputs.has-index }}
+        HAS_GLOSSARIES: ${{ inputs.has-glossaries }}
+        HAS_PSFRAG: ${{ inputs.has-psfrag }}
+        TEXINPUTS: ${{ inputs.texinputs }}
+      run: "$GITHUB_ACTION_PATH/scripts/build.sh"
+
+    - name: Verify PDF
+      shell: bash
+      working-directory: ${{ inputs.dir }}
+      env:
+        DIR: ${{ inputs.dir }}
+        MAIN: ${{ inputs.main }}
+      run: |
+        set -euo pipefail
+        if [ ! -s "$MAIN.pdf" ]; then
+          echo "::error::Expected $DIR/$MAIN.pdf was not produced or is empty."
+          exit 1
+        fi
+        ls -la "$MAIN.pdf"

@@ -1,0 +1,32 @@
+# To get started with Dependabot version updates, you'll need to specify which
+# package ecosystems to update and where the package manifests are located.
+# For the github-actions ecosystem, "/" covers workflows in .github/workflows;
+# the "/.github/actions/*" glob additionally covers the local composite
+# actions (e.g. upload-build-logs pins actions/upload-artifact).
+#
+# LaTeX note: Dependabot has no CTAN / TeX Live package ecosystem, so LaTeX
+# packages themselves cannot be tracked. The LaTeX toolchain is instead kept
+# current via the docker ecosystem below: the TeX Live container image is
+# pinned by digest in .github/docker/texlive/Dockerfile (the build workflow
+# reads its FROM line), and Dependabot bumps the digest as the upstream
+# texlive/texlive:latest tag moves.
+# Please see the documentation for all configuration options:
+# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directories:
+      - "/" # Workflows in .github/workflows
+      - "/.github/actions/*" # Local composite actions
+    schedule:
+      interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*" # Bundle all action bumps into a single PR
+
+  - package-ecosystem: "docker"
+    directory: "/.github/docker/texlive" # TeX Live image digest pin
+    schedule:
+      interval: "weekly"
