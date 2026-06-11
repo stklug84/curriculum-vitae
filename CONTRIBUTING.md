@@ -23,10 +23,12 @@ be reusable — contributions to either are welcome.
 | `cvs/<name>/` | One directory per CV variant (one main `.tex` + `.engine`) |
 | `styles/*.sty`, `personal-info.tex`, `images/` | Shared assets, resolved via `TEXINPUTS` |
 | `.github/workflows/build.yml` | Orchestration only: discover → build (matrix) → package |
-| `.github/actions/discover-variants/` | Composite action: scans `cvs/*/`, emits the build matrix |
-| `.github/actions/build-latex/` | Composite action: engine dispatch, aux tools, PDF verification |
-| `.github/actions/upload-build-logs/` | Composite action: log artifacts on failure |
 | `.github/docker/texlive/Dockerfile` | Digest pin for the TeX Live container (tracked by Dependabot) |
+
+The composite actions (`texlive/discover-variants`, `texlive/build-pdf`,
+`texlive/upload-build-logs`) live in the central
+[`stklug84/actions`](https://github.com/stklug84/actions) repository and
+are consumed SHA-pinned from the workflow.
 
 ## Adding or changing a CV variant
 
@@ -61,32 +63,21 @@ gh act workflow_dispatch -W .github/workflows/build.yml --input local=true
 
 - **Keep the separation of concerns**: the matrix entry is pure data
   (`name`, `dir`, `main`, `engine`, `has_*` flags); behavior lives in the
-  composite actions. New engines or aux tools belong in
-  `.github/actions/build-latex/scripts/build.sh`, new discovery rules in
-  `.github/actions/discover-variants/scripts/scan.sh` — not in the
-  workflow.
-- **Shell scripts** must pass `shellcheck`, run with
-  `set -euo pipefail`, stay bash-3.2-compatible (macOS) for local
-  testability, and carry the repository's header convention
-  (`@author` / `@dependencies` / `@description` / `@arguments` /
-  `## Usage:` / `### Example:`).
-- **Workflows and actions** must pass `actionlint`.
-- **Test discovery locally** without CI:
-
-  ```sh
-  .github/actions/discover-variants/scripts/scan.sh cvs latexmk | jq .
-  ```
-
+  composite actions of the central
+  [`stklug84/actions`](https://github.com/stklug84/actions) repository.
+  New engines or aux tools belong in `texlive/build-pdf`, new discovery
+  rules in `texlive/discover-variants` — over there, not in this
+  workflow. Bump the SHA pins here after a release.
+- **Workflows** must pass `actionlint`.
 - **Dependencies** are managed by Dependabot (`.github/dependabot.yml`):
-  GitHub Actions in workflows and composite actions, plus the TeX Live
-  image digest in `.github/docker/texlive/Dockerfile`. Do not hand-bump
-  pinned versions in a feature PR; let Dependabot do it, or open a
-  dedicated PR.
+  GitHub Actions in workflows (including the SHA-pinned
+  `stklug84/actions` references), plus the TeX Live image digest in
+  `.github/docker/texlive/Dockerfile`. Do not hand-bump pinned versions
+  in a feature PR; let Dependabot do it, or open a dedicated PR.
 
 ## Checklist before opening a PR
 
-- [ ] `shellcheck` clean on any touched `*.sh`
-- [ ] `actionlint` clean on any touched workflow/action YAML
+- [ ] `actionlint` clean on any touched workflow YAML
 - [ ] Variant builds locally (direct or via `gh act`)
 - [ ] No build byproducts or unrelated changes staged
 - [ ] README updated if behavior, layout, or conventions changed

@@ -134,7 +134,7 @@ manual dispatch.
 | --- | --- | --- | --- |
 | `local` | `workflow_dispatch` input | `"false"` | Forces local mode for `gh act` (skips artifact upload) |
 | `ARTIFACT_PREFIX` | workflow `env` | `${{ github.event.repository.name }}` | Dynamic artifact-name prefix; never hardcoded |
-| `TEXINPUTS` | `build` job `env` | `.:../..:../../styles:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
+| `TEXINPUTS` | `texinputs` input of `texlive/build-pdf` | `.:../..:../../styles:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
 | `ACT` | runner env (set by `nektos/act`) | unset | Auto-detected to switch into local mode |
 
 The engine is **not** a workflow input. It is declared per variant via the
@@ -197,32 +197,33 @@ flowchart TD
 
 ### Step-by-step walkthrough
 
-**1. `discover`** — scans every directory under `cvs/`, locates exactly one
-`*.tex` with `\documentclass` per folder, reads the sibling `.engine`
-dotfile (default `latexmk` if absent), and detects per-main auxiliary
-toolchain requirements (`bibtex`, `biblatex`, `makeindex`, `glossaries`,
-`psfrag`). The result is emitted as a JSON matrix consumed by `build`.
+The heavy lifting is delegated to composite actions from the central
+[`stklug84/actions`](https://github.com/stklug84/actions) repository
+(SHA-pinned, kept current by Dependabot): `texlive/discover-variants`,
+`texlive/build-pdf`, and `texlive/upload-build-logs`. This workflow is
+pure orchestration — the matrix entry is data, the actions are behavior.
+
+**1. `discover`** — `texlive/discover-variants` scans every directory
+under `cvs/`, locates exactly one `*.tex` with `\documentclass` per
+folder, reads the sibling `.engine` dotfile (default `latexmk` if
+absent), and detects per-main auxiliary toolchain requirements
+(`bibtex`, `biblatex`, `makeindex`, `glossaries`, `psfrag`). The result
+is emitted as a JSON matrix consumed by `build`.
 
 ```yaml
-- name: Scan cvs/*/ and build matrix
+- name: Discover CV variants
   id: scan
-  run: |
-    set -euo pipefail
-    for dir in cvs/*/; do
-      # find the unique main .tex; read .engine; detect aux features;
-      # append a JSON entry to the matrix.
-      ...
-    done
-    matrix_json="{\"include\":[${joined}]}"
-    echo "matrix=$matrix_json" >> "$GITHUB_OUTPUT"
+  uses: stklug84/actions/texlive/discover-variants@<sha>  # v1.3.0
+  with:
+    root: cvs
+    default-engine: latexmk
 ```
 
 **2. `build` (matrix)** — `strategy.matrix: ${{ fromJson(needs.discover.outputs.matrix) }}`,
-`fail-fast: false`. Each leg runs in `texlive/texlive:latest` with
-`working-directory: ${{ matrix.dir }}` and `env.TEXINPUTS: .:../..:../../styles:../../images:`.
-The engine branch (`latexmk` / `pdflatex` / `xelatex` / `latex-chain`) is
-driven entirely by `matrix.engine`, and aux tools run only when
-`matrix.has_*` flags say they are needed.
+`fail-fast: false`. Each leg runs in the digest-pinned TeX Live container
+and calls `texlive/build-pdf`, which dispatches on `matrix.engine`
+(`latexmk` / `pdflatex` / `xelatex` / `latex-chain`), runs aux tools only
+when `matrix.has_*` flags say they are needed, and verifies the PDF.
 
 ```yaml
 build:
@@ -230,16 +231,18 @@ build:
   strategy:
     fail-fast: false
     matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
-  defaults:
-    run:
-      working-directory: ${{ matrix.dir }}
-  env:
-    TEXINPUTS: ".:../..:../../styles:../../images:"
+  container:
+    image: ${{ needs.discover.outputs.texlive-image }}
   steps:
-    - name: Build with latexmk
-      if: matrix.engine == 'latexmk'
-      run: latexmk -pdf -interaction=nonstopmode -halt-on-error -g "${{ matrix.main }}.tex"
-    # ... pdflatex / xelatex / latex-chain branches ...
+    - uses: actions/checkout@v6
+    - name: Build ${{ matrix.name }} (${{ matrix.engine }})
+      uses: stklug84/actions/texlive/build-pdf@<sha>  # v1.3.0
+      with:
+        working-directory: ${{ matrix.dir }}
+        main: ${{ matrix.main }}
+        engine: ${{ matrix.engine }}
+        texinputs: ".:../..:../../styles:../../images:"
+        # ... has-* flags from the matrix ...
     - name: Upload PDF artifact
       if: needs.discover.outputs.local != 'true'
       uses: actions/upload-artifact@v7
