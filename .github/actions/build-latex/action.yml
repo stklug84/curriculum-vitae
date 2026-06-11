@@ -8,7 +8,7 @@ description: |
 
   Note: composite steps do not inherit the job's
   `defaults.run.working-directory`, so each step sets
-  `working-directory: ${{ inputs.dir }}` explicitly.
+  `working-directory` to the `dir` input explicitly.
 
 inputs:
   dir:
