@@ -21,7 +21,7 @@ be reusable — contributions to either are welcome.
 | Path | Purpose |
 | --- | --- |
 | `cvs/<name>/` | One directory per CV variant (one main `.tex` + `.engine`) |
-| `*.sty`, `personal-info.tex`, `images/` | Shared assets at the repo root, resolved via `TEXINPUTS` |
+| `styles/*.sty`, `personal-info.tex`, `images/` | Shared assets, resolved via `TEXINPUTS` |
 | `.github/workflows/build.yml` | Orchestration only: discover → build (matrix) → package |
 | `.github/actions/discover-variants/` | Composite action: scans `cvs/*/`, emits the build matrix |
 | `.github/actions/build-latex/` | Composite action: engine dispatch, aux tools, PDF verification |
@@ -47,7 +47,7 @@ Direct, with a host TeX Live install:
 
 ```sh
 cd cvs/<variant>
-TEXINPUTS=.:../..:../../images: <engine> -interaction=nonstopmode -halt-on-error <main>.tex
+TEXINPUTS=.:../..:../../styles:../../images: <engine> -interaction=nonstopmode -halt-on-error <main>.tex
 ```
 
 Or replay the full CI matrix in the pinned container (no host TeX Live

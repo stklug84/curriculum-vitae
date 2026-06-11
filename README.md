@@ -15,15 +15,16 @@ Today the repo ships two variants:
 
 | Variant            | Folder              | Engine    | Style file         |
 | ------------------ | ------------------- | --------- | ------------------ |
-| Classic two-page   | `cvs/photo-2page/`  | pdflatex  | `cv-plain-style.sty` |
-| Sidebar two-column | `cvs/sidebar/`      | xelatex   | `cv-sidebar.sty`   |
+| Classic two-page   | `cvs/photo-2page/`  | pdflatex  | `styles/cv-plain-style.sty` |
+| Sidebar two-column | `cvs/sidebar/`      | xelatex   | `styles/cv-sidebar.sty`   |
 
 ## Repository layout
 
 ```
 .
-├── cv-plain-style.sty            # Classic two-page CV style (pdflatex)
-├── cv-sidebar.sty                # Sidebar CV style (xelatex, FiraSans)
+├── styles/
+│   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
+│   └── cv-sidebar.sty            # Sidebar CV style (xelatex, FiraSans)
 ├── personal-info.tex             # Shared name / contact / asset paths
 ├── images/                       # Shared assets (photo, signature)
 ├── cvs/
@@ -36,10 +37,11 @@ Today the repo ships two variants:
 └── .github/workflows/build.yml
 ```
 
-Shared assets (`personal-info.tex`, `images/`, and the two `*.sty` files)
-live at the repo root and are resolved from inside each variant directory
-via `TEXINPUTS=.:../..:../../images:`. That setting is applied automatically
-by the workflow and is the only thing you need locally as well.
+Shared assets (`personal-info.tex`, `images/`, and the `*.sty` files in
+`styles/`) live at the repo root and are resolved from inside each variant
+directory via `TEXINPUTS=.:../..:../../styles:../../images:`. That setting is
+applied automatically by the workflow and is the only thing you need locally
+as well.
 
 ## Adding a new CV variant
 
@@ -66,18 +68,18 @@ the shared `*.sty` files, and `images/` from the repo root.
 ```sh
 # Classic two-page CV (pdflatex)
 cd cvs/photo-2page
-TEXINPUTS=.:../..:../../images: pdflatex -interaction=nonstopmode -halt-on-error lebenslauf-photo-2page.tex
+TEXINPUTS=.:../..:../../styles:../../images: pdflatex -interaction=nonstopmode -halt-on-error lebenslauf-photo-2page.tex
 
 # Sidebar variant (xelatex)
 cd cvs/sidebar
-TEXINPUTS=.:../..:../../images: xelatex -interaction=nonstopmode -halt-on-error lebenslauf-sidebar.tex
+TEXINPUTS=.:../..:../../styles:../../images: xelatex -interaction=nonstopmode -halt-on-error lebenslauf-sidebar.tex
 ```
 
 `latexmk` users can equivalently run:
 
 ```sh
 cd cvs/<variant>
-TEXINPUTS=.:../..:../../images: latexmk -pdf -interaction=nonstopmode -halt-on-error -g <main>.tex
+TEXINPUTS=.:../..:../../styles:../../images: latexmk -pdf -interaction=nonstopmode -halt-on-error -g <main>.tex
 ```
 
 The PDF lands next to the source: `cvs/<variant>/<main>.pdf`.
@@ -132,7 +134,7 @@ manual dispatch.
 | --- | --- | --- | --- |
 | `local` | `workflow_dispatch` input | `"false"` | Forces local mode for `gh act` (skips artifact upload) |
 | `ARTIFACT_PREFIX` | workflow `env` | `${{ github.event.repository.name }}` | Dynamic artifact-name prefix; never hardcoded |
-| `TEXINPUTS` | `build` job `env` | `.:../..:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
+| `TEXINPUTS` | `build` job `env` | `.:../..:../../styles:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
 | `ACT` | runner env (set by `nektos/act`) | unset | Auto-detected to switch into local mode |
 
 The engine is **not** a workflow input. It is declared per variant via the
@@ -217,7 +219,7 @@ toolchain requirements (`bibtex`, `biblatex`, `makeindex`, `glossaries`,
 
 **2. `build` (matrix)** — `strategy.matrix: ${{ fromJson(needs.discover.outputs.matrix) }}`,
 `fail-fast: false`. Each leg runs in `texlive/texlive:latest` with
-`working-directory: ${{ matrix.dir }}` and `env.TEXINPUTS: .:../..:../../images:`.
+`working-directory: ${{ matrix.dir }}` and `env.TEXINPUTS: .:../..:../../styles:../../images:`.
 The engine branch (`latexmk` / `pdflatex` / `xelatex` / `latex-chain`) is
 driven entirely by `matrix.engine`, and aux tools run only when
 `matrix.has_*` flags say they are needed.
@@ -232,7 +234,7 @@ build:
     run:
       working-directory: ${{ matrix.dir }}
   env:
-    TEXINPUTS: ".:../..:../../images:"
+    TEXINPUTS: ".:../..:../../styles:../../images:"
   steps:
     - name: Build with latexmk
       if: matrix.engine == 'latexmk'

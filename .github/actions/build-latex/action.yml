@@ -43,9 +43,10 @@ inputs:
   texinputs:
     description: >-
       TEXINPUTS search path so the main .tex resolves repo-root shared
-      assets (personal-info.tex, *.sty, images/) without path edits.
+      assets (personal-info.tex, styles/*.sty, images/) without path
+      edits.
     required: false
-    default: ".:../..:../../images:"
+    default: ".:../..:../../styles:../../images:"
 
 runs:
   using: composite
