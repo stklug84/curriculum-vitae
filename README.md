@@ -20,6 +20,30 @@ Today the repo ships two variants:
 | Classic two-page   | `cvs/photo-2page/` | pdflatex | `styles/cv-plain-style.sty` |
 | Sidebar two-column | `cvs/sidebar/`     | xelatex  | `styles/cv-sidebar.sty`     |
 
+## Downloading the PDFs
+
+Every merge to `main` publishes the built PDFs as a versioned GitHub
+release tagged `v<YYYY.MM.DD>-r<run-number>` (see the
+[Releases](https://github.com/stklug84/curriculum-vitae/releases) page).
+Release assets never expire; only the 10 newest releases are kept
+(older ones are pruned automatically, including their tags).
+
+Grab the current PDFs with the GitHub CLI — without a tag this always
+resolves to the latest release:
+
+```sh
+gh release download -R stklug84/curriculum-vitae
+```
+
+Or a specific revision:
+
+```sh
+gh release download v2026.06.12-r17 -R stklug84/curriculum-vitae
+```
+
+PR builds additionally upload short-lived workflow artifacts for review
+(see [Artifact names](#artifact-names)).
+
 ## Repository layout
 
 ```text
@@ -104,7 +128,8 @@ copy step is needed.
 ## CI workflow explained
 
 The `.github/workflows/build.yml` workflow turns every CV variant under
-`cvs/*/` into a PDF on every pull request and on demand via the Actions UI.
+`cvs/*/` into a PDF on every pull request, on every push to `main`
+(publishing a versioned release), and on demand via the Actions UI.
 It is intentionally generic: it auto-discovers what to build, picks the
 right engine per variant from each `.engine` dotfile, and runs the legs in
 parallel.
@@ -114,6 +139,9 @@ parallel.
 ```yaml
 on:
   pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       local:
@@ -125,11 +153,11 @@ on:
 
 - `pull_request` — builds every CV for every PR so reviewers can download
   the rendered PDFs as artifacts before merging.
+- `push` to `main` — builds every CV and publishes the PDFs as a
+  versioned GitHub release (see
+  [Downloading the PDFs](#downloading-the-pdfs)).
 - `workflow_dispatch` — lets you trigger a manual build. The only input is
   `local`, used by `gh act` to skip artifact upload steps.
-
-There is intentionally no `push` trigger; the workflow only runs on PRs and
-manual dispatch.
 
 ### Inputs and environment
 
@@ -309,6 +337,7 @@ producing a PDF with un-substituted markers.
 | Run mode | Location |
 | --- | --- |
 | GitHub Actions (PR or `workflow_dispatch`) | Workflow artifacts `<repo>-<name>-pdf` per variant, plus combined `<repo>` |
+| GitHub Actions (push to `main`) | Same artifacts, plus a versioned release `v<date>-r<run#>` with all PDFs |
 | `gh act` (local) | `cvs/<name>/<main>.pdf` in your working tree (via bind mount) |
 
 ## Known caveats and future improvements

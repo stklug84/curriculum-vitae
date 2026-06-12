@@ -3,6 +3,9 @@ name: Build Document
 
 on:  # yamllint disable-line rule:truthy
   pull_request:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       local:
@@ -11,8 +14,9 @@ on:  # yamllint disable-line rule:truthy
         default: "false"
         type: string
 
-# Least-privilege token: the called workflow only reads the repo and uploads
-# artifacts.
+# Least-privilege default; the calling job below grants contents: write,
+# which the called workflow's release job needs to publish versioned
+# releases on pushes to main.
 permissions:
   contents: read
 
@@ -22,14 +26,24 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # All build logic (variant discovery, matrix build, packaging) lives in
-  # the central latex-build-cv reusable workflow. The TeX Live container
-  # image is still resolved from this repo's digest-pinned
-  # .github/docker/texlive/Dockerfile (kept current by Dependabot).
+  # All build logic (variant discovery, matrix build, packaging, release
+  # publishing) lives in the central latex-build-cv reusable workflow.
+  # The TeX Live container image is still resolved from this repo's
+  # digest-pinned .github/docker/texlive/Dockerfile (kept current by
+  # Dependabot).
   build:
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@4558e620091a7317d90c9cb11ff6b7daabf6ef6d  # v1.3.0
+    # contents: write is consumed only by the called workflow's release
+    # job (publishes versioned releases on pushes to main); all other
+    # jobs read the repo and upload artifacts.
+    permissions:
+      contents: write
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@3e01e55d5872661ab769b02fb7203e224bb24591  # v1.5.0
     with:
       # Resolve repo-root shared assets (personal-info.tex, styles/*.sty,
       # images/) from inside cvs/<name>/.
       texinputs: ".:../..:../../styles:../../images:"
       local: ${{ inputs.local }}
+      # Publish the built PDFs as a versioned release (v<date>-r<run#>)
+      # on every push to main; keep only the 10 newest releases.
+      release: "true"
+      release-keep: "10"
