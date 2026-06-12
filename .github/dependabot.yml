@@ -12,18 +12,19 @@
 # Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
+---
 version: 2
 updates:
   - package-ecosystem: "github-actions"
-    directory: "/" # Workflows in .github/workflows
+    directory: "/"  # Workflows in .github/workflows
     schedule:
       interval: "weekly"
     groups:
       github-actions:
         patterns:
-          - "*" # Bundle all action bumps into a single PR
+          - "*"  # Bundle all action bumps into a single PR
 
   - package-ecosystem: "docker"
-    directory: "/.github/docker/texlive" # TeX Live image digest pin
+    directory: "/.github/docker/texlive"  # TeX Live image digest pin
     schedule:
       interval: "weekly"

@@ -6,4 +6,8 @@
 # Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
+# DL3007 (avoid :latest) is intentional here: the digest is the actual
+# version pin (Dependabot-managed); the :latest tag only names the
+# stream the digest tracks.
+# hadolint ignore=DL3007
 FROM texlive/texlive:latest@sha256:2f9918a156cfc6c7527590e06f69bfb4fbc827278e4736c90e567382855d7cd1

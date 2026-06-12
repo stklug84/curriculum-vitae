@@ -1,6 +1,8 @@
 # Curriculum Vitae (LaTeX)
 
 [![Build Document](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml/badge.svg?event=pull_request)](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml)
+[![Lint](https://github.com/stklug84/curriculum-vitae/actions/workflows/lint.yml/badge.svg?event=pull_request)](https://github.com/stklug84/curriculum-vitae/actions/workflows/lint.yml)
+[![CodeQL](https://github.com/stklug84/curriculum-vitae/actions/workflows/codeql.yml/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/codeql.yml)
 [![Dependabot Updates](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates)
 [![Made with LaTeX](https://img.shields.io/badge/Made%20with-LaTeX-008080.svg)](https://www.latex-project.org/)
 
@@ -13,14 +15,14 @@ locally with the host TeX Live install or by replaying the workflow with
 
 Today the repo ships two variants:
 
-| Variant            | Folder              | Engine    | Style file         |
-| ------------------ | ------------------- | --------- | ------------------ |
-| Classic two-page   | `cvs/photo-2page/`  | pdflatex  | `styles/cv-plain-style.sty` |
-| Sidebar two-column | `cvs/sidebar/`      | xelatex   | `styles/cv-sidebar.sty`   |
+| Variant            | Folder             | Engine   | Style file                  |
+| ------------------ | ------------------ | -------- | --------------------------- |
+| Classic two-page   | `cvs/photo-2page/` | pdflatex | `styles/cv-plain-style.sty` |
+| Sidebar two-column | `cvs/sidebar/`     | xelatex  | `styles/cv-sidebar.sty`     |
 
 ## Repository layout
 
-```
+```text
 .
 ├── styles/
 │   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
@@ -87,7 +89,8 @@ The PDF lands next to the source: `cvs/<variant>/<main>.pdf`.
 ### Via the CI workflow with `gh act`
 
 This replays the exact CI logic on your machine inside the digest-pinned
-TeX Live container, so you do not need TeX Live installed on the host. `act` builds the **full matrix** — every CV variant in one run.
+TeX Live container, so you do not need TeX Live installed on the host.
+`act` builds the **full matrix** — every CV variant in one run.
 
 ```sh
 gh act workflow_dispatch -W .github/workflows/build.yml --input local=true
@@ -219,7 +222,8 @@ is emitted as a JSON matrix consumed by `build`.
     default-engine: latexmk
 ```
 
-**2. `build` (matrix)** — `strategy.matrix: ${{ fromJson(needs.discover.outputs.matrix) }}`,
+**2. `build` (matrix)** — one leg per variant via
+`strategy.matrix: fromJson(...)` with
 `fail-fast: false`. Each leg runs in the digest-pinned TeX Live container
 and calls `texlive/build-pdf`, which dispatches on `matrix.engine`
 (`latexmk` / `pdflatex` / `xelatex` / `latex-chain`), runs aux tools only
@@ -291,9 +295,9 @@ Set the engine per variant by writing one of the following keywords into
 
 | Engine value | When to use | Why |
 | --- | --- | --- |
-| `latexmk`     | Default for most CVs | Auto-runs the right number of passes plus `biber` / `bibtex` / `makeindex` / `makeglossaries` |
-| `pdflatex`    | Classic pdfLaTeX three-pass build | Lower-level; useful for debugging pass-by-pass |
-| `xelatex`     | Documents using OpenType fonts (e.g. Fira Sans via `fontspec`) | Required by `cv-sidebar.sty` and any `fontspec`-based style |
+| `latexmk` | Default for most CVs | Auto-runs the right number of passes plus `biber` / `bibtex` / `makeindex` / `makeglossaries` |
+| `pdflatex` | Classic pdfLaTeX three-pass build | Lower-level; useful for debugging pass-by-pass |
+| `xelatex` | Documents using OpenType fonts (e.g. Fira Sans via `fontspec`) | Required by `cv-sidebar.sty` and any `fontspec`-based style |
 | `latex-chain` | Documents using `psfrag` | `psfrag` substitutions are applied by `dvips` at the PostScript stage; `pdflatex` / `xelatex` skip them |
 
 If you select `pdflatex` or `xelatex` but the document `\usepackage{psfrag}`s

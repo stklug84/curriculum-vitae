@@ -1,0 +1,22 @@
+---
+# title: YAMLlint rules configuration
+# authors:
+#   - Steffen Klug <45033201+stklug84@users.noreply.github.com>
+# date: 2026-06-11
+# keywords: [infrastructure, linting]
+# comment: |
+#   All yaml files linter extensions need to be added below
+# ---
+
+extends: default
+
+rules:
+  # Use only two spaces for intendation
+  indentation:
+    spaces: 2
+  # Relax-line length into warning. 130 instead of 120 because
+  # SHA-pinned `uses:` references with their Dependabot-maintained
+  # inline version comments cannot be wrapped.
+  line-length:
+    max: 130
+    level: warning
