@@ -1,6 +1,6 @@
 # Curriculum Vitae (LaTeX)
 
-[![Build Document](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml/badge.svg?event=pull_request)](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml)
+[![Build Document](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/build.yml)
 [![Lint](https://github.com/stklug84/curriculum-vitae/actions/workflows/lint.yml/badge.svg?event=pull_request)](https://github.com/stklug84/curriculum-vitae/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/stklug84/curriculum-vitae/actions/workflows/codeql.yml/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/codeql.yml)
 [![Dependabot Updates](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates)
@@ -60,7 +60,17 @@ PR builds additionally upload short-lived workflow artifacts for review
 │   └── sidebar/
 │       ├── lebenslauf-sidebar.tex
 │       └── .engine               # contents: xelatex
-└── .github/workflows/build.yml
+├── .github/
+│   ├── CODEOWNERS                # Default reviewer: @stklug84
+│   ├── dependabot.yml            # Actions + TeX Live digest updates
+│   ├── docker/texlive/Dockerfile # Digest pin for the TeX Live image
+│   └── workflows/
+│       ├── build.yml             # Thin caller of latex-build-cv (below)
+│       ├── codeql.yml            # CodeQL (actions language)
+│       └── lint.yml              # actionlint/yamllint/markdownlint/hadolint
+├── .markdownlint.yaml            # Markdown lint rules
+├── .yamllint.yml                 # YAML lint rules
+└── CONTRIBUTING.md               # Conventions and PR checklist
 ```
 
 Shared assets (`personal-info.tex`, `images/`, and the `*.sty` files in
@@ -80,8 +90,10 @@ To add a third CV:
    `\includegraphics{images/photo.jpg}`).
 3. `echo <engine> > cvs/<name>/.engine` — one of `latexmk`, `pdflatex`,
    `xelatex`, `latex-chain`. If `.engine` is missing, `latexmk` is used.
-4. Commit and push. CI picks the new variant up automatically and uploads
-   `<repo>-<name>-pdf` as a workflow artifact.
+4. Open a pull request (`main` is protected; direct pushes are rejected).
+   CI picks the new variant up automatically and uploads
+   `<repo>-<name>-pdf` as a workflow artifact for review. After the merge,
+   the PDF is also included in the next versioned release.
 
 ## Building locally
 
@@ -114,25 +126,66 @@ The PDF lands next to the source: `cvs/<variant>/<main>.pdf`.
 
 This replays the exact CI logic on your machine inside the digest-pinned
 TeX Live container, so you do not need TeX Live installed on the host.
-`act` builds the **full matrix** — every CV variant in one run.
+`act` fetches the remote reusable workflow and the composite actions
+(both repositories are public — network access required, no token) and
+builds the **full matrix** — every CV variant in one run.
 
 ```sh
-gh act workflow_dispatch -W .github/workflows/build.yml --input local=true
+gh act workflow_dispatch -W .github/workflows/build.yml \
+  --input local=true \
+  -P ubuntu-latest=catthehacker/ubuntu:act-latest
 ```
+
+Two flags matter (verified with act 0.2.89):
+
+- `-P ubuntu-latest=catthehacker/ubuntu:act-latest` — act's default
+  micro image (`node:16-buster-slim`) lacks `jq`, which the `discover`
+  job needs; the medium runner image matches GitHub's toolset.
+- On Apple Silicon add `--container-architecture linux/arm64` if the
+  TeX Live image was previously pulled as arm64 — act defaults to
+  amd64 and the Docker daemon refuses a digest whose local platform
+  differs.
 
 `act` exports `ACT=true` automatically, so the workflow also auto-detects
 local mode even if you omit `--input local=true`. In local mode the PDFs land
-in their variant folders via the bind mount; no separate upload or `./out/`
-copy step is needed.
+in their variant folders via the bind mount; the upload, package, and
+release jobs are skipped.
 
 ## CI workflow explained
 
-The `.github/workflows/build.yml` workflow turns every CV variant under
-`cvs/*/` into a PDF on every pull request, on every push to `main`
-(publishing a versioned release), and on demand via the Actions UI.
-It is intentionally generic: it auto-discovers what to build, picks the
-right engine per variant from each `.engine` dotfile, and runs the legs in
-parallel.
+CI turns every CV variant under `cvs/*/` into a PDF on every pull
+request, on every push to `main` (publishing a versioned release), and
+on demand via the Actions UI. It is intentionally generic: it
+auto-discovers what to build, picks the right engine per variant from
+each `.engine` dotfile, and runs the legs in parallel.
+
+The logic is layered across three repositories:
+
+| Layer | Where | Role |
+| --- | --- | --- |
+| Caller `build.yml` | this repo | Triggers, concurrency, permissions, repo-specific inputs |
+| Reusable workflow `latex-build-cv.yml` | [`stklug84/github-workflows`](https://github.com/stklug84/github-workflows) (SHA-pinned, `v1.5.0`) | Jobs: `discover` → `build` (matrix) → `package` → `release` |
+| Composite actions `texlive/*` | [`stklug84/actions`](https://github.com/stklug84/actions) (SHA-pinned, `v1.3.0`) | Behavior: `discover-variants`, `build-pdf`, `upload-build-logs` |
+
+The caller in this repo is intentionally thin:
+
+```yaml
+jobs:
+  build:
+    # contents: write is consumed only by the called workflow's release
+    # job (publishes versioned releases on pushes to main).
+    permissions:
+      contents: write
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.5.0
+    with:
+      texinputs: ".:../..:../../styles:../../images:"
+      local: ${{ inputs.local }}
+      release: "true"
+      release-keep: "10"
+```
+
+Everything below describes what the reusable workflow does with these
+inputs.
 
 ### Triggers
 
@@ -161,12 +214,30 @@ on:
 
 ### Inputs and environment
 
-| Name | Source | Default | Purpose |
-| --- | --- | --- | --- |
-| `local` | `workflow_dispatch` input | `"false"` | Forces local mode for `gh act` (skips artifact upload) |
-| `ARTIFACT_PREFIX` | workflow `env` | `${{ github.event.repository.name }}` | Dynamic artifact-name prefix; never hardcoded |
-| `TEXINPUTS` | `texinputs` input of `texlive/build-pdf` | `.:../..:../../styles:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
-| `ACT` | runner env (set by `nektos/act`) | unset | Auto-detected to switch into local mode |
+Inputs this repo passes to the reusable workflow:
+
+| Name | Value here | Purpose |
+| --- | --- | --- |
+| `texinputs` | `.:../..:../../styles:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
+| `local` | `workflow_dispatch` input (default `"false"`) | Forces local mode for `gh act` (skips upload/package/release) |
+| `release` | `"true"` | Publish a versioned release on pushes to `main` |
+| `release-keep` | `"10"` | Keep only the 10 newest releases (older ones pruned, tags included) |
+
+Reusable-workflow inputs left at their defaults:
+
+| Name | Default | Purpose |
+| --- | --- | --- |
+| `root` | `cvs` | Directory scanned for variants |
+| `default-engine` | `latexmk` | Engine for variants without an `.engine` file |
+| `texlive-dockerfile` | `.github/docker/texlive/Dockerfile` | Path to the TeX Live digest pin in this repo |
+| `runs-on` | `ubuntu-latest` | Runner label for all jobs |
+
+Environment resolved inside the reusable workflow:
+
+| Name | Source | Purpose |
+| --- | --- | --- |
+| `ARTIFACT_PREFIX` | `${{ github.event.repository.name }}` | Dynamic artifact-name prefix; never hardcoded |
+| `ACT` | runner env (set by `nektos/act`) | Auto-detected to switch into local mode |
 
 The engine is **not** a workflow input. It is declared per variant via the
 `.engine` dotfile and picked up automatically by `discover`.
@@ -174,28 +245,29 @@ The engine is **not** a workflow input. It is declared per variant via the
 ### Permissions, timeout, concurrency
 
 ```yaml
+# Caller (this repo)
 permissions:
-  contents: read
+  contents: read          # workflow default
+jobs:
+  build:
+    permissions:
+      contents: write     # consumed only by the release job
 
 concurrency:
   group: build-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    container:
-      image: ${{ needs.discover.outputs.texlive-image }}
 ```
 
-- `permissions: contents: read` — the build only needs to read the repo and
-  upload artifacts, so the `GITHUB_TOKEN` is scoped to the minimum required.
+- **Two-level permissions** — the caller's workflow default is
+  `contents: read`; only the calling job grants `contents: write`, which
+  the reusable workflow's `release` job needs to create releases and
+  tags. All other jobs read the repo and upload artifacts.
 - `concurrency` — if you push several commits to the same PR in quick
   succession, in-flight builds for older commits are cancelled, saving
   runner minutes.
-- `timeout-minutes: 15` per matrix leg — guards against a runaway LaTeX
-  loop or a broken package burning a full hour of runner time.
+- `timeout-minutes: 15` per matrix leg (set in the reusable workflow) —
+  guards against a runaway LaTeX loop or a broken package burning a
+  full hour of runner time.
 - `container` — every build step runs inside the official TeX Live image
   (digest-pinned via `.github/docker/texlive/Dockerfile`, resolved by the
   `discover` job), so `latexmk`, `pdflatex`, `xelatex`, `latex`, `dvips`,
@@ -206,7 +278,7 @@ jobs:
 
 ```mermaid
 flowchart TD
-  A[Trigger: PR or workflow_dispatch] --> B[discover]
+  A[Trigger: PR, push to main, or workflow_dispatch] --> B[discover]
   B --> C[Scan cvs/*/ : read .engine + .tex]
   C --> D[Emit matrix JSON]
   D --> E[build matrix: one job per cvs/&lt;name&gt;/]
@@ -224,15 +296,20 @@ flowchart TD
   L -- true  --> N[PDF stays in cvs/&lt;name&gt;/ via act bind mount]
   M --> O[package: download &lt;repo&gt;-*-pdf]
   O --> P[Upload combined &lt;repo&gt; artifact]
+  P --> Q{push to main?}
+  Q -- yes --> R[release: tag v&lt;date&gt;-r&lt;run#&gt; + upload PDFs]
+  R --> S[Prune releases beyond release-keep]
+  Q -- no --> T[done]
 ```
 
 ### Step-by-step walkthrough
 
-The heavy lifting is delegated to composite actions from the central
+All four jobs live in the reusable workflow; the heavy lifting is
+further delegated to composite actions from the central
 [`stklug84/actions`](https://github.com/stklug84/actions) repository
-(SHA-pinned, kept current by Dependabot): `texlive/discover-variants`,
-`texlive/build-pdf`, and `texlive/upload-build-logs`. This workflow is
-pure orchestration — the matrix entry is data, the actions are behavior.
+(SHA-pinned): `texlive/discover-variants`, `texlive/build-pdf`, and
+`texlive/upload-build-logs`. The workflow is pure orchestration — the
+matrix entry is data, the actions are behavior.
 
 **1. `discover`** — `texlive/discover-variants` scans every directory
 under `cvs/`, locates exactly one `*.tex` with `\documentclass` per
@@ -293,7 +370,7 @@ package:
   needs: [discover, build]
   if: needs.discover.outputs.local != 'true'
   steps:
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         pattern: ${{ env.ARTIFACT_PREFIX }}-*-pdf
         path: ./dist
@@ -301,6 +378,28 @@ package:
       with:
         name: ${{ env.ARTIFACT_PREFIX }}
         path: ./dist/*
+```
+
+**4. `release`** — opt-in (`release: "true"`), push events only. Downloads
+the per-CV artifacts, flattens them, and publishes a GitHub release
+tagged `v<YYYY.MM.DD>-r<run-number>` via the `gh` CLI (no third-party
+actions). GitHub marks the newest release as *Latest*. When
+`release-keep` is non-zero, older releases matching the workflow's tag
+pattern are deleted together with their tags; manually created releases
+are never touched.
+
+```yaml
+release:
+  needs: [discover, package]
+  if: >-
+    inputs.release == 'true' &&
+    github.event_name == 'push' &&
+    needs.discover.outputs.local != 'true'
+  permissions:
+    contents: write
+  steps:
+    # download artifacts -> flatten PDFs -> gh release create
+    # "v$(date +%Y.%m.%d)-r${GITHUB_RUN_NUMBER}" -> prune to release-keep
 ```
 
 ### Artifact names
@@ -348,11 +447,21 @@ producing a PDF with un-substituted markers.
   upstream `texlive/texlive:latest` moves. Dependabot has no CTAN / TeX Live
   package ecosystem, so individual LaTeX packages are not tracked — the
   container digest is the LaTeX-toolchain version pin.
-- **Action pinning**: `actions/checkout@v6`, `actions/upload-artifact@v7`,
-  and `actions/download-artifact@v6` are pinned by major version. Pin to a
-  commit SHA for stricter supply-chain hardening.
-- **No `push` trigger**: by design, CI runs only on PRs and manual dispatch;
-  there is no automatic build of the default branch.
+- **Central pins need manual bumps**: the reusable workflow
+  (`latex-build-cv.yml`) and the composite actions it uses are SHA-pinned.
+  Dependabot bumps the reusable-workflow pin in this repo; the composite
+  action pins live inside `stklug84/github-workflows` and are bumped
+  there. New central releases only take effect here after the pin is
+  updated.
+- **Release retention**: only the 10 newest releases are kept
+  (`release-keep: "10"`). Pruned releases are deleted **including their
+  PDFs and tags** — older CV revisions are gone for good. Anyone with
+  read access can download any release still present.
+- **`gh act` needs the medium runner image**: the default micro image
+  lacks `jq` (used by `discover`), so pass
+  `-P ubuntu-latest=catthehacker/ubuntu:act-latest`; on Apple Silicon a
+  consistent `--container-architecture` may also be required (see
+  [Building locally](#via-the-ci-workflow-with-gh-act)).
 - **No `tlmgr` cache**: the workflow does not install extra TeX packages, so
   no caching is needed today. Add an `actions/cache` step if package
   installation is introduced later.
