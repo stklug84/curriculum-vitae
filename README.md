@@ -29,10 +29,10 @@ Release assets never expire; only the 10 newest releases are kept
 (older ones are pruned automatically, including their tags).
 
 Grab the current PDFs with the GitHub CLI — without a tag this always
-resolves to the latest release:
+resolves to the latest release (`--pattern` is required in that case):
 
 ```sh
-gh release download -R stklug84/curriculum-vitae
+gh release download -R stklug84/curriculum-vitae -p '*.pdf'
 ```
 
 Or a specific revision:
