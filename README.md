@@ -13,6 +13,41 @@ them in parallel inside a TeX Live container. Any build can be reproduced
 locally with the host TeX Live install or by replaying the workflow with
 [`nektos/act`](https://github.com/nektos/act) via the GitHub CLI.
 
+## Single source of truth: `data/cv.yaml`
+
+All CV content lives in one canonical, bilingual (`de`/`en`) file:
+[`data/cv.yaml`](data/cv.yaml). The per-section LaTeX files each variant
+`\input`s are **generated** from it by the
+[`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions) action
+(major alias `v2`). See [`data/README.md`](data/README.md) for the full
+schema, the `targets` contract, and the generate→build flow.
+
+The generated section files are also **committed** under each
+`cvs/<variant>/` as a local-build fallback (so the repo builds without
+running the action first). Regenerate them after editing `cv.yaml`:
+
+```sh
+make gen     # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
+make check   # validate data/cv.yaml against the cv/parse schema
+```
+
+Both delegate to `scripts/gen.sh`, which expects a sibling checkout of the
+action at `../actions/cv/parse` (override with `ACTION_DIR` / `PARSE_PY`).
+
+Each variant main wraps the generated bodies in its own scaffolding. The
+generated files are:
+
+```text
+cvs/<variant>/personal-info.tex     # \cv… macros (name, contact, paths)
+cvs/<variant>/cv-experience.tex
+cvs/<variant>/cv-education.tex
+cvs/<variant>/cv-conferences.tex
+cvs/<variant>/cv-skills.tex
+cvs/<variant>/cv-languages.tex
+cvs/<variant>/cv-interests.tex
+cvs/<variant>/cv-certifications.tex
+```
+
 Today the repo ships two variants:
 
 | Variant            | Folder             | Engine   | Style file                  |
@@ -48,36 +83,54 @@ PR builds additionally upload short-lived workflow artifacts for review
 
 ```text
 .
+├── data/
+│   ├── cv.yaml                   # Single source of truth (bilingual de/en)
+│   └── README.md                 # Schema + targets contract
 ├── styles/
 │   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
 │   └── cv-sidebar.sty            # Sidebar CV style (xelatex, FiraSans)
-├── personal-info.tex             # Shared name / contact / asset paths
 ├── images/                       # Shared assets (photo, signature)
 ├── cvs/
 │   ├── photo-2page/
-│   │   ├── lebenslauf-photo-2page.tex
+│   │   ├── lebenslauf-photo-2page.tex  # Scaffolding; \input generated bodies
+│   │   ├── personal-info.tex     # Generated (committed fallback)
+│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
 │   │   └── .engine               # contents: pdflatex
 │   └── sidebar/
 │       ├── lebenslauf-sidebar.tex
+│       ├── personal-info.tex     # Generated (committed fallback)
+│       ├── cv-*.tex              # Generated section bodies (committed fallback)
 │       └── .engine               # contents: xelatex
+├── scripts/gen.sh                # Regenerate section files from data/cv.yaml
+├── Makefile                      # `make gen` / `make check`
 ├── .github/
 │   ├── CODEOWNERS                # Default reviewer: @stklug84
 │   ├── dependabot.yml            # Actions + TeX Live digest updates
 │   ├── docker/texlive/Dockerfile # Digest pin for the TeX Live image
 │   └── workflows/
-│       ├── build.yml             # Thin caller of latex-build-cv (below)
+│       ├── build.yml             # generate (cv/parse) -> latex-build-cv (below)
 │       ├── codeql.yml            # CodeQL (actions language)
-│       └── lint.yml              # actionlint/yamllint/markdownlint/hadolint
+│       └── lint.yml              # actionlint/yamllint/markdownlint/hadolint/cv-schema
 ├── .markdownlint.yaml            # Markdown lint rules
 ├── .yamllint.yml                 # YAML lint rules
 └── CONTRIBUTING.md               # Conventions and PR checklist
 ```
 
-Shared assets (`personal-info.tex`, `images/`, and the `*.sty` files in
-`styles/`) live at the repo root and are resolved from inside each variant
-directory via `TEXINPUTS=.:../..:../../styles:../../images:`. That setting is
-applied automatically by the workflow and is the only thing you need locally
-as well.
+Shared assets (`images/` and the `*.sty` files in `styles/`) live at the
+repo root and are resolved from inside each variant directory via
+`TEXINPUTS=.:../..:../../styles:../../images:`. Each variant's
+`personal-info.tex` and `cv-*.tex` are generated per variant (and resolved
+first via the leading `.` in `TEXINPUTS`). That setting is applied
+automatically by the workflow and is the only thing you need locally too.
+
+## Editing CV content
+
+Content is **not** edited in the `.tex` files — edit
+[`data/cv.yaml`](data/cv.yaml) (bilingual), then run `make gen` to
+regenerate the committed section files and `make check` to validate the
+schema. See [`data/README.md`](data/README.md). Do not hand-edit the
+generated `cv-*.tex` / `personal-info.tex` files; they carry a
+"do not edit by hand" banner and are overwritten on regeneration.
 
 ## Adding a new CV variant
 
@@ -85,12 +138,17 @@ The workflow is fully data-driven — there is no list of variants to update.
 To add a third CV:
 
 1. `mkdir cvs/<name>`
-2. Drop exactly one `*.tex` file with `\documentclass{...}` into it. Reference
-   shared assets normally (`\input{personal-info}`, `\usepackage{cv-sidebar}`,
+2. Drop exactly one `*.tex` file with `\documentclass{...}` into it. Build
+   the document scaffolding and `\input` the generated per-section files
+   (`\input{personal-info}`, `\input{cv-experience}`, …). Reference shared
+   assets normally (`\usepackage{cv-sidebar}`,
    `\includegraphics{images/photo.jpg}`).
 3. `echo <engine> > cvs/<name>/.engine` — one of `latexmk`, `pdflatex`,
    `xelatex`, `latex-chain`. If `.engine` is missing, `latexmk` is used.
-4. Open a pull request (`main` is protected; direct pushes are rejected).
+4. Add the variant (and its `cv/parse` style) to the `generate` job in
+   `.github/workflows/build.yml` and to the `VARIANTS` list in
+   `scripts/gen.sh`, then run `make gen` and commit the generated files.
+5. Open a pull request (`main` is protected; direct pushes are rejected).
    CI picks the new variant up automatically and uploads
    `<repo>-<name>-pdf` as a workflow artifact for review. After the merge,
    the PDF is also included in the next versioned release.
@@ -163,23 +221,41 @@ The logic is layered across three repositories:
 
 | Layer | Where | Role |
 | --- | --- | --- |
-| Caller `build.yml` | this repo | Triggers, concurrency, permissions, repo-specific inputs |
-| Reusable workflow `latex-build-cv.yml` | [`stklug84/github-workflows`](https://github.com/stklug84/github-workflows) (SHA-pinned, `v1.5.0`) | Jobs: `discover` → `build` (matrix) → `package` → `release` |
+| Caller `build.yml` | this repo | Triggers, concurrency, permissions, the `generate` job (cv/parse), repo-specific inputs |
+| Composite action `cv/parse` | [`stklug84/actions`](https://github.com/stklug84/actions) (`v2`) | Renders `data/cv.yaml` → per-section `.tex` for each variant style |
+| Reusable workflow `latex-build-cv.yml` | [`stklug84/github-workflows`](https://github.com/stklug84/github-workflows) (SHA-pinned, `v1.6.0`) | Jobs: `discover` → `build` (matrix, with prebuild download) → `package` → `release` |
 | Composite actions `texlive/*` | [`stklug84/actions`](https://github.com/stklug84/actions) (SHA-pinned, `v1.3.0`) | Behavior: `discover-variants`, `build-pdf`, `upload-build-logs` |
 
-The caller in this repo is intentionally thin:
+The caller in this repo runs a `generate` job (cv/parse per variant,
+uploaded as the `cv-generated-tex` artifact) and a thin `build` job that
+hands that artifact to the reusable workflow as a *prebuild* (downloaded at
+repo root before the TeX Live build):
 
 ```yaml
 jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: stklug84/actions/cv/parse@v2     # plain  -> cvs/photo-2page
+        with: {source: data/cv.yaml, mode: latex, style: plain,  lang: de, out-dir: cvs/photo-2page}
+      - uses: stklug84/actions/cv/parse@v2     # sidebar -> cvs/sidebar
+        with: {source: data/cv.yaml, mode: latex, style: sidebar, lang: de, out-dir: cvs/sidebar}
+      - uses: actions/upload-artifact@v4
+        with: {name: cv-generated-tex, path: cvs/**/*.tex, if-no-files-found: error}
+
   build:
+    needs: generate
     # contents: write is consumed only by the called workflow's release
     # job (publishes versioned releases on pushes to main).
     permissions:
       contents: write
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.5.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.6.0
     with:
       texinputs: ".:../..:../../styles:../../images:"
       local: ${{ inputs.local }}
+      prebuild-artifact: "cv-generated-tex"   # extracted at repo root before build
+      prebuild-into: "."
       release: "true"
       release-keep: "10"
 ```

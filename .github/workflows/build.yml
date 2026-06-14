@@ -26,23 +26,72 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Render the per-section .tex files for every variant from the single
+  # source of truth (data/cv.yaml) via the cv/parse composite action,
+  # then upload them as one artifact laid out under cvs/<variant>/. The
+  # reusable workflow downloads this artifact at repo root (prebuild),
+  # so every file must already sit under its variant directory.
+  generate:
+    name: Generate section files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # plain style -> cvs/photo-2page/ (pdflatex variant). Emits
+      # cv-*.tex + personal-info.tex for the plain longtable layout.
+      - name: Generate plain (photo-2page)
+        uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
+        with:
+          source: data/cv.yaml
+          mode: latex
+          style: plain
+          lang: de
+          out-dir: cvs/photo-2page
+
+      # sidebar style -> cvs/sidebar/ (xelatex variant). Emits
+      # cv-*.tex + personal-info.tex using \cventry/\cvskillgroup/... .
+      - name: Generate sidebar
+        uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
+        with:
+          source: data/cv.yaml
+          mode: latex
+          style: sidebar
+          lang: de
+          out-dir: cvs/sidebar
+
+      - name: Upload generated section files
+        uses: actions/upload-artifact@v4
+        with:
+          name: cv-generated-tex
+          path: cvs/**/*.tex
+          if-no-files-found: error
+
   # All build logic (variant discovery, matrix build, packaging, release
   # publishing) lives in the central latex-build-cv reusable workflow.
   # The TeX Live container image is still resolved from this repo's
   # digest-pinned .github/docker/texlive/Dockerfile (kept current by
-  # Dependabot).
+  # Dependabot). The reusable workflow downloads the generate job's
+  # artifact at repo root (prebuild) before the TeX Live build, so the
+  # freshly generated section files override the committed fallback.
   build:
+    needs: generate
     # contents: write is consumed only by the called workflow's release
     # job (publishes versioned releases on pushes to main); all other
     # jobs read the repo and upload artifacts.
     permissions:
       contents: write
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@3e01e55d5872661ab769b02fb7203e224bb24591  # v1.5.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@ef8ccb7f951405e721fa4891008c45c47eb8dcb8  # v1.6.0
     with:
-      # Resolve repo-root shared assets (personal-info.tex, styles/*.sty,
-      # images/) from inside cvs/<name>/.
+      # Resolve repo-root shared assets (styles/*.sty, images/) from
+      # inside cvs/<name>/.
       texinputs: ".:../..:../../styles:../../images:"
       local: ${{ inputs.local }}
+      # Download the generate job's section files at repo root before
+      # the build, so cvs/<variant>/{cv-*.tex,personal-info.tex} reflect
+      # data/cv.yaml rather than the committed fallback snapshot.
+      prebuild-artifact: "cv-generated-tex"
+      prebuild-into: "."
       # Publish the built PDFs as a versioned release (v<date>-r<run#>)
       # on every push to main; keep only the 10 newest releases.
       release: "true"

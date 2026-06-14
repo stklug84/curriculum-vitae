@@ -10,6 +10,7 @@
 #     - yamllint     : all YAML files (.yamllint.yml)
 #     - markdownlint : all Markdown files (.markdownlint.yaml)
 #     - hadolint     : .github/docker/texlive/Dockerfile
+#     - cv-schema    : validate data/cv.yaml against the cv/parse schema
 # ---
 name: Lint
 
@@ -86,3 +87,21 @@ jobs:
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5  # v3.3.0
         with:
           dockerfile: .github/docker/texlive/Dockerfile
+
+  cv-schema:
+    name: cv-schema (data/cv.yaml)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      # Validate the single source of truth against the cv/parse schema
+      # contract; --check writes nothing and fails the PR on the first
+      # violation with a clear message.
+      - name: Validate data/cv.yaml
+        uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
+        with:
+          source: data/cv.yaml
+          check: "true"
+          # out-dir is required by the action but unused in --check mode.
+          out-dir: .
