@@ -5,14 +5,15 @@
 # date: 2026-06-22
 # keywords: [infrastructure, latex, ci]
 # comment: |
-#   Builds the CV on pull requests and pushes to main:
-#     - generate : render per-section .tex files for every variant from
-#                  the single source of truth (data/cv.yml) via the
-#                  cv/parse composite action, uploaded as one artifact.
-#     - build    : delegate to the central latex-build-cv reusable
-#                  workflow (variant discovery, matrix build, packaging
-#                  and versioned release on pushes to main). The TeX Live
-#                  image is resolved from the digest-pinned Dockerfile.
+#   Builds the CV on pull requests and pushes to main by delegating
+#   entirely to the central latex-build-cv reusable workflow. With
+#   generate: 'true' that workflow first expands the build matrix in
+#   data/variants.yml into the variant tree (via the
+#   stklug84/actions/cv/generate composite action), then discovers,
+#   matrix-builds, packages and (on pushes to main) publishes a versioned
+#   release. The TeX Live image is resolved from the repo's digest-pinned
+#   Dockerfile. All generation and build logic lives in the reusable
+#   workflow / composite actions; this caller is pure configuration.
 # ---
 name: Build Document
 
@@ -41,119 +42,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Render the per-section .tex files for every variant from the single
-  # source of truth (data/cv.yml) via the cv/parse composite action,
-  # then upload them as one artifact laid out under cvs/<variant>/. The
-  # reusable workflow downloads this artifact at repo root (prebuild),
-  # so every file must already sit under its variant directory.
-  generate:
-    name: Generate section files
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      # plain style -> cvs/photo-2page/ (pdflatex variant). Emits
-      # cv-*.tex + personal-info.tex for the plain longtable layout.
-      - name: Generate plain (photo-2page)
-        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-        with:
-          source: data/cv.yml
-          mode: latex
-          style: plain
-          lang: de
-          out-dir: cvs/photo-2page
-
-      # sidebar style -> cvs/sidebar/ (xelatex variant). Emits
-      # cv-*.tex + personal-info.tex using \cventry/\cvskillgroup/... .
-      - name: Generate sidebar
-        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-        with:
-          source: data/cv.yml
-          mode: latex
-          style: sidebar
-          lang: de
-          out-dir: cvs/sidebar
-
-      # databricks-en -> cvs/databricks-en/ (xelatex variant). English
-      # render of the Databricks-tuned CV (sidebar style).
-      - name: Generate Databricks (EN)
-        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-        with:
-          source: data/cv.yml
-          mode: latex
-          style: sidebar
-          lang: en
-          out-dir: cvs/databricks-en
-
-      # databricks-de -> cvs/databricks-de/ (xelatex variant). German
-      # render of the Databricks-tuned CV (sidebar style).
-      - name: Generate Databricks (DE)
-        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-        with:
-          source: data/cv.yml
-          mode: latex
-          style: sidebar
-          lang: de
-          out-dir: cvs/databricks-de
-
-      # Example-CV showcase variants (cvs/{pw,dh,vs,fs,ia}/). These build
-      # today from their committed fallback section bodies, so the steps
-      # below are STAGED and commented out: they require new cv/parse
-      # --style emitters in stklug84/actions (pw/dh/vs alias the sidebar
-      # emitter; fs/ia get their own templates). Uncomment once cv/parse
-      # ships those styles and bump the pin below to the release that adds
-      # them (mirrors the existing v2.3.0 SHA-pin convention). See README
-      # "Known caveats and future improvements".
-      # - name: Generate  (pw)   # PENDING cv/parse style support
-      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-      #   with: {source: data/cv.yml, mode: latex, style: pw, lang: de, out-dir: cvs/pw}
-      # - name: Generate  (dh)     # PENDING cv/parse style support
-      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-      #   with: {source: data/cv.yml, mode: latex, style: dh, lang: de, out-dir: cvs/dh}
-      # - name: Generate  (vs) # PENDING cv/parse style support
-      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-      #   with: {source: data/cv.yml, mode: latex, style: vs, lang: en, out-dir: cvs/vs}
-      # - name: Generate  (fs)  # PENDING cv/parse style support
-      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-      #   with: {source: data/cv.yml, mode: latex, style: fs, lang: en, out-dir: cvs/fs}
-      # - name: Generate  (ia)    # PENDING cv/parse style support
-      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
-      #   with: {source: data/cv.yml, mode: latex, style: ia, lang: de, out-dir: cvs/ia}
-
-      - name: Upload generated section files
-        uses: actions/upload-artifact@v7
-        with:
-          name: cv-generated-tex
-          path: cvs/**/*.tex
-          if-no-files-found: error
-
-  # All build logic (variant discovery, matrix build, packaging, release
-  # publishing) lives in the central latex-build-cv reusable workflow.
-  # The TeX Live container image is still resolved from this repo's
-  # digest-pinned .github/docker/texlive/Dockerfile (kept current by
-  # Dependabot). The reusable workflow downloads the generate job's
-  # artifact at repo root (prebuild) before the TeX Live build, so the
-  # freshly generated section files override the committed fallback.
+  # The reusable workflow does everything: with generate: 'true' it first
+  # expands the build matrix in data/variants.yml into the variant tree
+  # (cvs/<yaml>-<lang>/<style>/sklug-cv.tex + .engine + cv/parse section
+  # bodies) via the stklug84/actions/cv/generate composite action, then
+  # discovers, matrix-builds, packages and releases. The TeX Live image
+  # is resolved from this repo's digest-pinned
+  # .github/docker/texlive/Dockerfile (kept current by Dependabot).
+  #
+  # The matrix lives entirely in data/variants.yml: adding or changing a
+  # variant (any yaml x style x lang) needs no edit to this workflow.
   build:
-    needs: generate
     # contents: write is consumed only by the called workflow's release
     # job (publishes versioned releases on pushes to main); all other
     # jobs read the repo and upload artifacts.
     permissions:
       contents: write
+    # TODO(pin): this points at the github-workflows release that adds the
+    # built-in `generate` job (generate input + cv/generate). That release
+    # does not exist yet. After the github-workflows PR is merged and
+    # tagged, SHA-pin this to the new release (repo convention pins by
+    # commit SHA with a trailing `# vX.Y.Z` comment), e.g.
+    #   ...latex-build-cv.yml@<sha>  # v1.8.0
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@50a6d4b1ab8a8a817e552c1f53901661368673e5  # v1.7.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@v1.8.0
     with:
+      # Render the full variant tree before building, straight from the
+      # build matrix in data/variants.yml (defaults: templates/, data/).
+      generate: "true"
       # Resolve repo-root shared assets (styles/*.sty, images/) from
-      # inside cvs/<name>/.
-      texinputs: ".:../..:../../styles:../../images:"
+      # inside cvs/<yaml>-<lang>/<style>/ (three levels below the repo
+      # root, hence ../../..).
+      texinputs: ".:../../..:../../../styles:../../../images:"
       local: ${{ inputs.local }}
-      # Download the generate job's section files at repo root before
-      # the build, so cvs/<variant>/{cv-*.tex,personal-info.tex} reflect
-      # data/cv.yml rather than the committed fallback snapshot.
-      prebuild-artifact: "cv-generated-tex"
-      prebuild-into: "."
       # Publish the built PDFs as a versioned release (v<date>-r<run#>)
       # on every push to main; keep only the 10 newest releases.
       release: "true"

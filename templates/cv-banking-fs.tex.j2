@@ -1,0 +1,73 @@
+% =====================================================================
+% sklug-cv.tex  —  GENERATED, DO NOT EDIT BY HAND.
+% Rendered by stklug84/actions/cv/generate from templates/{{ style }}.tex.j2
+%   source : data/{{ yaml_name }}.yml
+%   style  : {{ style }}   (engine: {{ engine }})
+%   lang   : {{ lang }}
+% Edit the template or data/variants.yml and regenerate instead.
+% =====================================================================
+\documentclass[a4paper,10pt]{article}
+\synctex=1
+
+\input{personal-info}
+\usepackage{{ '{' }}{{ style }}{{ '}' }}
+% Language: this style loads fontspec (XeLaTeX) but no language package.
+% polyglossia gives correct {{ polyglossia }} hyphenation/typography.
+\usepackage{polyglossia}
+\setdefaultlanguage{{ '{' }}{{ polyglossia }}{{ '}' }}
+
+\hypersetup{
+  pdftitle={\cvtitle},
+  pdfauthor={\cvpdfauthor},
+  pdfsubject={\cvsubject}
+}
+
+% Footer name (style defaults to a demo name; bind it to the data).
+\cvfootername{\cvdisplayname}
+
+% Role line and profile paragraph. cv/parse emits \cvroleline / \cvprofile
+% into personal-info.tex from meta.title / meta.summary. Provide safe
+% fallbacks so the document also compiles against an older committed
+% personal-info.tex that predates those macros.
+\providecommand{\cvroleline}{}
+\providecommand{\cvprofile}{}
+
+\begin{document}
+
+\cvtopbanner
+
+% --- Centered header -------------------------------------------------
+\cvname{\cvdisplayname}{}
+
+\cvsubtitle{\cvroleline}
+
+\cvaddressline{\cvaddressone, \cvaddresstwo, \cvaddressthree}
+
+\cvcontact{\faPhone}{\cvphone}
+\cvcontact{\faEnvelope}{\href{\cvemailurl}{\cvemail}}
+\cvcontact{\faLinkedin}{\href{\cvlinkedinurl}{\cvlinkedinlabel}}
+\cvcontact{\faGithub}{\href{\cvgithuburl}{\cvgithublabel}}
+
+% --- Summary ---------------------------------------------------------
+\cvsummary{\cvprofile}
+
+% --- Sections --------------------------------------------------------
+\cvsection{{ '{' }}{{ label_experience }}{{ '}' }}
+\input{cv-experience}
+
+\cvsection{{ '{' }}{{ label_education }}{{ '}' }}
+\input{cv-education}
+
+\cvsection{{ '{' }}{{ label_skills }}{{ '}' }}
+\input{cv-skills}
+
+\cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
+\input{cv-languages}
+
+\cvsection{{ '{' }}{{ label_certifications }}{{ '}' }}
+\input{cv-certifications}
+
+\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
+\input{cv-conferences}
+
+\end{document}

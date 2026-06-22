@@ -6,95 +6,110 @@
 [![Dependabot Updates](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/stklug84/curriculum-vitae/actions/workflows/dependabot/dependabot-updates)
 [![Made with LaTeX](https://img.shields.io/badge/Made%20with-LaTeX-008080.svg)](https://www.latex-project.org/)
 
-A multi-variant LaTeX CV repository. Every directory under `cvs/<name>/`
-contains exactly one CV main document plus a hidden `.engine` file that
-declares the LaTeX engine to use. CI auto-discovers every variant and builds
-them in parallel inside a TeX Live container. Any build can be reproduced
-locally with the host TeX Live install or by replaying the workflow with
+A multi-variant, **fully data-driven** LaTeX CV repository. A single build
+matrix in [`data/variants.yml`](data/variants.yml) declares every
+`(source YAML × style × language)` combination to produce. CI expands that
+matrix into a tree of variants, then discovers and builds them in parallel
+inside a digest-pinned TeX Live container. Any build can be reproduced
+locally with a host TeX Live install or by replaying the workflow with
 [`nektos/act`](https://github.com/nektos/act) via the GitHub CLI.
 
-## Single source of truth: `data/cv.yml`
+Nothing about which style maps to which language or source YAML is
+hardcoded anywhere. Add a `{ style, lang }` line to the matrix and the new
+variant is generated, discovered and built — no code or workflow change.
 
-All CV content lives in one canonical, bilingual (`de`/`en`) file:
-[`data/cv.yml`](data/cv.yml). The per-section LaTeX files each variant
-`\input`s are **generated** from it by the
-[`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions) action
-(major alias `v2`). See [`data/README.md`](data/README.md) for the full
-schema, the `targets` contract, and the generate→build flow.
-
-The generated section files are also **committed** under each
-`cvs/<variant>/` as a local-build fallback (so the repo builds without
-running the action first). Regenerate them after editing `cv.yml`:
-
-```sh
-scripts/gen.sh           # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
-scripts/gen.sh --check   # validate data/cv.yml against the cv/parse schema
-```
-
-`scripts/gen.sh` expects a sibling checkout of the action at
-`../actions/cv/parse` (override with `ACTION_DIR` / `PARSE_PY`).
-
-Each variant main wraps the generated bodies in its own scaffolding. The
-generated files are:
+## How it fits together
 
 ```text
-cvs/<variant>/personal-info.tex     # \cv… macros (name, contact, paths)
-cvs/<variant>/cv-experience.tex
-cvs/<variant>/cv-education.tex
-cvs/<variant>/cv-conferences.tex
-cvs/<variant>/cv-skills.tex
-cvs/<variant>/cv-languages.tex
-cvs/<variant>/cv-interests.tex
-cvs/<variant>/cv-certifications.tex
+data/variants.yml      (the build matrix: styles × langs × cvs)
+data/cv-*.yml          (canonical bilingual CV sources)
+templates/<style>.tex.j2  (one Jinja2 main template per style)
+        │
+        ▼  stklug84/actions/cv/generate  (composite action, run in CI)
+cvs/<yaml>-<lang>/<style>/
+        ├── sklug-cv.tex        # leaf main, rendered from the template
+        ├── .engine             # pdflatex | xelatex (from the style registry)
+        ├── personal-info.tex   # cv/parse emitter
+        └── cv-*.tex            # cv/parse section bodies
+        │
+        ▼  latex-build-cv reusable workflow  (discover → build → package → release)
+cvs/<yaml>-<lang>/<style>/sklug-cv.pdf
 ```
 
-Today the repo ships four built variants:
+- **Sources** (`data/cv-*.yml`) hold the content, bilingual `de`/`en`.
+- **Templates** (`templates/<style>.tex.j2`) hold the per-style document
+  scaffolding; they `\input` the generated bodies and select the
+  language/encoding packages per engine.
+- **The matrix** (`data/variants.yml`) wires sources to styles and
+  languages. See [`data/README.md`](data/README.md) for the manifest and
+  schema in full.
+- **Generation** is the
+  [`stklug84/actions` `cv/generate`](https://github.com/stklug84/actions)
+  composite action; it renders each leaf main from its template and emits
+  the section bodies via the `cv/parse` emitter. The repo itself ships no
+  generator scripts.
 
-| Variant             | Folder                | Engine   | Style file                  |
-| ------------------- | --------------------- | -------- | --------------------------- |
-| Classic two-page    | `cvs/photo-2page/`    | pdflatex | `styles/cv-plain-style.sty` |
-| Sidebar two-column  | `cvs/sidebar/`        | xelatex  | `styles/cv-sidebar.sty`     |
-| Databricks (EN)     | `cvs/databricks-en/`  | xelatex  | `styles/cv-sidebar.sty`     |
-| Databricks (DE)     | `cvs/databricks-de/`  | xelatex  | `styles/cv-sidebar.sty`     |
+## Source CVs and styles
 
-The two Databricks variants render the same `data/cv.yml` in English and
-German respectively (sidebar style); `scripts/gen.sh` selects each
-variant's language via the `dir:style:lang` entry in its `VARIANTS` list.
+Two canonical sources live under `data/`, each rendered into several
+styles and languages:
 
-### Additional style files (derived from example CVs)
+| Source YAML | Focus | Variants today |
+| --- | --- | --- |
+| `data/cv-academics.yml` | Academic-leaning | plain (de) + 5 styles (en) |
+| `data/cv-databricks.yml` | Industry / Databricks | 5 styles (en) |
 
-Five further style files reproduce the visual language of the example CVs
-under `examples/`. Each follows the same public macro API as the sidebar
-style (`\cventry`, `\cvsection`, `\cvskillgroup`, `\cvlanguage`, …) so it
-consumes the generated per-section `.tex` bodies unchanged. Per US-CV
-conventions **none of these styles define a photo box.** Sidebar styles
-follow the `cv-sidebar-<initials>.sty` naming; single-column styles use a
-descriptive name ending in the example's initials.
+Styles are declared in `data/variants.yml`'s `styles` registry. Each maps
+to a TeX engine and a `cv/parse` body emitter (`plain` or the
+style-agnostic `sidebar`). Per US-CV conventions **none of these styles
+define a photo box** except the classic plain style.
 
-| Style file                  | Example          | Layout                                   |
-| --------------------------- | ---------------- | ---------------------------------------- |
-| `styles/cv-sidebar-pw.sty`  |    | Left sidebar (37/63), grayscale, dark banner, pill chips, 5-dot languages |
-| `styles/cv-sidebar-dh.sty`  |      | Left sidebar (35/65), green section banners, slate titles |
-| `styles/cv-sidebar-vs.sty`  |  | Right sidebar (≈57/37), Letter, accent blue + teal rules, donut chart |
-| `styles/cv-banking-fs.sty`  |   | Single column, centered header, two-tone red headings, footer |
-| `styles/cv-tagged-ia.sty`   |     | Single column, black tag headings, skill bars + bubbles, mono tech lists |
+| Style file | Engine | Example | Layout |
+| --- | --- | --- | --- |
+| `styles/cv-plain-style.sty` | pdflatex | — | Classic two-page, photo + signature, longtable layout |
+| `styles/cv-banking-fs.sty` | xelatex |  | Single column, centered header, two-tone red headings, footer |
+| `styles/cv-tagged-ia.sty` | xelatex |  | Single column, black tag headings, skill bars + bubbles, mono tech lists |
+| `styles/cv-sidebar-pw.sty` | xelatex |  | Left sidebar (37/63), grayscale, dark banner, pill chips, 5-dot languages |
+| `styles/cv-sidebar-dh.sty` | xelatex |  | Left sidebar (35/65), green section banners, slate titles |
+| `styles/cv-sidebar-vs.sty` | xelatex |  | Right sidebar (≈57/37), Letter, accent blue + teal rules, donut chart |
 
-The matching showcase variant directories — `cvs/{pw,dh,vs,fs,ia}/` — wire
-each style to the committed fallback section bodies so the build matrix
-auto-discovers and renders them. Driving these variants from `data/cv.yml`
-via `scripts/gen.sh` / the `generate` job is **planned and pending**
-`cv/parse` style-emitter support in
-[`stklug84/actions`](https://github.com/stklug84/actions) (the new
-`--style` values are staged but commented out; see
-[Known caveats](#known-caveats-and-future-improvements)).
+The example styles reproduce the visual language of the CVs under
+`examples/`. They all consume the same generated per-section bodies, so a
+single source YAML renders into every style unchanged.
+
+## The build matrix
+
+`data/variants.yml` is the single control plane. A condensed view of the
+current matrix:
+
+| Source | Style | Lang | Leaf directory | Engine |
+| --- | --- | --- | --- | --- |
+| cv-academics | cv-plain-style | de | `cvs/cv-academics-de/cv-plain-style/` | pdflatex |
+| cv-academics | cv-banking-fs | en | `cvs/cv-academics-en/cv-banking-fs/` | xelatex |
+| cv-academics | cv-tagged-ia | en | `cvs/cv-academics-en/cv-tagged-ia/` | xelatex |
+| cv-academics | cv-sidebar-pw | en | `cvs/cv-academics-en/cv-sidebar-pw/` | xelatex |
+| cv-academics | cv-sidebar-dh | en | `cvs/cv-academics-en/cv-sidebar-dh/` | xelatex |
+| cv-academics | cv-sidebar-vs | en | `cvs/cv-academics-en/cv-sidebar-vs/` | xelatex |
+| cv-databricks | cv-banking-fs | en | `cvs/cv-databricks-en/cv-banking-fs/` | xelatex |
+| cv-databricks | cv-tagged-ia | en | `cvs/cv-databricks-en/cv-tagged-ia/` | xelatex |
+| cv-databricks | cv-sidebar-pw | en | `cvs/cv-databricks-en/cv-sidebar-pw/` | xelatex |
+| cv-databricks | cv-sidebar-dh | en | `cvs/cv-databricks-en/cv-sidebar-dh/` | xelatex |
+| cv-databricks | cv-sidebar-vs | en | `cvs/cv-databricks-en/cv-sidebar-vs/` | xelatex |
+
+The leaf main is always `sklug-cv.tex`. The directory scheme is
+`cvs/<yaml-without-extension>-<lang>/<style>/`. Languages and their
+`babel` / `polyglossia` tokens plus localized `label_*` headings come from
+the manifest's `langs` registry, so any `{ style, lang }` pairing — even
+ones not currently listed — renders with the correct language packages and
+headings.
 
 ## Downloading the PDFs
 
 Every merge to `main` publishes the built PDFs as a versioned GitHub
 release tagged `v<YYYY.MM.DD>-r<run-number>` (see the
 [Releases](https://github.com/stklug84/curriculum-vitae/releases) page).
-Release assets never expire; only the 10 newest releases are kept
-(older ones are pruned automatically, including their tags).
+Release assets never expire; only the 10 newest releases are kept (older
+ones are pruned automatically, including their tags).
 
 Grab the current PDFs with the GitHub CLI — without a tag this always
 resolves to the latest release (`--pattern` is required in that case):
@@ -117,50 +132,50 @@ PR builds additionally upload short-lived workflow artifacts for review
 ```text
 .
 ├── data/
-│   ├── cv.yml                    # Single source of truth (bilingual de/en)
-│   └── README.md                 # Schema + targets contract
+│   ├── variants.yml              # Build matrix: styles × langs × cvs
+│   ├── cv-academics.yml          # Canonical source (bilingual de/en)
+│   ├── cv-databricks.yml         # Canonical source (bilingual de/en)
+│   └── README.md                 # Manifest + schema + targets contract
+├── templates/
+│   ├── cv-plain-style.tex.j2     # Per-style leaf main templates (Jinja2)
+│   ├── cv-banking-fs.tex.j2
+│   ├── cv-tagged-ia.tex.j2
+│   ├── cv-sidebar-pw.tex.j2
+│   ├── cv-sidebar-dh.tex.j2
+│   └── cv-sidebar-vs.tex.j2
 ├── styles/
 │   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
-│   ├── cv-sidebar.sty            # Sidebar CV style (xelatex, FiraSans)
+│   ├── cv-banking-fs.sty         #  single column (banking)
+│   ├── cv-tagged-ia.sty          #  single column (black tags)
 │   ├── cv-sidebar-pw.sty         #  sidebar (grayscale, no photo)
 │   ├── cv-sidebar-dh.sty         #  sidebar (green banners, no photo)
-│   ├── cv-sidebar-vs.sty         #  right sidebar (blue, donut)
-│   ├── cv-banking-fs.sty         #  single column (banking)
-│   └── cv-tagged-ia.sty          #  single column (black tags)
+│   └── cv-sidebar-vs.sty         #  right sidebar (blue, donut)
 ├── images/                       # Shared assets (photo, signature)
-├── cvs/
-│   ├── photo-2page/
-│   │   ├── lebenslauf-photo-2page.tex  # Scaffolding; \input generated bodies
-│   │   ├── personal-info.tex     # Generated (committed fallback)
-│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
-│   │   └── .engine               # contents: pdflatex
-│   ├── sidebar/
-│   │   ├── lebenslauf-sidebar.tex
-│   │   ├── personal-info.tex     # Generated (committed fallback)
-│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
-│   │   └── .engine               # contents: xelatex
-│   ├── databricks-en/            # Databricks-tuned CV, English (sidebar, xelatex)
-│   │   ├── lebenslauf-databricks.tex
-│   │   ├── personal-info.tex     # Generated (committed fallback)
-│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
-│   │   └── .engine               # contents: xelatex
-│   ├── databricks-de/            # Databricks-tuned CV, German (sidebar, xelatex)
-│   │   ├── lebenslauf-databricks.tex
-│   │   ├── personal-info.tex     # Generated (committed fallback)
-│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
-│   │   └── .engine               # contents: xelatex
-│   ├── pw/                       #  showcase (cv-sidebar-pw, xelatex)
-│   ├── dh/                       #  showcase (cv-sidebar-dh, xelatex)
-│   ├── vs/                       #  showcase (cv-sidebar-vs, xelatex)
-│   ├── fs/                       #  showcase (cv-banking-fs, xelatex)
-│   └── ia/                       #  showcase (cv-tagged-ia, xelatex)
-├── scripts/gen.sh                # Regenerate section files from data/cv.yml (--check validates)
+├── cvs/                          # Generated variant tree (committed fallback)
+│   ├── cv-academics-de/
+│   │   └── cv-plain-style/
+│   │       ├── sklug-cv.tex      # Leaf main (generated from the template)
+│   │       ├── personal-info.tex # Generated (cv/parse)
+│   │       ├── cv-*.tex          # Generated section bodies (cv/parse)
+│   │       └── .engine           # contents: pdflatex
+│   ├── cv-academics-en/
+│   │   ├── cv-banking-fs/        # sklug-cv.tex + bodies + .engine (xelatex)
+│   │   ├── cv-tagged-ia/
+│   │   ├── cv-sidebar-pw/
+│   │   ├── cv-sidebar-dh/
+│   │   └── cv-sidebar-vs/
+│   └── cv-databricks-en/
+│       ├── cv-banking-fs/
+│       ├── cv-tagged-ia/
+│       ├── cv-sidebar-pw/
+│       ├── cv-sidebar-dh/
+│       └── cv-sidebar-vs/
 ├── .github/
 │   ├── CODEOWNERS                # Default reviewer: @stklug84
 │   ├── dependabot.yml            # Actions + TeX Live digest updates
 │   ├── docker/texlive/Dockerfile # Digest pin for the TeX Live image
 │   └── workflows/
-│       ├── build.yml             # generate (cv/parse) -> latex-build-cv (below)
+│       ├── build.yml             # Thin caller -> latex-build-cv (generate + build)
 │       ├── codeql.yml            # CodeQL (actions language)
 │       └── lint.yml              # actionlint/yamllint/markdownlint/hadolint/cv-schema
 ├── .markdownlint.yml             # Markdown lint rules
@@ -168,77 +183,96 @@ PR builds additionally upload short-lived workflow artifacts for review
 └── CONTRIBUTING.md               # Conventions and PR checklist
 ```
 
-Shared assets (`images/` and the `*.sty` files in `styles/`) live at the
-repo root and are resolved from inside each variant directory via
-`TEXINPUTS=.:../..:../../styles:../../images:`. Each variant's
-`personal-info.tex` and `cv-*.tex` are generated per variant (and resolved
-first via the leading `.` in `TEXINPUTS`). That setting is applied
-automatically by the workflow and is the only thing you need locally too.
+Each leaf sits **three** directories below the repo root
+(`cvs/<yaml>-<lang>/<style>/`). Shared assets (`images/` and the `*.sty`
+files in `styles/`) live at the repo root and are resolved from inside each
+leaf via
+
+```text
+TEXINPUTS=.:../../..:../../../styles:../../../images:
+```
+
+The leading `.` resolves each leaf's own generated `personal-info.tex` and
+`cv-*.tex` first. The workflow applies this setting automatically; use the
+same value for local builds.
 
 ## Editing CV content
 
-Content is **not** edited in the `.tex` files — edit
-[`data/cv.yml`](data/cv.yml) (bilingual), then run `scripts/gen.sh` to
-regenerate the committed section files and `scripts/gen.sh --check` to
-validate the schema. See [`data/README.md`](data/README.md). Do not hand-edit the
-generated `cv-*.tex` / `personal-info.tex` files; they carry a
-"do not edit by hand" banner and are overwritten on regeneration.
+Content is **not** edited in the `.tex` files — edit the canonical sources
+[`data/cv-academics.yml`](data/cv-academics.yml) and
+[`data/cv-databricks.yml`](data/cv-databricks.yml) (bilingual). CI
+regenerates the whole `cvs/` tree on every build. See
+[`data/README.md`](data/README.md) for the schema and the `targets`
+contract. Do not hand-edit the generated `sklug-cv.tex` / `cv-*.tex` /
+`personal-info.tex` files; they carry a "do not edit by hand" banner and
+are overwritten on regeneration.
+
+To change a variant's **scaffolding** (not its content), edit the matching
+`templates/<style>.tex.j2`. To change the **matrix** (which sources render
+in which style/language), edit `data/variants.yml`.
 
 ## Adding a new CV variant
 
-The workflow is fully data-driven — there is no list of variants to update.
-To add a third CV:
+Because the build is matrix-driven, adding a variant is a one-line change:
 
-1. `mkdir cvs/<name>`
-2. Drop exactly one `*.tex` file with `\documentclass{...}` into it. Build
-   the document scaffolding and `\input` the generated per-section files
-   (`\input{personal-info}`, `\input{cv-experience}`, …). Reference shared
-   assets normally (`\usepackage{cv-sidebar}`,
-   `\includegraphics{images/photo.jpg}`).
-3. `echo <engine> > cvs/<name>/.engine` — one of `latexmk`, `pdflatex`,
-   `xelatex`, `latex-chain`. If `.engine` is missing, `latexmk` is used.
-4. Add the variant (and its `cv/parse` style) to the `generate` job in
-   `.github/workflows/build.yml` and to the `VARIANTS` list in
-   `scripts/gen.sh`, then run `scripts/gen.sh` and commit the generated files.
-5. Open a pull request (`main` is protected; direct pushes are rejected).
-   CI picks the new variant up automatically and uploads
-   `<repo>-<name>-pdf` as a workflow artifact for review. After the merge,
-   the PDF is also included in the next versioned release.
+1. Open [`data/variants.yml`](data/variants.yml).
+2. Under the desired `cvs.<yaml>` (e.g. `cv-academics`), add an entry:
+
+   ```yaml
+   - { style: cv-sidebar-pw, lang: de }
+   ```
+
+   The `style` must exist in the `styles` registry and the `lang` in the
+   `langs` registry. That is the only edit required.
+3. Open a pull request (`main` is protected; direct pushes are rejected).
+   CI regenerates the tree, discovers the new leaf
+   (`cvs/<yaml>-<lang>/<style>/`), builds it, and uploads its PDF artifact
+   for review. After merge it is included in the next versioned release.
+
+To add a **new style**: author `styles/<style>.sty` and
+`templates/<style>.tex.j2`, add a `styles.<style>` entry (engine +
+`parse_style`), then reference it from the matrix. To add a **new
+language**: add a `langs.<lang>` block (babel/polyglossia tokens +
+`label_*` headings), then reference it.
 
 ## Building locally
 
 ### Direct (host TeX Live)
 
-`cd` into the variant directory and invoke the engine matching its `.engine`
-file. The `TEXINPUTS` setting lets the main `.tex` resolve `personal-info.tex`,
+`cd` into a leaf directory and invoke the engine from its `.engine` file.
+The `TEXINPUTS` setting lets the leaf main resolve its generated bodies,
 the shared `*.sty` files, and `images/` from the repo root.
 
 ```sh
 # Classic two-page CV (pdflatex)
-cd cvs/photo-2page
-TEXINPUTS=.:../..:../../styles:../../images: pdflatex -interaction=nonstopmode -halt-on-error lebenslauf-photo-2page.tex
+cd cvs/cv-academics-de/cv-plain-style
+TEXINPUTS=.:../../..:../../../styles:../../../images: pdflatex -interaction=nonstopmode -halt-on-error sklug-cv.tex
 
-# Sidebar variant (xelatex)
-cd cvs/sidebar
-TEXINPUTS=.:../..:../../styles:../../images: xelatex -interaction=nonstopmode -halt-on-error lebenslauf-sidebar.tex
+# A sidebar variant (xelatex)
+cd cvs/cv-academics-en/cv-sidebar-pw
+TEXINPUTS=.:../../..:../../../styles:../../../images: xelatex -interaction=nonstopmode -halt-on-error sklug-cv.tex
 ```
 
 `latexmk` users can equivalently run:
 
 ```sh
-cd cvs/<variant>
-TEXINPUTS=.:../..:../../styles:../../images: latexmk -pdf -interaction=nonstopmode -halt-on-error -g <main>.tex
+cd cvs/<yaml>-<lang>/<style>
+TEXINPUTS=.:../../..:../../../styles:../../../images: latexmk -pdf -interaction=nonstopmode -halt-on-error -g sklug-cv.tex
 ```
 
-The PDF lands next to the source: `cvs/<variant>/<main>.pdf`.
+The PDF lands next to the source: `cvs/<yaml>-<lang>/<style>/sklug-cv.pdf`.
+
+The committed `cvs/` tree is the local source of truth — it is the same
+tree CI generates, so local builds work without running any generator.
 
 ### Via the CI workflow with `gh act`
 
 This replays the exact CI logic on your machine inside the digest-pinned
 TeX Live container, so you do not need TeX Live installed on the host.
-`act` fetches the remote reusable workflow and the composite actions
-(both repositories are public — network access required, no token) and
-builds the **full matrix** — every CV variant in one run.
+`act` fetches the remote reusable workflow and the composite actions (all
+repositories are public — network access required, no token) and builds
+the **full matrix** — every CV variant in one run, regenerating the tree
+first.
 
 ```sh
 gh act workflow_dispatch -W .github/workflows/build.yml \
@@ -248,72 +282,58 @@ gh act workflow_dispatch -W .github/workflows/build.yml \
 
 Two flags matter (verified with act 0.2.89):
 
-- `-P ubuntu-latest=catthehacker/ubuntu:act-latest` — act's default
-  micro image (`node:16-buster-slim`) lacks `jq`, which the `discover`
-  job needs; the medium runner image matches GitHub's toolset.
-- On Apple Silicon add `--container-architecture linux/arm64` if the
-  TeX Live image was previously pulled as arm64 — act defaults to
-  amd64 and the Docker daemon refuses a digest whose local platform
-  differs.
+- `-P ubuntu-latest=catthehacker/ubuntu:act-latest` — act's default micro
+  image (`node:16-buster-slim`) lacks `jq`, which the `discover` job needs;
+  the medium runner image matches GitHub's toolset.
+- On Apple Silicon add `--container-architecture linux/arm64` if the TeX
+  Live image was previously pulled as arm64 — act defaults to amd64 and the
+  Docker daemon refuses a digest whose local platform differs.
 
 `act` exports `ACT=true` automatically, so the workflow also auto-detects
-local mode even if you omit `--input local=true`. In local mode the PDFs land
-in their variant folders via the bind mount; the upload, package, and
+local mode even if you omit `--input local=true`. In local mode the PDFs
+land in their leaf folders via the bind mount; the upload, package, and
 release jobs are skipped.
 
 ## CI workflow explained
 
-CI turns every CV variant under `cvs/*/` into a PDF on every pull
-request, on every push to `main` (publishing a versioned release), and
-on demand via the Actions UI. It is intentionally generic: it
-auto-discovers what to build, picks the right engine per variant from
-each `.engine` dotfile, and runs the legs in parallel.
+CI turns every CV variant into a PDF on every pull request, on every push
+to `main` (publishing a versioned release), and on demand via the Actions
+UI. It is intentionally generic: it regenerates the variant tree from the
+matrix, auto-discovers what to build, picks the right engine per variant
+from each `.engine` dotfile, and runs the legs in parallel.
 
 The logic is layered across three repositories:
 
 | Layer | Where | Role |
 | --- | --- | --- |
-| Caller `build.yml` | this repo | Triggers, concurrency, permissions, the `generate` job (cv/parse), repo-specific inputs |
-| Composite action `cv/parse` | [`stklug84/actions`](https://github.com/stklug84/actions) (`v2`) | Renders `data/cv.yml` → per-section `.tex` for each variant style |
-| Reusable workflow `latex-build-cv.yml` | [`stklug84/github-workflows`](https://github.com/stklug84/github-workflows) (SHA-pinned, `v1.6.0`) | Jobs: `discover` → `build` (matrix, with prebuild download) → `package` → `release` |
-| Composite actions `texlive/*` | [`stklug84/actions`](https://github.com/stklug84/actions) (SHA-pinned, `v1.3.0`) | Behavior: `discover-variants`, `build-pdf`, `upload-build-logs` |
+| Caller `build.yml` | this repo | Triggers, concurrency, permissions, repo-specific inputs — a single `uses:` block |
+| Reusable workflow `latex-build-cv.yml` | [`stklug84/github-workflows`](https://github.com/stklug84/github-workflows) (SHA-pinned) | Jobs: `generate` → `discover` → `build` (matrix) → `package` → `release` |
+| Composite action `cv/generate` | [`stklug84/actions`](https://github.com/stklug84/actions) (`v2`) | Expands `data/variants.yml` into the variant tree (templates + `cv/parse`) |
+| Composite action `cv/parse` | [`stklug84/actions`](https://github.com/stklug84/actions) (`v2`) | Emits the per-section `.tex` bodies + `personal-info.tex` from a source YAML |
+| Composite actions `texlive/*` | [`stklug84/actions`](https://github.com/stklug84/actions) (SHA-pinned) | Behavior: `discover-variants`, `build-pdf`, `upload-build-logs` |
 
-The caller in this repo runs a `generate` job (cv/parse per variant,
-uploaded as the `cv-generated-tex` artifact) and a thin `build` job that
-hands that artifact to the reusable workflow as a *prebuild* (downloaded at
-repo root before the TeX Live build):
+All generation and build logic lives in the reusable workflow and the
+composite actions. The caller in this repo is **pure configuration** — one
+job, one `uses:`:
 
 ```yaml
 jobs:
-  generate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: stklug84/actions/cv/parse@v2     # plain  -> cvs/photo-2page
-        with: {source: data/cv.yml, mode: latex, style: plain,  lang: de, out-dir: cvs/photo-2page}
-      - uses: stklug84/actions/cv/parse@v2     # sidebar -> cvs/sidebar
-        with: {source: data/cv.yml, mode: latex, style: sidebar, lang: de, out-dir: cvs/sidebar}
-      - uses: actions/upload-artifact@v4
-        with: {name: cv-generated-tex, path: cvs/**/*.tex, if-no-files-found: error}
-
   build:
-    needs: generate
-    # contents: write is consumed only by the called workflow's release
-    # job (publishes versioned releases on pushes to main).
     permissions:
-      contents: write
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.6.0
+      contents: write          # consumed only by the release job
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.8.0
     with:
-      texinputs: ".:../..:../../styles:../../images:"
+      generate: "true"          # render the variant tree from data/variants.yml first
+      texinputs: ".:../../..:../../../styles:../../../images:"
       local: ${{ inputs.local }}
-      prebuild-artifact: "cv-generated-tex"   # extracted at repo root before build
-      prebuild-into: "."
-      release: "true"
+      release: "true"           # versioned release on pushes to main
       release-keep: "10"
 ```
 
-Everything below describes what the reusable workflow does with these
-inputs.
+With `generate: 'true'`, the reusable workflow's `generate` job checks out
+this repo, runs `cv/generate` (manifest `data/variants.yml`, templates
+`templates/`, sources `data/`), and hands the resulting tree to discovery
+and the build internally. The caller needs **no** generate job of its own.
 
 ### Triggers
 
@@ -334,11 +354,10 @@ on:
 
 - `pull_request` — builds every CV for every PR so reviewers can download
   the rendered PDFs as artifacts before merging.
-- `push` to `main` — builds every CV and publishes the PDFs as a
-  versioned GitHub release (see
-  [Downloading the PDFs](#downloading-the-pdfs)).
-- `workflow_dispatch` — lets you trigger a manual build. The only input is
-  `local`, used by `gh act` to skip artifact upload steps.
+- `push` to `main` — builds every CV and publishes the PDFs as a versioned
+  GitHub release (see [Downloading the PDFs](#downloading-the-pdfs)).
+- `workflow_dispatch` — manual build. The only input is `local`, used by
+  `gh act` to skip artifact upload steps.
 
 ### Inputs and environment
 
@@ -346,7 +365,8 @@ Inputs this repo passes to the reusable workflow:
 
 | Name | Value here | Purpose |
 | --- | --- | --- |
-| `texinputs` | `.:../..:../../styles:../../images:` | Lets each `cvs/<name>/<main>.tex` resolve shared assets at the repo root |
+| `generate` | `"true"` | Run the built-in generate job (expand the matrix into the variant tree) before discovery |
+| `texinputs` | `.:../../..:../../../styles:../../../images:` | Lets each leaf `sklug-cv.tex` resolve shared assets at the repo root (three levels up) |
 | `local` | `workflow_dispatch` input (default `"false"`) | Forces local mode for `gh act` (skips upload/package/release) |
 | `release` | `"true"` | Publish a versioned release on pushes to `main` |
 | `release-keep` | `"10"` | Keep only the 10 newest releases (older ones pruned, tags included) |
@@ -355,7 +375,11 @@ Reusable-workflow inputs left at their defaults:
 
 | Name | Default | Purpose |
 | --- | --- | --- |
-| `root` | `cvs` | Directory scanned for variants |
+| `root` | `cvs` | Directory scanned for variants (and written by generate) |
+| `generate-manifest` | `data/variants.yml` | Build matrix consumed by the generate job |
+| `generate-templates-dir` | `templates` | Per-style Jinja2 main templates |
+| `generate-data-dir` | `data` | Directory holding the source YAMLs |
+| `generate-main-name` | `sklug-cv` | Basename for every generated leaf main |
 | `default-engine` | `latexmk` | Engine for variants without an `.engine` file |
 | `texlive-dockerfile` | `.github/docker/texlive/Dockerfile` | Path to the TeX Live digest pin in this repo |
 | `runs-on` | `ubuntu-latest` | Runner label for all jobs |
@@ -368,7 +392,8 @@ Environment resolved inside the reusable workflow:
 | `ACT` | runner env (set by `nektos/act`) | Auto-detected to switch into local mode |
 
 The engine is **not** a workflow input. It is declared per variant via the
-`.engine` dotfile and picked up automatically by `discover`.
+`styles.<style>.engine` registry entry, written into each leaf's `.engine`
+dotfile by `cv/generate`, and picked up automatically by `discover`.
 
 ### Permissions, timeout, concurrency
 
@@ -388,14 +413,12 @@ concurrency:
 
 - **Two-level permissions** — the caller's workflow default is
   `contents: read`; only the calling job grants `contents: write`, which
-  the reusable workflow's `release` job needs to create releases and
-  tags. All other jobs read the repo and upload artifacts.
-- `concurrency` — if you push several commits to the same PR in quick
-  succession, in-flight builds for older commits are cancelled, saving
-  runner minutes.
+  the reusable workflow's `release` job needs to create releases and tags.
+  All other jobs read the repo and upload artifacts.
+- `concurrency` — pushing several commits to the same PR cancels in-flight
+  builds for older commits, saving runner minutes.
 - `timeout-minutes: 15` per matrix leg (set in the reusable workflow) —
-  guards against a runaway LaTeX loop or a broken package burning a
-  full hour of runner time.
+  guards against a runaway LaTeX loop.
 - `container` — every build step runs inside the official TeX Live image
   (digest-pinned via `.github/docker/texlive/Dockerfile`, resolved by the
   `discover` job), so `latexmk`, `pdflatex`, `xelatex`, `latex`, `dvips`,
@@ -406,22 +429,26 @@ concurrency:
 
 ```mermaid
 flowchart TD
-  A[Trigger: PR, push to main, or workflow_dispatch] --> B[discover]
-  B --> C[Scan cvs/*/ : read .engine + .tex]
+  A[Trigger: PR, push to main, or workflow_dispatch] --> G[generate]
+  G --> G1[cv/generate: expand data/variants.yml -> cvs/&lt;yaml&gt;-&lt;lang&gt;/&lt;style&gt;/]
+  G1 --> G2[Upload generated tree artifact]
+  G2 --> B[discover]
+  B --> B0[Download generated tree at repo root]
+  B0 --> C[Scan cvs/**/ : read .engine + .tex]
   C --> D[Emit matrix JSON]
-  D --> E[build matrix: one job per cvs/&lt;name&gt;/]
+  D --> E[build matrix: one job per leaf]
   E --> F{matrix.engine?}
-  F -- latexmk     --> G[latexmk -pdf]
   F -- pdflatex    --> H[pdflatex x3 + aux tools]
   F -- xelatex     --> I[xelatex x3 + aux tools]
+  F -- latexmk     --> Gx[latexmk -pdf]
   F -- latex-chain --> J[latex x3 -> dvips -> ps2pdf]
-  G --> K[Verify PDF]
-  H --> K
+  H --> K[Verify PDF]
   I --> K
+  Gx --> K
   J --> K
   K --> L{local?}
   L -- false --> M[Upload &lt;repo&gt;-&lt;name&gt;-pdf]
-  L -- true  --> N[PDF stays in cvs/&lt;name&gt;/ via act bind mount]
+  L -- true  --> N[PDF stays in leaf folder via act bind mount]
   M --> O[package: download &lt;repo&gt;-*-pdf]
   O --> P[Upload combined &lt;repo&gt; artifact]
   P --> Q{push to main?}
@@ -432,128 +459,76 @@ flowchart TD
 
 ### Step-by-step walkthrough
 
-All four jobs live in the reusable workflow; the heavy lifting is
-further delegated to composite actions from the central
-[`stklug84/actions`](https://github.com/stklug84/actions) repository
-(SHA-pinned): `texlive/discover-variants`, `texlive/build-pdf`, and
-`texlive/upload-build-logs`. The workflow is pure orchestration — the
-matrix entry is data, the actions are behavior.
+All jobs live in the reusable workflow; the heavy lifting is delegated to
+composite actions from the central
+[`stklug84/actions`](https://github.com/stklug84/actions) repository.
 
-**1. `discover`** — `texlive/discover-variants` scans every directory
-under `cvs/`, locates exactly one `*.tex` with `\documentclass` per
-folder, reads the sibling `.engine` dotfile (default `latexmk` if
-absent), and detects per-main auxiliary toolchain requirements
-(`bibtex`, `biblatex`, `makeindex`, `glossaries`, `psfrag`). The result
-is emitted as a JSON matrix consumed by `build`.
+**1. `generate`** (opt-in, `generate: 'true'`) — checks out this repo and
+runs `cv/generate`, which reads `data/variants.yml`, renders each leaf's
+`sklug-cv.tex` from `templates/<style>.tex.j2`, writes the `.engine`
+dotfile from the style registry, and emits the section bodies via the
+`cv/parse` emitter. The whole `cvs/` tree is uploaded as an internal
+artifact.
 
 ```yaml
-- name: Discover CV variants
-  id: scan
-  uses: stklug84/actions/texlive/discover-variants@<sha>  # v1.3.0
+- uses: stklug84/actions/cv/generate@v2
   with:
-    root: cvs
-    default-engine: latexmk
+    manifest: data/variants.yml
+    templates-dir: templates
+    cvs-root: cvs
+    data-dir: data
 ```
 
-**2. `build` (matrix)** — one leg per variant via
-`strategy.matrix: fromJson(...)` with
-`fail-fast: false`. Each leg runs in the digest-pinned TeX Live container
-and calls `texlive/build-pdf`, which dispatches on `matrix.engine`
-(`latexmk` / `pdflatex` / `xelatex` / `latex-chain`), runs aux tools only
-when `matrix.has_*` flags say they are needed, and verifies the PDF.
+**2. `discover`** — downloads the generated tree at the repo root, then
+`texlive/discover-variants` recursively scans `cvs/**/`, locates exactly
+one `*.tex` with `\documentclass` per leaf, reads the sibling `.engine`
+dotfile (default `latexmk` if absent), and detects per-main auxiliary
+toolchain requirements (`bibtex`, `biblatex`, `makeindex`, `glossaries`,
+`psfrag`). The result is a JSON matrix consumed by `build`. Each leaf's
+matrix `name` is its path relative to `root` with `/` replaced by `-`
+(e.g. `cv-academics-en-cv-sidebar-pw`), keeping artifact names unique.
 
-```yaml
-build:
-  needs: discover
-  strategy:
-    fail-fast: false
-    matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
-  container:
-    image: ${{ needs.discover.outputs.texlive-image }}
-  steps:
-    - uses: actions/checkout@v6
-    - name: Build ${{ matrix.name }} (${{ matrix.engine }})
-      uses: stklug84/actions/texlive/build-pdf@<sha>  # v1.3.0
-      with:
-        working-directory: ${{ matrix.dir }}
-        main: ${{ matrix.main }}
-        engine: ${{ matrix.engine }}
-        texinputs: ".:../..:../../styles:../../images:"
-        # ... has-* flags from the matrix ...
-    - name: Upload PDF artifact
-      if: needs.discover.outputs.local != 'true'
-      uses: actions/upload-artifact@v7
-      with:
-        name: ${{ env.ARTIFACT_PREFIX }}-${{ matrix.name }}-pdf
-        path: ${{ matrix.dir }}/${{ matrix.main }}.pdf
-```
+**3. `build` (matrix)** — one leg per variant via
+`strategy.matrix: fromJson(...)` with `fail-fast: false`. Each leg
+downloads the generated tree, runs in the digest-pinned TeX Live
+container, and calls `texlive/build-pdf`, which dispatches on
+`matrix.engine`, runs aux tools only when `matrix.has_*` flags say so, and
+verifies the PDF.
 
-**3. `package`** — runs after all matrix legs succeed and downloads every
-`${{ env.ARTIFACT_PREFIX }}-*-pdf` artifact, then republishes them as a
-single combined `${{ env.ARTIFACT_PREFIX }}` artifact with each PDF in its
-own subdirectory.
+**4. `package`** — after all matrix legs succeed, downloads every
+`${{ env.ARTIFACT_PREFIX }}-*-pdf` artifact and republishes them as a
+single combined `${{ env.ARTIFACT_PREFIX }}` artifact.
 
-```yaml
-package:
-  needs: [discover, build]
-  if: needs.discover.outputs.local != 'true'
-  steps:
-    - uses: actions/download-artifact@v8
-      with:
-        pattern: ${{ env.ARTIFACT_PREFIX }}-*-pdf
-        path: ./dist
-    - uses: actions/upload-artifact@v7
-      with:
-        name: ${{ env.ARTIFACT_PREFIX }}
-        path: ./dist/*
-```
-
-**4. `release`** — opt-in (`release: "true"`), push events only. Downloads
-the per-CV artifacts, flattens them, and publishes a GitHub release
-tagged `v<YYYY.MM.DD>-r<run-number>` via the `gh` CLI (no third-party
-actions). GitHub marks the newest release as *Latest*. When
-`release-keep` is non-zero, older releases matching the workflow's tag
-pattern are deleted together with their tags; manually created releases
-are never touched.
-
-```yaml
-release:
-  needs: [discover, package]
-  if: >-
-    inputs.release == 'true' &&
-    github.event_name == 'push' &&
-    needs.discover.outputs.local != 'true'
-  permissions:
-    contents: write
-  steps:
-    # download artifacts -> flatten PDFs -> gh release create
-    # "v$(date +%Y.%m.%d)-r${GITHUB_RUN_NUMBER}" -> prune to release-keep
-```
+**5. `release`** — opt-in (`release: "true"`), push events only. Downloads
+the per-CV artifacts, flattens them, and publishes a GitHub release tagged
+`v<YYYY.MM.DD>-r<run-number>` via the `gh` CLI. When `release-keep` is
+non-zero, older releases matching the workflow's tag pattern are deleted
+together with their tags; manually created releases are never touched.
 
 ### Artifact names
 
 All artifact names are derived from `${{ github.event.repository.name }}`
-(the workflow-level `ARTIFACT_PREFIX`) and the per-folder variant name. No
-artifact name is hardcoded; adding a new `cvs/<X>/` folder automatically
-yields a corresponding artifact.
+(the workflow-level `ARTIFACT_PREFIX`) and the per-leaf variant name. No
+artifact name is hardcoded; adding a matrix entry automatically yields a
+corresponding artifact.
 
 | Artifact | Pattern | Example (this repo, `curriculum-vitae`) |
 | --- | --- | --- |
-| Per-CV PDF | `<repo>-<name>-pdf` | `curriculum-vitae-photo-2page-pdf`, `curriculum-vitae-sidebar-pdf` |
-| Per-CV logs (failure) | `<repo>-<name>-logs` | `curriculum-vitae-photo-2page-logs` |
+| Per-CV PDF | `<repo>-<name>-pdf` | `curriculum-vitae-cv-academics-en-cv-sidebar-pw-pdf` |
+| Per-CV logs (failure) | `<repo>-<name>-logs` | `curriculum-vitae-cv-academics-de-cv-plain-style-logs` |
 | Combined | `<repo>` | `curriculum-vitae` |
 
 ### Engine selection guide
 
-Set the engine per variant by writing one of the following keywords into
-`cvs/<name>/.engine`:
+The engine is set per style via `styles.<style>.engine` in the manifest
+(written to each leaf's `.engine`). Valid values:
 
 | Engine value | When to use | Why |
 | --- | --- | --- |
-| `latexmk` | Default for most CVs | Auto-runs the right number of passes plus `biber` / `bibtex` / `makeindex` / `makeglossaries` |
-| `pdflatex` | Classic pdfLaTeX three-pass build | Lower-level; useful for debugging pass-by-pass |
-| `xelatex` | Documents using OpenType fonts (e.g. Fira Sans via `fontspec`) | Required by `cv-sidebar.sty` and any `fontspec`-based style |
-| `latex-chain` | Documents using `psfrag` | `psfrag` substitutions are applied by `dvips` at the PostScript stage; `pdflatex` / `xelatex` skip them |
+| `latexmk` | Default for variants without an `.engine` file | Auto-runs the right passes plus `biber` / `bibtex` / `makeindex` / `makeglossaries` |
+| `pdflatex` | Classic pdfLaTeX (plain style) | Loads `babel` via the `\documentclass` language option |
+| `xelatex` | OpenType-font styles (`fontspec` + `polyglossia`) | Required by every sidebar/example style |
+| `latex-chain` | Documents using `psfrag` | `psfrag` substitutions are applied by `dvips` at the PostScript stage |
 
 If you select `pdflatex` or `xelatex` but the document `\usepackage{psfrag}`s
 anything, the workflow fails fast with a clear remediation hint instead of
@@ -565,7 +540,7 @@ producing a PDF with un-substituted markers.
 | --- | --- |
 | GitHub Actions (PR or `workflow_dispatch`) | Workflow artifacts `<repo>-<name>-pdf` per variant, plus combined `<repo>` |
 | GitHub Actions (push to `main`) | Same artifacts, plus a versioned release `v<date>-r<run#>` with all PDFs |
-| `gh act` (local) | `cvs/<name>/<main>.pdf` in your working tree (via bind mount) |
+| `gh act` (local) | `cvs/<yaml>-<lang>/<style>/sklug-cv.pdf` in your working tree (via bind mount) |
 
 ## Known caveats and future improvements
 
@@ -578,29 +553,23 @@ producing a PDF with un-substituted markers.
 - **Central pins need manual bumps**: the reusable workflow
   (`latex-build-cv.yml`) and the composite actions it uses are SHA-pinned.
   Dependabot bumps the reusable-workflow pin in this repo; the composite
-  action pins live inside `stklug84/github-workflows` and are bumped
-  there. New central releases only take effect here after the pin is
-  updated.
-- **Example-CV style emitters are staged**: the additional styles
-  (`cv-sidebar-pw`, `cv-sidebar-dh`, `cv-sidebar-vs`, `cv-banking-fs`,
-  `cv-tagged-ia`) build today from their committed fallback section
-  bodies, but regenerating those bodies from `data/cv.yml` needs new
-  `--style` emitters in the SHA-pinned `cv/parse` composite action
-  (`stklug84/actions`). The corresponding `scripts/gen.sh` `VARIANTS`
-  entries and `build.yml` `generate` steps are present but **commented
-  out**; they activate once `cv/parse` ships those styles and its pin
-  here is bumped (same manual-bump flow as the central pins above).
+  action pins live inside `stklug84/github-workflows` and are bumped there.
+  New central releases (including `cv/generate` and the recursive
+  `discover-variants`) only take effect here after the pins are updated.
+- **Role line and summary are blank**: the leaf main templates declare
+  empty `\providecommand` fallbacks for the role line and profile summary
+  so every document compiles, but the `cv/parse` emitter does not yet emit
+  those macros. Populating them from `meta.title` / `meta.summary` is a
+  pending `cv/parse` enhancement; until it ships, those two lines render
+  blank. See [`data/README.md`](data/README.md).
 - **Release retention**: only the 10 newest releases are kept
   (`release-keep: "10"`). Pruned releases are deleted **including their
-  PDFs and tags** — older CV revisions are gone for good. Anyone with
-  read access can download any release still present.
-- **`gh act` needs the medium runner image**: the default micro image
-  lacks `jq` (used by `discover`), so pass
+  PDFs and tags** — older CV revisions are gone for good.
+- **`gh act` needs the medium runner image**: the default micro image lacks
+  `jq` (used by `discover`), so pass
   `-P ubuntu-latest=catthehacker/ubuntu:act-latest`; on Apple Silicon a
   consistent `--container-architecture` may also be required (see
   [Building locally](#via-the-ci-workflow-with-gh-act)).
-- **No `tlmgr` cache**: the workflow does not install extra TeX packages, so
-  no caching is needed today. Add an `actions/cache` step if package
-  installation is introduced later.
-- **One main per folder**: `discover` enforces exactly one `*.tex` with
-  `\documentclass` per `cvs/<name>/`. Use one folder per CV variant.
+- **One main per leaf**: `discover` enforces exactly one `*.tex` with
+  `\documentclass` per leaf directory. The generator always writes exactly
+  one (`sklug-cv.tex`) per leaf.

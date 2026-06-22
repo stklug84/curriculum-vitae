@@ -1,59 +1,95 @@
-# `data/cv.yml` — single source of truth
+# `data/` — CV sources and the build matrix
 
-`data/cv.yml` is the **canonical, bilingual** source of every CV in this
-repository. The LaTeX section files under `cvs/<variant>/` and (elsewhere)
-the web `cv.yml` are all *generated* from it by the
-[`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions) action
-(major alias `v2`). Edit `cv.yml`, regenerate, commit.
+This directory holds everything that drives CV generation:
+
+| File | Role |
+| --- | --- |
+| [`variants.yml`](variants.yml) | **Build matrix control plane** — declares every style, language and `(yaml × style × lang)` leaf the repo generates and builds. |
+| [`cv-academics.yml`](cv-academics.yml) | Canonical, bilingual (`de`/`en`) CV source — academic-leaning content. |
+| [`cv-databricks.yml`](cv-databricks.yml) | Canonical, bilingual (`de`/`en`) CV source — Databricks/industry-leaning content. |
+
+Both `cv-*.yml` files follow the **same schema** (below). Each is a
+self-contained source of truth; the per-section LaTeX files under
+`cvs/<yaml>-<lang>/<style>/` are *generated* from them by the
+[`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions)
+emitter (major alias `v2`). Edit the YAML, regenerate (CI does this
+automatically), commit.
+
+## The build matrix: `variants.yml`
+
+`variants.yml` is the **only** place that decides which CV is rendered in
+which style and language. It has three registries:
+
+- **`styles`** — one entry per LaTeX style, mapping it to a TeX `engine`
+  (written to each leaf's `.engine` dotfile) and a `parse_style` (the
+  `cv/parse` body emitter the style consumes; presentation styles share
+  the style-agnostic `sidebar`/`plain` emitters).
+- **`langs`** — centralized per-language tokens: the `babel` language
+  (passed as a `\documentclass` option for pdflatex), the `polyglossia`
+  language (passed to `\setdefaultlanguage` for xelatex), and the
+  localized `label_*` section headings used by the main templates.
+- **`cvs`** — the matrix itself: under each source YAML name, a list of
+  `{ style, lang }` leaves to generate.
+
+For every `cvs.<yaml>` entry a leaf directory is produced:
+
+```text
+cvs/<yaml>-<lang>/<style>/sklug-cv.tex   # leaf main (from templates/<style>.tex.j2)
+                          /.engine        # engine for this leaf
+                          /personal-info.tex
+                          /cv-*.tex        # cv/parse section bodies
+```
+
+The leaf main is always named `sklug-cv.tex`. Adding a variant means
+adding one `{ style, lang }` entry; adding a style or language means
+extending `styles` / `langs`. **No code or workflow change is required**
+— any combination of a registered style and a registered language is
+valid and will be generated and built correctly.
 
 ## Generate → build flow
 
+Generation lives entirely in the
+[`stklug84/actions/cv/generate`](https://github.com/stklug84/actions)
+composite action, driven by the `latex-build-cv` reusable workflow with
+`generate: 'true'`:
+
 ```text
-data/cv.yml ──(cv/parse --mode latex --style plain   --lang de)──▶ cvs/photo-2page/cv-*.tex   + personal-info.tex
-            ├──(cv/parse --mode latex --style sidebar --lang de)──▶ cvs/sidebar/cv-*.tex       + personal-info.tex
-            ├──(cv/parse --mode latex --style sidebar --lang en)──▶ cvs/databricks-en/cv-*.tex + personal-info.tex
-            └──(cv/parse --mode latex --style sidebar --lang de)──▶ cvs/databricks-de/cv-*.tex + personal-info.tex
+data/variants.yml ─┐
+data/cv-*.yml      ├─▶ cv/generate ─▶ cvs/<yaml>-<lang>/<style>/{sklug-cv.tex,.engine,cv-*.tex,personal-info.tex}
+templates/*.tex.j2 ┘        │
+                            ├─ leaf main : Jinja2 render of templates/<style>.tex.j2
+                            │              (engine + babel/polyglossia + label_* from the manifest)
+                            └─ section bodies + personal-info.tex : cv/parse emitter
 ```
 
-The Databricks variants render the same source in English and German via
-the per-variant `dir:style:lang` entries in `scripts/gen.sh`'s `VARIANTS`
-list (e.g. `cvs/databricks-en:sidebar:en`).
+In CI the reusable workflow's `generate` job runs `cv/generate`, uploads
+the whole tree as an internal artifact, and lays it down at the repo root
+before discovery and the TeX Live build — so the freshly generated files
+override the committed fallback (below). The matrix is read only from
+`variants.yml`; nothing about variant wiring is hardcoded in the workflow.
 
-In CI the `generate` job in `.github/workflows/build.yml` runs `cv/parse`
-once per variant and uploads the `cvs/**/*.tex` tree as the
-`cv-generated-tex` artifact. The reusable `latex-build-cv` workflow then
-downloads that artifact at the repo root (`prebuild-artifact`) **before**
-the TeX Live build, so the freshly generated files override the committed
-fallback (below).
-
-Locally, regenerate with the committed helper (`scripts/gen.sh`):
-
-```sh
-scripts/gen.sh           # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
-scripts/gen.sh --check   # validate data/cv.yml against the cv/parse schema
-```
-
-Both default to a sibling checkout of the action at `../actions/cv/parse`;
-override with `ACTION_DIR=/path/to/actions/cv/parse` or `PARSE_PY=...`.
+Validate the sources against the `cv/parse` schema with the action's
+`check` mode (`check: 'true'`); it writes nothing and exits non-zero on
+the first violation.
 
 ## Committed fallback
 
 The generated section files (`cv-experience.tex`, `cv-education.tex`,
 `cv-conferences.tex`, `cv-skills.tex`, `cv-languages.tex`,
-`cv-interests.tex`, `cv-certifications.tex`) and the generated
-`personal-info.tex` are **committed** under each `cvs/<variant>/` directory.
-They are *not* gitignored. This snapshot lets the repo build locally (plain
-`pdflatex`/`xelatex`) and keeps history reviewable without requiring the
-action to run first. CI regenerates them anyway via the prebuild artifact,
-so the committed copy is a convenience fallback — keep it in sync with
-`scripts/gen.sh` whenever `cv.yml` changes.
+`cv-interests.tex`, `cv-certifications.tex`), `personal-info.tex`, the
+leaf `sklug-cv.tex` and the `.engine` dotfile are **committed** under each
+`cvs/<yaml>-<lang>/<style>/` directory. They are *not* gitignored. This
+snapshot keeps the tree reviewable in history and buildable without
+running the action first. CI regenerates the whole tree anyway, so the
+committed copy is a convenience fallback — it is refreshed automatically
+on every CI build.
 
-> Each variant's local `personal-info.tex` is resolved first via
-> `TEXINPUTS=.:...` from inside `cvs/<variant>/`.
+> Each leaf's local `personal-info.tex` is resolved first via
+> `TEXINPUTS=.:...` from inside `cvs/<yaml>-<lang>/<style>/`.
 
 ## Emitted section files (LaTeX mode)
 
-| File | plain (`L!{\VRule}…`) emits | sidebar emits |
+| File | `plain` emitter | `sidebar` emitter |
 | --- | --- | --- |
 | `personal-info.tex` | `\newcommand{\cv…}` macros | same (style-agnostic) |
 | `cv-experience.tex` | longtable row bodies (`L!{\VRule}H`) | `\cventry` / `\cvsubentry` |
@@ -64,12 +100,12 @@ so the committed copy is a convenience fallback — keep it in sync with
 | `cv-interests.tex` | one `L!{\VRule}R` row | `\cvsidelist` |
 | `cv-certifications.tex` | numbered `L!{\VRule}R` rows | `\cvsidelist` |
 
-The variant main `.tex` keeps the document scaffolding and wraps each plain
-body in its own `\subsection*{…}\begin{longtable}{<cols>} … \input{…} …
-\end{longtable}`. The sidebar main `\input`s the bodies directly under its
-section headers inside the `paracol` layout.
+The leaf main (`sklug-cv.tex`, rendered from `templates/<style>.tex.j2`)
+keeps the document scaffolding, selects the language/encoding packages per
+engine, and `\input`s the generated bodies under localized section
+headings.
 
-> **Do not** put LaTeX escapes (`\&`, `\LaTeX`, `\"a`, …) in `cv.yml`.
+> **Do not** put LaTeX escapes (`\&`, `\LaTeX`, `\"a`, …) in the YAML.
 > Write plain UTF-8 text (`&`, `LaTeX`, `ä`); the action escapes LaTeX
 > specials for you and preserves `---`/`--` dashes and `\href{url}{name}`.
 
@@ -114,17 +150,11 @@ three remains valid.
 | `conferences` | `[latex]` | Conference list is PDF-only |
 | `interests` | `[latex]` | Personal interests are PDF-only |
 
-## Known inline exceptions (sidebar)
+## Role line and summary
 
-`cv-sidebar.sty` exposes a few presentational commands the action does not
-generate, so a small amount of literal text stays inline in
-`cvs/sidebar/lebenslauf-sidebar.tex`:
-
-- **`\cvname{…}{…}`** — the name maps to `\cvdisplayname` (generated); the
-  role line is literal and mirrors `meta.title.de`.
-- **`\cvsummary{…}`** — literal paragraph mirroring `meta.summary.de`
-  (no summary macro is emitted). Keep the two in sync by hand.
-- **`\cvchiprow{…}` (Tech-Stack)** and **`\cvchip{…}` (Schlüsselkonzepte)**
-  — decorative chip rows with no schema counterpart; kept inline.
-
-Everything else in both variants is generated from `cv.yml`.
+The leaf main templates declare empty `\providecommand` fallbacks for the
+role line and profile summary, so every document compiles even though the
+`cv/parse` emitter does not yet emit those macros. Populating them from
+`meta.title` / `meta.summary` is a pending `cv/parse` enhancement in
+[`stklug84/actions`](https://github.com/stklug84/actions); until it ships,
+those two lines render blank.

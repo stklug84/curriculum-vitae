@@ -1,0 +1,94 @@
+---
+# data/variants.yml — the CV build matrix control plane.
+#
+# This single file declares the entire set of CV variants the repository
+# builds. The stklug84/actions/cv/generate composite action (driven by
+# the latex-build-cv reusable workflow with generate: 'true') reads ONLY
+# this manifest plus the templates/ and data/ directories; nothing about
+# which style maps to which language or source YAML is hardcoded anywhere
+# else. Any (yaml x style x lang) combination is expressible here and
+# will be generated and built correctly.
+#
+# For every entry under `cvs.<yaml>` a leaf directory is created:
+#
+#   cvs/<yaml>-<lang>/<style>/sklug-cv.tex   (+ personal-info.tex,
+#                                              cv-*.tex, .engine)
+#
+# The leaf main is always named `sklug-cv.tex`. Its engine comes from
+# `styles.<style>.engine`; its language/encoding packages are selected
+# from the `langs` registry by the leaf's `lang` and the style's engine.
+#
+# To add a variant: add one `{ style, lang }` entry under the desired
+# `cvs.<yaml>`. To add a new style or language: extend `styles` / `langs`.
+# No code or workflow change is required.
+
+# ---------------------------------------------------------------------
+# Style registry — presentation-only metadata per LaTeX style.
+#   engine      : TeX engine written to the leaf's .engine dotfile and
+#                 used by CI to pick the build command.
+#   parse_style : the cv/parse body emitter to use for this style. The
+#                 generated section bodies (cv-*.tex) are style-agnostic
+#                 (\cventry / longtable rows), so several presentation
+#                 styles share one emitter.
+# ---------------------------------------------------------------------
+styles:
+  cv-plain-style: {engine: pdflatex, parse_style: plain}
+  cv-banking-fs: {engine: xelatex, parse_style: sidebar}
+  cv-tagged-ia: {engine: xelatex, parse_style: sidebar}
+  cv-sidebar-pw: {engine: xelatex, parse_style: sidebar}
+  cv-sidebar-dh: {engine: xelatex, parse_style: sidebar}
+  cv-sidebar-vs: {engine: xelatex, parse_style: sidebar}
+
+# ---------------------------------------------------------------------
+# Language registry — centralized language tokens. The template selects
+# the mechanism by engine (babel for pdflatex via the \documentclass
+# option; polyglossia for xelatex) and the value by the leaf's `lang`.
+#   babel       : language passed as a \documentclass option (pdflatex).
+#   polyglossia : language passed to \setdefaultlanguage (xelatex).
+#   label_*     : localized section headings used by the main templates.
+# ---------------------------------------------------------------------
+langs:
+  de:
+    babel: ngerman
+    polyglossia: german
+    label_experience: Berufserfahrung
+    label_education: Akademische Laufbahn
+    label_skills: Kenntnisse
+    label_languages: Sprachen
+    label_interests: Interessen
+    label_certifications: Zertifikate
+    label_conferences: Konferenzen
+    label_contact: Kontakt
+    label_summary: Profil
+  en:
+    babel: english
+    polyglossia: english
+    label_experience: Experience
+    label_education: Education
+    label_skills: Skills
+    label_languages: Languages
+    label_interests: Interests
+    label_certifications: Certifications
+    label_conferences: Conferences
+    label_contact: Contact
+    label_summary: Summary
+
+# ---------------------------------------------------------------------
+# Build matrix — per source YAML, the list of (style, lang) leaves to
+# generate. Any combination of a registered style and a registered lang
+# is valid; the entries below are the current selection.
+# ---------------------------------------------------------------------
+cvs:
+  cv-academics:
+    - {style: cv-plain-style, lang: de}
+    - {style: cv-banking-fs, lang: en}
+    - {style: cv-tagged-ia, lang: en}
+    - {style: cv-sidebar-pw, lang: en}
+    - {style: cv-sidebar-dh, lang: en}
+    - {style: cv-sidebar-vs, lang: en}
+  cv-databricks:
+    - {style: cv-banking-fs, lang: en}
+    - {style: cv-tagged-ia, lang: en}
+    - {style: cv-sidebar-pw, lang: en}
+    - {style: cv-sidebar-dh, lang: en}
+    - {style: cv-sidebar-vs, lang: en}

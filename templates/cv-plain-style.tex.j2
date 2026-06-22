@@ -1,0 +1,87 @@
+% =====================================================================
+% sklug-cv.tex  —  GENERATED, DO NOT EDIT BY HAND.
+% Rendered by stklug84/actions/cv/generate from templates/{{ style }}.tex.j2
+%   source : data/{{ yaml_name }}.yml
+%   style  : {{ style }}   (engine: {{ engine }})
+%   lang   : {{ lang }}
+% Edit the template or data/variants.yml and regenerate instead.
+% =====================================================================
+\documentclass[{{ babel }},10pt,a4paper,twoside]{article}
+\synctex=1
+
+\input{personal-info}
+\usepackage{{ '{' }}{{ style }}{{ '}' }}
+% Language/encoding: cv-plain-style.sty already loads babel, inputenc
+% and fontenc; the document language is selected via the {{ babel }}
+% \documentclass option above. No extra encoding packages here.
+
+
+\begin{document}
+
+
+\begin{flushleft}
+  \bfseries\LARGE \cvdisplayname
+\end{flushleft}
+\pagestyle{plain}
+
+
+\renewcommand\arraystretch{1.5}
+\begin{figure}[h]
+  \floatbox[{\capbeside\thisfloatsetup{facing=yes,capbesideposition={inside,center},
+        capbesidesep=capsep}}]{figure}[\FBwidth]
+           {\caption*{
+               \begin{tabular}{@{}A!{\VRule}H@{}}
+                 \cvbirthdate \\
+                 \cvbirthplace \\
+                 \cvaddressone \\
+                 \cvaddresstwo \\
+                 \cvaddressthree \\
+                 \cvphone \\
+                 \cvemail
+               \end{tabular}
+           }}
+           {\includegraphics[width=.18\textwidth]{\cvphotopath}}
+\end{figure}
+\renewcommand\arraystretch{.8}
+
+{\color{lightgray}\hrule}
+
+
+% Section bodies are generated from data/{{ yaml_name }}.yml by cv/parse
+% (plain style). The document scaffolding stays here; only the row bodies
+% are \input.
+\subsection*{{ '{' }}{{ label_experience }}{{ '}' }}
+\begin{longtable}{@{}L!{\VRule}H@{}}
+  \input{cv-experience}
+\end{longtable}
+
+
+\subsection*{{ '{' }}{{ label_education }}{{ '}' }}
+\begin{longtable}{@{}L!{\VRule}H@{}}
+  \input{cv-education}
+\end{longtable}
+
+
+\subsection*{{ '{' }}{{ label_conferences }}{{ '}' }}
+\begin{longtable}{@{}L!{\VRule}H@{}}
+  \input{cv-conferences}
+\end{longtable}
+
+
+\subsection*{{ '{' }}{{ label_skills }} \& {{ label_interests }}{{ '}' }}
+\begin{longtable}{@{}L!{\VRule}R@{}}
+  \input{cv-skills}
+  \\ & \\
+  \input{cv-interests}
+\end{longtable}
+
+
+\vfill
+\normalsize
+\begin{flushleft}
+  \cvlocation, \today\\
+  \includegraphics[width=.15\textwidth]{\cvsignature}
+\end{flushleft}
+
+
+\end{document}

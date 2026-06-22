@@ -1,0 +1,79 @@
+% =====================================================================
+% sklug-cv.tex  —  GENERATED, DO NOT EDIT BY HAND.
+% Rendered by stklug84/actions/cv/generate from templates/{{ style }}.tex.j2
+%   source : data/{{ yaml_name }}.yml
+%   style  : {{ style }}   (engine: {{ engine }})
+%   lang   : {{ lang }}
+% Edit the template or data/variants.yml and regenerate instead.
+% =====================================================================
+\documentclass[a4paper,10pt]{article}
+\synctex=1
+
+\input{personal-info}
+\usepackage{{ '{' }}{{ style }}{{ '}' }}
+% Language: this style loads fontspec (XeLaTeX) but no language package.
+% polyglossia gives correct {{ polyglossia }} hyphenation/typography.
+\usepackage{polyglossia}
+\setdefaultlanguage{{ '{' }}{{ polyglossia }}{{ '}' }}
+
+\hypersetup{
+  pdftitle={\cvtitle},
+  pdfauthor={\cvpdfauthor},
+  pdfsubject={\cvsubject}
+}
+
+% Role line and profile paragraph (see template notes). Safe fallbacks.
+\providecommand{\cvroleline}{}
+\providecommand{\cvprofile}{}
+
+\begin{document}
+
+\cvtopbanner
+
+\begin{paracol}{2}
+
+% =====================================================================
+% SIDEBAR (column 1) — no photo (US CV convention)
+% =====================================================================
+\cvname{\cvdisplayname}{\cvroleline}
+
+\cvsidesection{{ '{' }}{{ label_contact }}{{ '}' }}
+\cvcontact{\faPhone}{\cvphone}
+\cvcontact{\faEnvelope}{\href{\cvemailurl}{\cvemail}}
+
+\cvruled
+
+\cvsidesection{{ '{' }}{{ label_skills }}{{ '}' }}
+\input{cv-skills}
+
+\cvruled
+
+\cvsidesection{{ '{' }}{{ label_languages }}{{ '}' }}
+\input{cv-languages}
+
+\cvruled
+
+\cvsidesection{{ '{' }}{{ label_interests }}{{ '}' }}
+\input{cv-interests}
+
+\switchcolumn
+
+% =====================================================================
+% MAIN COLUMN (column 2)
+% =====================================================================
+\cvname{\cvdisplayname}{\cvroleline}
+
+\cvsummary{\cvprofile}
+
+\cvsection{{ '{' }}{{ label_experience }}{{ '}' }}
+\input{cv-experience}
+
+\cvsection{{ '{' }}{{ label_education }}{{ '}' }}
+\input{cv-education}
+
+\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
+\input{cv-conferences}
+
+\end{paracol}
+
+\end{document}

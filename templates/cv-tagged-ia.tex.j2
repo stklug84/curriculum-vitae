@@ -1,0 +1,90 @@
+% =====================================================================
+% sklug-cv.tex  —  GENERATED, DO NOT EDIT BY HAND.
+% Rendered by stklug84/actions/cv/generate from templates/{{ style }}.tex.j2
+%   source : data/{{ yaml_name }}.yml
+%   style  : {{ style }}   (engine: {{ engine }})
+%   lang   : {{ lang }}
+% Edit the template or data/variants.yml and regenerate instead.
+% =====================================================================
+\documentclass[a4paper,10pt]{article}
+\synctex=1
+
+\input{personal-info}
+\usepackage{{ '{' }}{{ style }}{{ '}' }}
+% Language: this style loads fontspec (XeLaTeX) but no language package.
+% polyglossia gives correct {{ polyglossia }} hyphenation/typography.
+\usepackage{polyglossia}
+\setdefaultlanguage{{ '{' }}{{ polyglossia }}{{ '}' }}
+
+\hypersetup{
+  pdftitle={\cvtitle},
+  pdfauthor={\cvpdfauthor},
+  pdfsubject={\cvsubject}
+}
+
+% Role line and profile paragraph. cv/parse emits \cvroleline / \cvprofile
+% into personal-info.tex from meta.title / meta.summary. Provide safe
+% fallbacks so the document also compiles against an older committed
+% personal-info.tex that predates those macros.
+\providecommand{\cvroleline}{}
+\providecommand{\cvprofile}{}
+
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+\cvtopbanner
+
+% =====================================================================
+% HEADER — name, role, contact grid
+% =====================================================================
+\cvname{\cvdisplayname}{}
+
+{\large \cvroleline}\par
+\vspace{0.8em}
+
+\noindent
+\begin{tabularx}{\linewidth}{@{}X X@{}}
+  \cvcontact{\faMapMarker}{\cvaddresstwo}          & \cvcontact{\faGithub}{\href{\cvgithuburl}{\cvgithublabel}}      \\[0.5em]
+  \cvcontact{\faPhone}{\cvphone}                   & \cvcontact{\faLinkedin}{\href{\cvlinkedinurl}{\cvlinkedinlabel}} \\[0.5em]
+  \cvcontact{\faAt}{\href{\cvemailurl}{\cvemail}}  & \\
+\end{tabularx}
+
+% =====================================================================
+% {{ label_summary }}
+% =====================================================================
+\cvsection{{ '{' }}{{ label_summary }}{{ '}' }}
+
+\cvsummary{\cvprofile}
+
+% =====================================================================
+% {{ label_experience }}
+% =====================================================================
+\cvsection{{ '{' }}{{ label_experience }}{{ '}' }}
+\input{cv-experience}
+
+% =====================================================================
+% {{ label_education }}
+% =====================================================================
+\cvsection{{ '{' }}{{ label_education }}{{ '}' }}
+\input{cv-education}
+
+% =====================================================================
+% {{ label_skills }}
+% =====================================================================
+\cvsection{{ '{' }}{{ label_skills }}{{ '}' }}
+\input{cv-skills}
+
+% =====================================================================
+% {{ label_languages }}
+% =====================================================================
+\cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
+\input{cv-languages}
+
+% =====================================================================
+% {{ label_interests }}
+% =====================================================================
+\cvsection{{ '{' }}{{ label_interests }}{{ '}' }}
+\input{cv-interests}
+
+\end{document}
