@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       # plain style -> cvs/photo-2page/ (pdflatex variant). Emits
       # cv-*.tex + personal-info.tex for the plain longtable layout.
@@ -61,7 +61,7 @@ jobs:
           out-dir: cvs/sidebar
 
       - name: Upload generated section files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: cv-generated-tex
           path: cvs/**/*.tex
