@@ -1,19 +1,25 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# For the github-actions ecosystem, "/" covers workflows in .github/workflows,
-# including the SHA-pinned stklug84/actions composite actions.
-#
-# LaTeX note: Dependabot has no CTAN / TeX Live package ecosystem, so LaTeX
-# packages themselves cannot be tracked. The LaTeX toolchain is instead kept
-# current via the docker ecosystem below: the TeX Live container image is
-# pinned by digest in .github/docker/texlive/Dockerfile (the build workflow
-# reads its FROM line), and Dependabot bumps the digest as the upstream
-# texlive/texlive:latest tag moves.
-# Please see the documentation for all configuration options:
-# yamllint disable-line rule:line-length
-# https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
-
 ---
+# title: Dependabot version updates configuration
+# authors:
+#   - Steffen Klug <45033201+stklug84@users.noreply.github.com>
+# date: 2026-06-22
+# keywords: [infrastructure, dependencies]
+# comment: |
+#   Weekly version updates. For the github-actions ecosystem "/" covers
+#   workflows in .github/workflows, including the SHA-pinned
+#   stklug84/actions composite actions; all action bumps are grouped
+#   into a single pull request.
+#
+#   LaTeX note: Dependabot has no CTAN / TeX Live package ecosystem, so
+#   LaTeX packages themselves cannot be tracked. The LaTeX toolchain is
+#   instead kept current via the docker ecosystem below: the TeX Live
+#   container image is pinned by digest in
+#   .github/docker/texlive/Dockerfile (the build workflow reads its FROM
+#   line), and Dependabot bumps the digest as the upstream
+#   texlive/texlive:latest tag moves.
+#   Documentation:
+#   https://docs.github.com/code-security/dependabot/dependabot-version-updates
+# ---
 version: 2
 updates:
   - package-ecosystem: "github-actions"

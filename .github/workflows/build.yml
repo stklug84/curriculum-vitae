@@ -1,4 +1,19 @@
 ---
+# title: Build Document workflow
+# authors:
+#   - Steffen Klug <45033201+stklug84@users.noreply.github.com>
+# date: 2026-06-22
+# keywords: [infrastructure, latex, ci]
+# comment: |
+#   Builds the CV on pull requests and pushes to main:
+#     - generate : render per-section .tex files for every variant from
+#                  the single source of truth (data/cv.yml) via the
+#                  cv/parse composite action, uploaded as one artifact.
+#     - build    : delegate to the central latex-build-cv reusable
+#                  workflow (variant discovery, matrix build, packaging
+#                  and versioned release on pushes to main). The TeX Live
+#                  image is resolved from the digest-pinned Dockerfile.
+# ---
 name: Build Document
 
 on:
