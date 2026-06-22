@@ -64,17 +64,16 @@ to a TeX engine and a `cv/parse` body emitter (`plain` or the
 style-agnostic `sidebar`). Per US-CV conventions **none of these styles
 define a photo box** except the classic plain style.
 
-| Style file | Engine | Example | Layout |
-| --- | --- | --- | --- |
-| `styles/cv-plain-style.sty` | pdflatex | — | Classic two-page, photo + signature, longtable layout |
-| `styles/cv-banking-fs.sty` | xelatex |  | Single column, centered header, two-tone red headings, footer |
-| `styles/cv-tagged-ia.sty` | xelatex |  | Single column, black tag headings, skill bars + bubbles, mono tech lists |
-| `styles/cv-sidebar-pw.sty` | xelatex |  | Left sidebar (37/63), grayscale, dark banner, pill chips, 5-dot languages |
-| `styles/cv-sidebar-dh.sty` | xelatex |  | Left sidebar (35/65), green section banners, slate titles |
-| `styles/cv-sidebar-vs.sty` | xelatex |  | Right sidebar (≈57/37), Letter, accent blue + teal rules, donut chart |
+| Style file | Engine | Layout |
+| --- | --- | --- |
+| `styles/cv-plain-style.sty` | pdflatex | Classic two-page, photo + signature, longtable layout |
+| `styles/cv-banking-fs.sty` | xelatex | Single column, centered header, two-tone red headings, footer |
+| `styles/cv-tagged-ia.sty` | xelatex | Single column, black tag headings, skill bars + bubbles, mono tech lists |
+| `styles/cv-sidebar-pw.sty` | xelatex | Left sidebar (37/63), grayscale, dark banner, pill chips, 5-dot languages |
+| `styles/cv-sidebar-dh.sty` | xelatex | Left sidebar (35/65), green section banners, slate titles |
+| `styles/cv-sidebar-vs.sty` | xelatex | Right sidebar (≈57/37), Letter, accent blue + teal rules, donut chart |
 
-The example styles reproduce the visual language of the CVs under
-`examples/`. They all consume the same generated per-section bodies, so a
+The styles all consume the same generated per-section bodies, so a
 single source YAML renders into every style unchanged.
 
 ## The build matrix
@@ -145,31 +144,15 @@ PR builds additionally upload short-lived workflow artifacts for review
 │   └── cv-sidebar-vs.tex.j2
 ├── styles/
 │   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
-│   ├── cv-banking-fs.sty         #  single column (banking)
-│   ├── cv-tagged-ia.sty          #  single column (black tags)
-│   ├── cv-sidebar-pw.sty         #  sidebar (grayscale, no photo)
-│   ├── cv-sidebar-dh.sty         #  sidebar (green banners, no photo)
-│   └── cv-sidebar-vs.sty         #  right sidebar (blue, donut)
+│   ├── cv-banking-fs.sty         # single column (banking)
+│   ├── cv-tagged-ia.sty          # single column (black tags)
+│   ├── cv-sidebar-pw.sty         # sidebar (grayscale, no photo)
+│   ├── cv-sidebar-dh.sty         # sidebar (green banners, no photo)
+│   └── cv-sidebar-vs.sty         # right sidebar (blue, donut)
 ├── images/                       # Shared assets (photo, signature)
-├── cvs/                          # Generated variant tree (committed fallback)
-│   ├── cv-academics-de/
-│   │   └── cv-plain-style/
-│   │       ├── sklug-cv.tex      # Leaf main (generated from the template)
-│   │       ├── personal-info.tex # Generated (cv/parse)
-│   │       ├── cv-*.tex          # Generated section bodies (cv/parse)
-│   │       └── .engine           # contents: pdflatex
-│   ├── cv-academics-en/
-│   │   ├── cv-banking-fs/        # sklug-cv.tex + bodies + .engine (xelatex)
-│   │   ├── cv-tagged-ia/
-│   │   ├── cv-sidebar-pw/
-│   │   ├── cv-sidebar-dh/
-│   │   └── cv-sidebar-vs/
-│   └── cv-databricks-en/
-│       ├── cv-banking-fs/
-│       ├── cv-tagged-ia/
-│       ├── cv-sidebar-pw/
-│       ├── cv-sidebar-dh/
-│       └── cv-sidebar-vs/
+├── cvs/                          # Generated variant tree (gitignored, never committed)
+│   └── <yaml>-<lang>/<style>/    # Per leaf: sklug-cv.tex, personal-info.tex,
+│                                 #   cv-*.tex bodies, .engine — all from cv/generate
 ├── .github/
 │   ├── CODEOWNERS                # Default reviewer: @stklug84
 │   ├── dependabot.yml            # Actions + TeX Live digest updates
@@ -262,8 +245,9 @@ TEXINPUTS=.:../../..:../../../styles:../../../images: latexmk -pdf -interaction=
 
 The PDF lands next to the source: `cvs/<yaml>-<lang>/<style>/sklug-cv.pdf`.
 
-The committed `cvs/` tree is the local source of truth — it is the same
-tree CI generates, so local builds work without running any generator.
+The `cvs/` tree is generated, not committed (it is gitignored). Run
+`cv/generate` from the `data/*.yml` sources first to produce it locally;
+CI regenerates the same tree on every build.
 
 ### Via the CI workflow with `gh act`
 

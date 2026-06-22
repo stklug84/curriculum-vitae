@@ -64,25 +64,24 @@ templates/*.tex.j2 ┘        │
 
 In CI the reusable workflow's `generate` job runs `cv/generate`, uploads
 the whole tree as an internal artifact, and lays it down at the repo root
-before discovery and the TeX Live build — so the freshly generated files
-override the committed fallback (below). The matrix is read only from
+before discovery and the TeX Live build. The matrix is read only from
 `variants.yml`; nothing about variant wiring is hardcoded in the workflow.
 
 Validate the sources against the `cv/parse` schema with the action's
 `check` mode (`check: 'true'`); it writes nothing and exits non-zero on
 the first violation.
 
-## Committed fallback
+## Generated tree is not committed
 
 The generated section files (`cv-experience.tex`, `cv-education.tex`,
 `cv-conferences.tex`, `cv-skills.tex`, `cv-languages.tex`,
 `cv-interests.tex`, `cv-certifications.tex`), `personal-info.tex`, the
-leaf `sklug-cv.tex` and the `.engine` dotfile are **committed** under each
-`cvs/<yaml>-<lang>/<style>/` directory. They are *not* gitignored. This
-snapshot keeps the tree reviewable in history and buildable without
-running the action first. CI regenerates the whole tree anyway, so the
-committed copy is a convenience fallback — it is refreshed automatically
-on every CI build.
+leaf `sklug-cv.tex` and the `.engine` dotfile under each
+`cvs/<yaml>-<lang>/<style>/` directory are **generated artifacts** and are
+**gitignored** (`/cvs/`). They are never committed — CI regenerates the
+whole tree from the YAML sources on every build, and a local
+`cv/generate` run produces them on demand. The truth is `data/*.yml`
+plus `templates/` and `styles/`.
 
 > Each leaf's local `personal-info.tex` is resolved first via
 > `TEXINPUTS=.:...` from inside `cvs/<yaml>-<lang>/<style>/`.
