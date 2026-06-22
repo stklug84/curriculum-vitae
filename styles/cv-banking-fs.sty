@@ -1,0 +1,320 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-banking-fs}[2026/06/22 Single-column Awesome-CV "banking" style (XeLaTeX)]
+
+% =====================================================================
+% cv-banking-fs.sty -- Single-column Awesome-CV "banking" CV style
+% ---------------------------------------------------------------------
+% Author identity:  (FS) demo variant.
+% Engine:   XeLaTeX (required -- fontspec)
+% Layout:   Single column, centered header, no paracol/sidebar.
+% Fonts:    Roboto (name/body), Source Sans 3 (headings/labels).
+%           Graceful fallback to Fira Sans if a family is missing.
+% Icons:    fontawesome5
+%
+% PUBLIC API (matches the generated section files)
+% ---------------------------------------------------------------------
+%   \cvtopbanner                          -- no-op (banking style has none)
+%   \cvcontact{icon}{text}                -- one centered contact item
+%   \cvname{firstline}{secondline}        -- two-tone centered name
+%   \cvsummary{text}                      -- centered intro paragraph
+%   \cvsection{TITLE}                     -- two-tone heading + rule
+%   \cvsidesection{TITLE}                 -- alias of \cvsection
+%   \cventry{title}{date}{employer}{desc} -- job/education entry
+%   \cvsubentry{date}{title}{desc}        -- nested sub-project
+%   \cvchip{label}                        -- subtle inline pill
+%   \cvchiprow{labels}                    -- comma-separated chips inline
+%   \cvskillgroup{heading}{body}          -- right-aligned key/value row
+%   \cvlanguage{name}{sublabel}{level}    -- "name (sublabel)" text row
+%   \cvsidelist{items}                    -- plain bullet list
+%   \cvruled                              -- thin separator
+%
+% USAGE
+% ---------------------------------------------------------------------
+%   \documentclass[a4paper,10pt]{article}
+%   \usepackage{cv-banking-fs}
+%   \begin{document}
+%   \cvname{First}{Last}
+%   \cvsummary{...}
+%   \cvsection{Experience} \input{cv-experience}
+%   ...
+%   \end{document}
+% =====================================================================
+
+% --- Engine guard ----------------------------------------------------
+\RequirePackage{iftex}
+\RequireXeTeX
+
+% --- Required packages -----------------------------------------------
+\RequirePackage{fontspec}
+\RequirePackage[a4paper,top=1.8cm,bottom=1.8cm,left=2cm,right=2cm]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{fontawesome5}
+\RequirePackage{enumitem}
+\RequirePackage{microtype}
+\RequirePackage{calc}
+\RequirePackage{array}
+\RequirePackage{tabularx}
+\RequirePackage{etoolbox}
+\RequirePackage{fancyhdr}
+\RequirePackage[hidelinks]{hyperref}
+
+% --- Color palette ---------------------------------------------------
+\definecolor{cvAccent}{HTML}{DD4B39}   % red/coral accent
+\definecolor{cvDark}{HTML}{2B2B2B}     % name last / strong headings
+\definecolor{cvGray33}{HTML}{333333}
+\definecolor{cvGrayMid}{HTML}{5A5A5A}
+\definecolor{cvGrayLt}{HTML}{999999}
+\definecolor{cvNameLt}{HTML}{666666}   % name first (light)
+\definecolor{cvBody}{HTML}{323232}     % body text
+\definecolor{cvRule}{HTML}{D6D6D6}     % thin section rule
+
+\color{cvBody}
+
+% --- Fonts: Roboto (body) + Source Sans 3 (headings) -----------------
+% Graceful fallback to Fira Sans when a family is unavailable.
+\IfFontExistsTF{Roboto}{%
+  \setmainfont{Roboto}[%
+    UprightFont={Roboto},
+    BoldFont={Roboto Medium},
+    ItalicFont={Roboto Italic},
+    BoldItalicFont={Roboto Medium Italic}]%
+  \newfontfamily\cv@robotolight{Roboto Light}%
+}{%
+  \setmainfont{Fira Sans}%
+  \newfontfamily\cv@robotolight{Fira Sans Light}%
+}
+
+\IfFontExistsTF{Source Sans 3}{%
+  \newfontfamily\cv@headingfont{Source Sans 3}%
+  \newfontfamily\cv@labelfont{Source Sans 3}%
+}{%
+  \newfontfamily\cv@headingfont{Fira Sans}%
+  \newfontfamily\cv@labelfont{Fira Sans}%
+}
+
+% --- hyperref --------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=cvBody,
+  urlcolor=cvBody,
+  citecolor=cvBody,
+  pdfborder={0 0 0}
+}
+
+% --- List styling ----------------------------------------------------
+\setlist{nosep,leftmargin=1.2em}
+\setlist[itemize,1]{label=\textbullet,labelsep=.5em}
+\setlist[itemize,2]{label=\textendash,labelsep=.5em,leftmargin=1.2em}
+
+% --- Footer (every page) ---------------------------------------------
+% 3-field small-caps gray: left = date, center = NAME, right = page.
+\newcommand{\cv@footername}{ \textperiodcentered{} Curriculum Vitae}
+\providecommand{\cvfootername}[1]{\renewcommand{\cv@footername}{#1}}
+
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancyfoot[L]{{\cv@labelfont\scriptsize\color{cvGrayLt}\scshape\today}}
+\fancyfoot[C]{{\cv@labelfont\scriptsize\color{cvGrayLt}\scshape\cv@footername}}
+\fancyfoot[R]{{\cv@labelfont\scriptsize\color{cvGrayLt}\scshape\thepage}}
+
+% --- Private: two-tone word for section headings ---------------------
+% First (up to) 3 letters in accent red, remainder in dark gray.
+% Robust against short words: \StrLeft/\StrGobbleLeft via xstring.
+\RequirePackage{xstring}
+\newcommand{\cv@twotoneword}[1]{%
+  \StrLen{#1}[\cv@wl]%
+  \ifnum\cv@wl<4 %
+    {\color{cvAccent}#1}%
+  \else
+    \StrLeft{#1}{3}[\cv@head]%
+    \StrGobbleLeft{#1}{3}[\cv@tail]%
+    {\color{cvAccent}\cv@head}{\color{cvGray33}\cv@tail}%
+  \fi
+}
+
+% =====================================================================
+%  PUBLIC API
+% =====================================================================
+
+% --- \cvtopbanner : no-op for the banking style ----------------------
+\newcommand{\cvtopbanner}{}
+
+% --- \cvname{firstline}{secondline} ----------------------------------
+% Centered two-tone name: first light gray (Roboto Light), last dark bold.
+\newcommand{\cvname}[2]{%
+  \begin{center}
+    {\cv@robotolight\fontsize{32pt}{36pt}\selectfont
+      {\color{cvNameLt}#1}\hspace{0.35em}%
+      {\bfseries\color{cvDark}#2}\par}
+  \end{center}%
+  \vspace{-0.2em}%
+}
+
+% --- \cvcontact{icon}{text} ------------------------------------------
+% Collects contact items; rendered as a centered pipe-separated line.
+% Each call appends one item to an internal box list. The line itself
+% is flushed by \cvcontactline (called automatically before sections),
+% but \cvcontact may also be used standalone -- in which case each item
+% is simply printed inline. To keep the generated files simple, we make
+% \cvcontact emit directly into a centered row via an accumulator.
+\newcommand{\cv@contactbuf}{}
+\newcommand{\cv@contactsep}{}
+\newcommand{\cvcontact}[2]{%
+  \appto\cv@contactbuf{\cv@contactsep{\faIcon@wrap{#1}\,#2}}%
+  \gdef\cv@contactsep{\hspace{0.6em}{\color{cvGrayLt}\textbar}\hspace{0.6em}}%
+}
+% small wrapper so an empty/raw icon still typesets safely
+\newcommand{\faIcon@wrap}[1]{{\color{cvAccent}#1}}
+
+% Flush the accumulated contact items as a centered line.
+\newcommand{\cvcontactline}{%
+  \ifdefempty{\cv@contactbuf}{}{%
+    \begin{center}
+      {\cv@labelfont\small\color{cvGrayMid}\cv@contactbuf\par}
+    \end{center}%
+  }%
+  \gdef\cv@contactbuf{}%
+  \gdef\cv@contactsep{}%
+}
+
+% --- \cvsubtitle / role line (red small-caps, letter-spaced) ---------
+\newcommand{\cvsubtitle}[1]{%
+  \begin{center}
+    {\cv@labelfont\small\scshape\color{cvAccent}%
+      \addfontfeatures{LetterSpace=8.0}#1\par}
+  \end{center}%
+  \vspace{0.2em}%
+}
+
+% --- \cvaddressline : italic gray centered line ----------------------
+\newcommand{\cvaddressline}[1]{%
+  \begin{center}
+    {\itshape\small\color{cvGrayMid}#1\par}
+  \end{center}%
+  \vspace{0.3em}%
+}
+
+% --- \cvsummary{text} ------------------------------------------------
+\newcommand{\cvsummary}[1]{%
+  \cvcontactline
+  \begin{center}
+    \begin{minipage}{0.92\linewidth}
+      \centering\small\color{cvBody}#1\par
+    \end{minipage}
+  \end{center}%
+  \vspace{0.6em}%
+}
+
+% --- \cvsection{TITLE} -----------------------------------------------
+% Two-tone heading word + thin light-gray rule to the right margin.
+\newcommand{\cvsection}[1]{%
+  \cvcontactline % flush any pending contacts before first section
+  \vspace{0.8em}%
+  \noindent
+  {\cv@headingfont\bfseries\fontsize{14pt}{16pt}\selectfont\cv@twotoneword{#1}}%
+  \hspace{0.6em}%
+  {\color{cvRule}\leaders\hrule height 0.6pt\hfill\kern0pt}%
+  \par\vspace{0.5em}%
+}
+
+% --- \cvsidesection : alias of \cvsection ----------------------------
+\newcommand{\cvsidesection}[1]{\cvsection{#1}}
+
+% --- \cventry{title}{date}{employer}{desc} ---------------------------
+% Generated signature is {role}{period}{org, location}{summary}.
+% Mapping (single-column banking layout):
+%   line1: \textbf{role} (dark)        \hfill  \itshape\color{accent} org
+%   line2: \textsc{org small-caps gray} (suppressed if same as org used) ...
+%          actually line2 = org as small-caps gray  \hfill italic gray period
+%   then  desc body / bullets.
+% To keep it clean: title(role) bold left, org on the right of line1 in
+% accent italic; line2 holds the date right-aligned in italic gray.
+\newcommand{\cventry}[4]{%
+  \vspace{0.45em}%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}X r@{}}
+    {\bfseries\color{cvDark}#1} &
+      {\itshape\color{cvAccent}#3}\\[0.15em]
+    {\cv@labelfont\footnotesize\scshape\color{cvGrayMid}\strut} &
+      {\itshape\footnotesize\color{cvGrayMid}#2}
+  \end{tabularx}\par
+  \ifblank{#4}{}{\vspace{0.2em}{\small\color{cvBody}#4}\par}%
+  \vspace{0.45em}%
+}
+
+% --- \cvsubentry{date}{title}{desc} ----------------------------------
+\newcommand{\cvsubentry}[3]{%
+  \vspace{0.2em}%
+  \noindent
+  {\footnotesize\itshape\color{cvGrayMid}#1}\quad
+  {\small\bfseries\color{cvGray33}#2}\par
+  \begingroup
+    \setlist[itemize,1]{label={\color{cvAccent}\textbullet},leftmargin=1.4em,labelsep=.4em}
+    #3
+  \endgroup
+  \vspace{0.3em}%
+}
+
+% --- \cvchip{label} / \cvchiprow{labels} -----------------------------
+% Banking style has no chips; render as subtle bracketed inline text.
+\newcommand{\cvchip}[1]{%
+  {\cv@labelfont\footnotesize\color{cvGrayMid}\,#1\,}%
+}
+\newcommand{\cvchiprow}[1]{%
+  \begingroup
+  \def\@cvchipsep{}%
+  \@for\@chip:=#1\do{%
+    \@cvchipsep\cvchip{\@chip}%
+    \def\@cvchipsep{{\color{cvGrayLt}\;\textperiodcentered\;}}%
+  }%
+  \par\medskip
+  \endgroup
+}
+
+% --- \cvskillgroup{heading}{body} ------------------------------------
+% Right-aligned bold label in left ~40%, values left-aligned right.
+\newcommand{\cvskillgroup}[2]{%
+  \vspace{0.15em}%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}>{\raggedleft\arraybackslash}p{0.34\linewidth}@{\hspace{1.2em}}X@{}}
+    {\cv@labelfont\bfseries\small\color{cvGray33}#1} &
+      {\small\color{cvBody}#2}
+  \end{tabularx}\par
+  \vspace{0.25em}%
+}
+
+% --- \cvlanguage{name}{sublabel}{level} ------------------------------
+% "name (sublabel)" text row, no dots (level arg accepted but unused).
+\newcommand{\cvlanguage}[3]{%
+  \vspace{0.1em}%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}>{\raggedleft\arraybackslash}p{0.34\linewidth}@{\hspace{1.2em}}X@{}}
+    {\cv@labelfont\bfseries\small\color{cvGray33}#1} &
+      {\small\color{cvBody}#2}
+  \end{tabularx}\par
+  \vspace{0.2em}%
+}
+
+% --- \cvsidelist{items} ----------------------------------------------
+% Plain bullet list; empty-safe.
+\newcommand{\cvsidelist}[1]{%
+  \ifblank{#1}{}{%
+    \begingroup
+    \setlist[itemize,1]{label=\textbullet,leftmargin=1.4em,labelsep=.5em}
+    \begin{itemize}
+      #1
+    \end{itemize}
+    \endgroup
+  }%
+}
+
+% --- \cvruled --------------------------------------------------------
+\newcommand{\cvruled}{%
+  \par\vspace{0.4em}%
+  {\color{cvRule}\hrule height 0.4pt}%
+  \par\vspace{0.4em}%
+}
+
+\endinput

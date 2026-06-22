@@ -84,6 +84,18 @@ VARIANTS=(
   "cvs/sidebar:sidebar:de"
   "cvs/databricks-en:sidebar:en"
   "cvs/databricks-de:sidebar:de"
+  # Example-CV showcase variants (styles in styles/cv-{sidebar-pw,sidebar-dh,
+  # sidebar-vs,banking-fs,tagged-ia}.sty). Each builds today from its
+  # committed fallback section bodies; the entries below are STAGED and
+  # commented out because they need new cv/parse --style emitters in
+  # stklug84/actions (pw/dh/vs alias the sidebar emitter; fs/ia get their
+  # own templates). Uncomment once cv/parse ships those styles and the pin
+  # in .github/workflows/build.yml is bumped. See README "Known caveats".
+  # "cvs/pw:pw:de"   # PENDING cv/parse style support
+  # "cvs/dh:dh:de"   # PENDING cv/parse style support
+  # "cvs/vs:vs:en"   # PENDING cv/parse style support
+  # "cvs/fs:fs:en"   # PENDING cv/parse style support
+  # "cvs/ia:ia:de"   # PENDING cv/parse style support
 )
 
 for entry in "${VARIANTS[@]}"; do

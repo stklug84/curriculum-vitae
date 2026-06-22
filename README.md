@@ -48,7 +48,7 @@ cvs/<variant>/cv-interests.tex
 cvs/<variant>/cv-certifications.tex
 ```
 
-Today the repo ships four variants:
+Today the repo ships four built variants:
 
 | Variant             | Folder                | Engine   | Style file                  |
 | ------------------- | --------------------- | -------- | --------------------------- |
@@ -60,6 +60,33 @@ Today the repo ships four variants:
 The two Databricks variants render the same `data/cv.yml` in English and
 German respectively (sidebar style); `scripts/gen.sh` selects each
 variant's language via the `dir:style:lang` entry in its `VARIANTS` list.
+
+### Additional style files (derived from example CVs)
+
+Five further style files reproduce the visual language of the example CVs
+under `examples/`. Each follows the same public macro API as the sidebar
+style (`\cventry`, `\cvsection`, `\cvskillgroup`, `\cvlanguage`, …) so it
+consumes the generated per-section `.tex` bodies unchanged. Per US-CV
+conventions **none of these styles define a photo box.** Sidebar styles
+follow the `cv-sidebar-<initials>.sty` naming; single-column styles use a
+descriptive name ending in the example's initials.
+
+| Style file                  | Example          | Layout                                   |
+| --------------------------- | ---------------- | ---------------------------------------- |
+| `styles/cv-sidebar-pw.sty`  |    | Left sidebar (37/63), grayscale, dark banner, pill chips, 5-dot languages |
+| `styles/cv-sidebar-dh.sty`  |      | Left sidebar (35/65), green section banners, slate titles |
+| `styles/cv-sidebar-vs.sty`  |  | Right sidebar (≈57/37), Letter, accent blue + teal rules, donut chart |
+| `styles/cv-banking-fs.sty`  |   | Single column, centered header, two-tone red headings, footer |
+| `styles/cv-tagged-ia.sty`   |     | Single column, black tag headings, skill bars + bubbles, mono tech lists |
+
+The matching showcase variant directories — `cvs/{pw,dh,vs,fs,ia}/` — wire
+each style to the committed fallback section bodies so the build matrix
+auto-discovers and renders them. Driving these variants from `data/cv.yml`
+via `scripts/gen.sh` / the `generate` job is **planned and pending**
+`cv/parse` style-emitter support in
+[`stklug84/actions`](https://github.com/stklug84/actions) (the new
+`--style` values are staged but commented out; see
+[Known caveats](#known-caveats-and-future-improvements)).
 
 ## Downloading the PDFs
 
@@ -94,7 +121,12 @@ PR builds additionally upload short-lived workflow artifacts for review
 │   └── README.md                 # Schema + targets contract
 ├── styles/
 │   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
-│   └── cv-sidebar.sty            # Sidebar CV style (xelatex, FiraSans)
+│   ├── cv-sidebar.sty            # Sidebar CV style (xelatex, FiraSans)
+│   ├── cv-sidebar-pw.sty         #  sidebar (grayscale, no photo)
+│   ├── cv-sidebar-dh.sty         #  sidebar (green banners, no photo)
+│   ├── cv-sidebar-vs.sty         #  right sidebar (blue, donut)
+│   ├── cv-banking-fs.sty         #  single column (banking)
+│   └── cv-tagged-ia.sty          #  single column (black tags)
 ├── images/                       # Shared assets (photo, signature)
 ├── cvs/
 │   ├── photo-2page/
@@ -112,11 +144,16 @@ PR builds additionally upload short-lived workflow artifacts for review
 │   │   ├── personal-info.tex     # Generated (committed fallback)
 │   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
 │   │   └── .engine               # contents: xelatex
-│   └── databricks-de/            # Databricks-tuned CV, German (sidebar, xelatex)
-│       ├── lebenslauf-databricks.tex
-│       ├── personal-info.tex     # Generated (committed fallback)
-│       ├── cv-*.tex              # Generated section bodies (committed fallback)
-│       └── .engine               # contents: xelatex
+│   ├── databricks-de/            # Databricks-tuned CV, German (sidebar, xelatex)
+│   │   ├── lebenslauf-databricks.tex
+│   │   ├── personal-info.tex     # Generated (committed fallback)
+│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
+│   │   └── .engine               # contents: xelatex
+│   ├── pw/                       #  showcase (cv-sidebar-pw, xelatex)
+│   ├── dh/                       #  showcase (cv-sidebar-dh, xelatex)
+│   ├── vs/                       #  showcase (cv-sidebar-vs, xelatex)
+│   ├── fs/                       #  showcase (cv-banking-fs, xelatex)
+│   └── ia/                       #  showcase (cv-tagged-ia, xelatex)
 ├── scripts/gen.sh                # Regenerate section files from data/cv.yml (--check validates)
 ├── .github/
 │   ├── CODEOWNERS                # Default reviewer: @stklug84
@@ -544,6 +581,15 @@ producing a PDF with un-substituted markers.
   action pins live inside `stklug84/github-workflows` and are bumped
   there. New central releases only take effect here after the pin is
   updated.
+- **Example-CV style emitters are staged**: the additional styles
+  (`cv-sidebar-pw`, `cv-sidebar-dh`, `cv-sidebar-vs`, `cv-banking-fs`,
+  `cv-tagged-ia`) build today from their committed fallback section
+  bodies, but regenerating those bodies from `data/cv.yml` needs new
+  `--style` emitters in the SHA-pinned `cv/parse` composite action
+  (`stklug84/actions`). The corresponding `scripts/gen.sh` `VARIANTS`
+  entries and `build.yml` `generate` steps are present but **commented
+  out**; they activate once `cv/parse` ships those styles and its pin
+  here is bumped (same manual-bump flow as the central pins above).
 - **Release retention**: only the 10 newest releases are kept
   (`release-keep: "10"`). Pruned releases are deleted **including their
   PDFs and tags** — older CV revisions are gone for good. Anyone with

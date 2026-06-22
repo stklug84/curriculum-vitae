@@ -1,0 +1,410 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-sidebar-vs}[2026/06/22  CV style (XeLaTeX, right sidebar)]
+
+% =====================================================================
+% cv-sidebar-vs.sty -- Two-column CV style for XeLaTeX, RIGHT sidebar.
+% ---------------------------------------------------------------------
+% Author variant:  "" (initials VS)
+% Engine:   XeLaTeX (required)
+% Layout:   main column (LEFT, ~60%) / sidebar (RIGHT, ~38%) via paracol
+% Font:     Lato (via fontspec), fallback Fira Sans, sans default
+% Icons:    fontawesome5
+% Accent:   blue #075E9C, dark-teal rules #00394D
+% Paper:    US Letter (letterpaper), ~0.5in margins
+%
+% NOTE ON PHOTO: This is a US-style CV. NO photo box / circular photo /
+% picture element is defined or used here. The original sidebar style
+% placed a circular photo top-right; per US CV conventions that space is
+% intentionally reclaimed and the header block widens into it instead.
+% There is deliberately NO \cvphoto macro.
+%
+% PUBLIC API
+% ---------------------------------------------------------------------
+%   \cvtopbanner                          -- no-op (kept for API parity)
+%   \cvcontact{icon}{text}                -- one contact row (left aligned)
+%   \cvname{firstline}{secondline}        -- main column name + role header
+%   \cvsummary{text}                      -- opening summary paragraph
+%   \cvsection{TITLE}                     -- main heading + thick teal rule
+%   \cvsidesection{TITLE}                 -- sidebar heading + teal rule
+%   \cventry{title}{date}{employer}{desc} -- job/education entry
+%   \cvsubentry{date}{title}{desc}        -- nested sub-project
+%   \cvchip{label}                        -- rounded bordered pill (single)
+%   \cvchiprow{labels}                    -- flowing row of chips (comma sep)
+%   \cvskillgroup{heading}{body}          -- grouped sidebar list
+%   \cvlanguage{name}{sublabel}{level}    -- language row (name + level text)
+%   \cvsidelist{items}                    -- plain bullet list (sidebar)
+%   \cvruled                              -- thin dotted gray separator
+%   \cvachievement{icon}{title}{desc}     -- trophy + bold title + gray desc
+%   \cvdonut{label/value, ...}            -- TikZ ring/donut chart + labels
+%
+% USAGE
+% ---------------------------------------------------------------------
+%   \documentclass[letterpaper,10pt]{article}
+%   \usepackage{cv-sidebar-vs}
+%   \begin{document}
+%   \begin{paracol}{2}
+%     % main content (column 1, left) ...
+%     \switchcolumn
+%     % sidebar content (column 2, right) ...
+%   \end{paracol}
+%   \end{document}
+% =====================================================================
+
+% --- Engine guard ----------------------------------------------------
+\RequirePackage{iftex}
+\RequireXeTeX
+
+% --- Required packages -----------------------------------------------
+\RequirePackage{fontspec}
+\RequirePackage[letterpaper,margin=0.5in]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{paracol}
+\RequirePackage{tikz}
+\RequirePackage{fontawesome5}
+\RequirePackage{enumitem}
+\RequirePackage{microtype}
+\RequirePackage{calc}
+\RequirePackage{array}
+\RequirePackage{tabularx}
+\RequirePackage{etoolbox}
+\RequirePackage[hidelinks]{hyperref}
+
+\usetikzlibrary{calc}
+
+% --- Fonts -----------------------------------------------------------
+% Lato is available in the build container; fall back to Fira Sans.
+\IfFontExistsTF{Lato}{%
+  \setmainfont{Lato}%
+  \setsansfont{Lato}%
+}{%
+  \setmainfont{Fira Sans}%
+  \setsansfont{Fira Sans}%
+}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Color palette ---------------------------------------------------
+\definecolor{cvAccent}{HTML}{075E9C}     % accent blue
+\definecolor{cvRuleTeal}{HTML}{00394D}   % dark teal heading rule
+\definecolor{cvChipBorder}{HTML}{9D9D9D} % chip border gray
+\definecolor{cvChipText}{HTML}{484848}   % chip text dark gray
+\definecolor{cvDivider}{HTML}{CDCDCD}    % dotted divider gray
+\definecolor{cvText}{HTML}{222222}       % body text near-black
+\definecolor{cvMuted}{HTML}{484848}      % muted dark gray
+% Donut palette (graduated blues)
+\definecolor{cvDonutA}{HTML}{015C99}
+\definecolor{cvDonutB}{HTML}{669DC1}
+\definecolor{cvDonutC}{HTML}{91B9D3}
+
+\color{cvText}
+
+% --- paracol setup ---------------------------------------------------
+% Main column LEFT. ratio 0.60 -> main 60%, sidebar 40% (gutter eats some,
+% giving an effective ~55-58% main / ~38% sidebar split).
+\columnratio{0.60}
+\setlength{\columnsep}{0.06\textwidth}
+\globalcounter*
+
+% --- hyperref ---------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=cvAccent,
+  urlcolor=cvAccent,
+  citecolor=cvAccent,
+  pdfborder={0 0 0}
+}
+
+% --- List styling -----------------------------------------------------
+\setlist{nosep,leftmargin=1.2em}
+\setlist[itemize,1]{label=\textbullet,labelsep=.5em}
+\setlist[itemize,2]{label=\textopenbullet,labelsep=.5em,leftmargin=1.2em}
+
+% =====================================================================
+%  PRIVATE HELPERS
+% =====================================================================
+
+% --- Bordered rounded chip pill (white fill, gray border) ------------
+\newcommand{\cv@chip}[1]{%
+  \tikz[baseline=(c.base)]{
+    \node[rounded corners=5pt,draw=cvChipBorder,line width=0.5pt,
+          fill=white,inner xsep=7pt,inner ysep=3pt,
+          font=\small,text=cvChipText] (c) {#1};
+  }%
+}
+
+% --- Thick full-width teal rule (used under section headings) --------
+\newcommand{\cv@tealrule}{%
+  \par\nointerlineskip
+  {\color{cvRuleTeal}\hrule height 1.5pt}%
+  \par
+}
+
+% --- Thin dotted gray divider ----------------------------------------
+\newcommand{\cv@dottedrule}{%
+  \par\nointerlineskip
+  \noindent\textcolor{cvDivider}{%
+    \leaders\hbox{\,\textperiodcentered\,}\hfill\kern0pt}%
+  \par
+}
+
+% =====================================================================
+%  PUBLIC API
+% =====================================================================
+
+% --- \cvtopbanner ----------------------------------------------------
+% No-op. Kept so generated documents can call it for API parity.
+\newcommand{\cvtopbanner}{}
+
+% --- \cvcontact{icon}{text} ------------------------------------------
+% One contact row, LEFT aligned, small accent-blue icon then text.
+\newcommand{\cvcontact}[2]{%
+  \noindent
+  {\small\textcolor{cvAccent}{#1}}\hspace{0.5em}{\small #2}%
+  \par\smallskip
+}
+
+% --- \cvname{firstline}{secondline} ----------------------------------
+% Main column header. Name ALL CAPS large light near-black; role line in
+% accent blue bold beneath. Widens into the (omitted) photo space.
+\newcommand{\cvname}[2]{%
+  {\fontsize{26pt}{30pt}\selectfont\color{cvText}\MakeUppercase{#1}}\par
+  \vspace{0.25em}
+  {\fontsize{12pt}{15pt}\selectfont\bfseries\color{cvAccent}#2}\par
+  \vspace{0.6em}
+}
+
+% --- \cvsummary{text} ------------------------------------------------
+\newcommand{\cvsummary}[1]{%
+  {\small #1}\par\vspace{0.5em}
+}
+
+% --- \cvsection{TITLE} -----------------------------------------------
+% Main-column heading: uppercase bold accent-blue text + thick teal rule.
+\newcommand{\cvsection}[1]{%
+  \vspace{0.7em}%
+  \noindent
+  {\bfseries\fontsize{13pt}{15pt}\selectfont\color{cvAccent}\MakeUppercase{#1}}%
+  \par\vspace{0.25em}
+  \cv@tealrule
+  \par\vspace{0.45em}
+}
+
+% --- \cvsidesection{TITLE} -------------------------------------------
+% Sidebar heading: same style, slightly smaller.
+\newcommand{\cvsidesection}[1]{%
+  \vspace{0.6em}%
+  \noindent
+  {\bfseries\fontsize{12pt}{14pt}\selectfont\color{cvAccent}\MakeUppercase{#1}}%
+  \par\vspace{0.2em}
+  \cv@tealrule
+  \par\vspace{0.4em}
+}
+
+% --- \cventry{title}{date}{employer}{desc} ---------------------------
+% Employer bold accent-blue; a rounded chip holding the role/title inline
+% followed by the date range in plain dark text; description paragraph.
+% Entries separated by a dotted gray divider.
+\newcommand{\cventry}[4]{%
+  \vspace{0.35em}%
+  \noindent{\bfseries\color{cvAccent}#3}\par
+  \vspace{0.25em}
+  \noindent\cv@chip{#1}\hspace{0.6em}{\small\color{cvText}#2}\par
+  \vspace{0.3em}
+  \ifblank{#4}{}{{\small #4}\par}%
+  \vspace{0.4em}
+  \cv@dottedrule
+  \vspace{0.35em}
+}
+
+% --- \cvsubentry{date}{title}{desc} ----------------------------------
+% Nested sub-project under a job entry; round-bullet list inside desc.
+\newcommand{\cvsubentry}[3]{%
+  \vspace{0.15em}%
+  {\small\color{cvText}#1 \textbar{} \textit{#2}}\par
+  \vspace{0.1em}
+  \begingroup
+    \setlist[itemize,1]{label=\textbullet,leftmargin=1.4em,labelsep=.4em}
+    #3
+  \endgroup
+  \vspace{0.25em}
+}
+
+% --- \cvchip{label} and \cvchiprow{labels} ---------------------------
+\newcommand{\cvchip}[1]{\cv@chip{#1}}
+
+% \cvchiprow flows chips inline, wrapping naturally with small gaps.
+\newcommand{\cvchiprow}[1]{%
+  \begingroup
+  \setlength{\parindent}{0pt}%
+  \def\@cvchipsep{}%
+  \@for\@chip:=#1\do{%
+    \@cvchipsep
+    \cv@chip{\@chip}%
+    \def\@cvchipsep{\hspace{0.4em}\penalty0\hspace{0pt plus 0.4em}}%
+  }%
+  \par\medskip
+  \endgroup
+}
+
+% --- \cvskillgroup{heading}{body} ------------------------------------
+\newcommand{\cvskillgroup}[2]{%
+  \vspace{0.25em}%
+  {\bfseries\small\color{cvText}#1}\par
+  {\small\color{cvMuted}#2}\par
+  \vspace{0.3em}
+}
+
+% --- \cvlanguage{name}{sublabel}{level} ------------------------------
+% Renders name (bold) + sublabel text. The numeric level is accepted for
+% API compatibility but rendered as plain text (no rated dots needed).
+\newcommand{\cvlanguage}[3]{%
+  \noindent
+  {\bfseries\small\color{cvText}#1}%
+  \ifblank{#2}{}{\hspace{0.5em}{\small\color{cvMuted}#2}}%
+  \par\vspace{0.3em}
+}
+
+% --- \cvsidelist{items} ----------------------------------------------
+% Plain bullet list for the sidebar. Empty-safe.
+\newcommand{\cvsidelist}[1]{%
+  \ifblank{#1}{}{%
+    \begingroup
+    \setlist[itemize,1]{label=\textbullet,leftmargin=1.2em,labelsep=.5em}
+    \begin{itemize}
+      #1
+    \end{itemize}
+    \endgroup
+  }%
+}
+
+% --- \cvruled --------------------------------------------------------
+\newcommand{\cvruled}{%
+  \par\vspace{0.4em}%
+  \cv@dottedrule
+  \par\vspace{0.4em}
+}
+
+% --- \cvachievement{icon}{title}{desc} -------------------------------
+% Accent-blue fontawesome icon (e.g. \faTrophy) left, bold title, gray
+% description beneath; closed with a dotted divider.
+\newcommand{\cvachievement}[3]{%
+  \vspace{0.3em}%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}c@{\hspace{0.6em}}X@{}}
+    {\color{cvAccent}\large #1} &
+    \begin{tabular}[t]{@{}>{\raggedright\arraybackslash}p{\dimexpr\linewidth-1.4em\relax}@{}}
+      {\bfseries\small\color{cvText}#2}\\[0.15em]
+      {\small\color{cvMuted}#3}
+    \end{tabular}
+  \end{tabularx}\par
+  \vspace{0.35em}
+  \cv@dottedrule
+  \vspace{0.3em}
+}
+
+% --- \cvdonut{label1/value1, label2/value2, ...} ---------------------
+% A TikZ ring/donut chart. Wedges are drawn as thick arcs on a ring,
+% coloured from a graduated blue palette (cycled). Each wedge gets an
+% external text label "<label> <pct>%" connected by a short leader line
+% to the wedge midpoint.
+%
+% Implementation notes:
+%   * Values are summed first, then each wedge angle = value/total*360.
+%   * Drawn as arcs of a circle of radius R with line width = ring band.
+%   * Robustness: arithmetic via \pgfmath; labels placed at midangle on a
+%     larger radius. Kept deliberately simple so it always compiles.
+\newcommand{\cv@donutR}{1.05}      % ring radius (cm)
+\newcommand{\cv@donutW}{0.42cm}    % ring band thickness
+
+\newcommand{\cvdonut}[1]{%
+  \begingroup
+  % First pass: compute total.
+  \edef\cv@dtotal{0}%
+  \@for\@pair:=#1\do{%
+    \expandafter\cv@splitpair\@pair\@nil
+    \pgfmathparse{\cv@dtotal+\cv@dval}%
+    \edef\cv@dtotal{\pgfmathresult}%
+  }%
+  \par\medskip
+  \noindent
+  \begin{tikzpicture}[scale=1]
+    \pgfmathsetmacro{\cv@R}{\cv@donutR}
+    % Second pass: draw wedges + labels.
+    \def\cv@dstart{90}% start at top, go clockwise
+    \edef\cv@didx{0}%
+    \@for\@pair:=#1\do{%
+      \expandafter\cv@splitpair\@pair\@nil
+      % fraction & sweep
+      \pgfmathsetmacro{\cv@frac}{\cv@dval/\cv@dtotal}%
+      \pgfmathsetmacro{\cv@sweep}{\cv@frac*360}%
+      \pgfmathsetmacro{\cv@dend}{\cv@dstart-\cv@sweep}%
+      \pgfmathsetmacro{\cv@dmid}{(\cv@dstart+\cv@dend)/2}%
+      \pgfmathsetmacro{\cv@pct}{round(\cv@frac*100)}%
+      % pick colour by index modulo 3
+      \pgfmathtruncatemacro{\cv@cmod}{mod(\cv@didx,3)}%
+      \ifcase\cv@cmod
+        \def\cv@dcol{cvDonutA}\or
+        \def\cv@dcol{cvDonutB}\or
+        \def\cv@dcol{cvDonutC}\fi
+      % draw the ring arc
+      \draw[\cv@dcol,line width=\cv@donutW]
+        ([shift={(\cv@dstart:\cv@R)}]0,0)
+        arc[start angle=\cv@dstart,end angle=\cv@dend,radius=\cv@R];
+      % leader line + external label.
+      % Normalise midangle to (-180,180] and choose left/right anchor.
+      \pgfmathsetmacro{\cv@nmid}{mod(\cv@dmid+180,360)-180}%
+      \pgfmathsetmacro{\cv@lr}{\cv@R+0.30}%
+      \pgfmathsetmacro{\cv@tr}{\cv@R+0.42}%
+      \draw[cvChipBorder,line width=0.3pt]
+        (\cv@dmid:\cv@R+0.24) -- (\cv@dmid:\cv@lr);
+      \ifdim\cv@nmid pt>0pt
+        \def\cv@danchor{west}%
+      \else
+        \def\cv@danchor{east}%
+      \fi
+      \node[font=\scriptsize,color=cvText,anchor=\cv@danchor]
+        at (\cv@dmid:\cv@tr) {\cv@dlabel~\cv@pct\%};
+      % advance
+      \edef\cv@dstart{\cv@dend}%
+      \pgfmathtruncatemacro{\cv@didx}{\cv@didx+1}%
+      \xdef\cv@didx{\cv@didx}%
+    }%
+  \end{tikzpicture}%
+  \par\medskip
+  \endgroup
+}
+
+% Split "label/value" into \cv@dlabel and \cv@dval, splitting on the LAST
+% slash so labels may themselves contain slashes (e.g. "CI/CD/20" ->
+% label "CI/CD", value "20"). We scan the chunks between slashes one at a
+% time: each iteration appends the previous chunk to the label, and the
+% LAST chunk (the one with no slash after it) becomes the value.
+\def\cv@splitpair#1\@nil{%
+  \def\cv@dlabel{}%
+  \def\cv@dvalraw{0}%
+  \cv@splitscan#1/\cv@stop
+  \pgfmathsetmacro{\cv@dval}{\cv@dvalraw}%
+}
+% Scans "<chunk>/<rest>/". \cv@end marks the tail. When the chunk that
+% follows is the \cv@end sentinel, the current chunk is the value.
+\def\cv@splitscan#1/#2\cv@stop{%
+  \cv@ifsentinel{#2}{%
+    % #2 is empty/sentinel -> #1 is the final chunk = the numeric value
+    \def\cv@dvalraw{#1}%
+  }{%
+    \ifx\cv@dlabel\@empty
+      \def\cv@dlabel{#1}%
+    \else
+      \edef\cv@dlabel{\cv@dlabel/#1}%
+    \fi
+    \cv@splitscan#2\cv@stop
+  }%
+}
+% \cv@ifsentinel{tokens}{is-sentinel}{not-sentinel}: true when tokens are
+% exactly the \cv@end marker (i.e. nothing real remains before \cv@stop).
+\def\cv@ifsentinel#1#2#3{\cv@ifsent@aux#1\cv@end\cv@send{#2}{#3}}
+\def\cv@ifsent@aux#1\cv@end#2\cv@send#3#4{%
+  % If #1 (text before first \cv@end) is empty, it was the sentinel.
+  \ifblank{#1}{#3}{#4}%
+}
+
+\endinput

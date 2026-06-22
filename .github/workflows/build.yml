@@ -97,6 +97,30 @@ jobs:
           lang: de
           out-dir: cvs/databricks-de
 
+      # Example-CV showcase variants (cvs/{pw,dh,vs,fs,ia}/). These build
+      # today from their committed fallback section bodies, so the steps
+      # below are STAGED and commented out: they require new cv/parse
+      # --style emitters in stklug84/actions (pw/dh/vs alias the sidebar
+      # emitter; fs/ia get their own templates). Uncomment once cv/parse
+      # ships those styles and bump the pin below to the release that adds
+      # them (mirrors the existing v2.3.0 SHA-pin convention). See README
+      # "Known caveats and future improvements".
+      # - name: Generate  (pw)   # PENDING cv/parse style support
+      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+      #   with: {source: data/cv.yml, mode: latex, style: pw, lang: de, out-dir: cvs/pw}
+      # - name: Generate  (dh)     # PENDING cv/parse style support
+      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+      #   with: {source: data/cv.yml, mode: latex, style: dh, lang: de, out-dir: cvs/dh}
+      # - name: Generate  (vs) # PENDING cv/parse style support
+      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+      #   with: {source: data/cv.yml, mode: latex, style: vs, lang: en, out-dir: cvs/vs}
+      # - name: Generate  (fs)  # PENDING cv/parse style support
+      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+      #   with: {source: data/cv.yml, mode: latex, style: fs, lang: en, out-dir: cvs/fs}
+      # - name: Generate  (ia)    # PENDING cv/parse style support
+      #   uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+      #   with: {source: data/cv.yml, mode: latex, style: ia, lang: de, out-dir: cvs/ia}
+
       - name: Upload generated section files
         uses: actions/upload-artifact@v7
         with:

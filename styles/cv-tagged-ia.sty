@@ -1,0 +1,304 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-tagged-ia}[2026/06/22 Tagged B/W minimalist CV style (XeLaTeX) --  / IA]
+
+% =====================================================================
+% cv-tagged-ia.sty -- Black/white minimalist single-column CV style
+% ---------------------------------------------------------------------
+% Engine:   XeLaTeX (required)
+% Layout:   single column, with local sub-columns inside entries
+% Font:     Lato (fallback Fira Sans) via fontspec; mono Inconsolata
+% Icons:    fontawesome5
+% Signature look: section headings are a solid BLACK "tag" rectangle
+%                 containing WHITE uppercase bold text, left-aligned.
+%
+% PUBLIC API
+% ---------------------------------------------------------------------
+%   \cvtopbanner                          -- no-op (kept for API parity)
+%   \cvcontact{icon}{text}                -- icon-chip + text pair
+%   \cvname{firstline}{secondline}        -- two stacked huge caps lines
+%   \cvsummary{text}                      -- justified intro paragraph
+%   \cvsection{TITLE}                     -- black tag heading
+%   \cvsidesection{TITLE}                 -- alias of \cvsection
+%   \cventry{title}{date}{employer}{desc} -- entry row (date col + main)
+%   \cvsubentry{date}{title}{desc}        -- nested sub-project
+%   \cvchip{label}                        -- simple boxed label
+%   \cvchiprow{comma,labels}              -- row of boxed labels
+%   \cvskillgroup{heading}{body}          -- bold heading + body
+%   \cvlanguage{name}{sublabel}{level}    -- plain "name -- sublabel"
+%   \cvsidelist{items}                    -- plain bullet list
+%   \cvruled                              -- thin separator (minimal)
+%   \cvtechstack{a / b / c}               -- monospace slash-joined line
+%   \cvskillbar{label}{frac}              -- solid black bar, frac of max
+%   \cvskillbubbles{l1/w1, l2/w2, ...}    -- row of black circles + labels
+% =====================================================================
+
+% --- Engine guard ----------------------------------------------------
+\RequirePackage{iftex}
+\RequireXeTeX
+
+% --- Required packages -----------------------------------------------
+\RequirePackage{fontspec}
+\RequirePackage[a4paper,top=1.4cm,bottom=1.2cm,left=1.6cm,right=1.6cm]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{tikz}
+\RequirePackage{fontawesome5}
+\RequirePackage{enumitem}
+\RequirePackage{microtype}
+\RequirePackage{calc}
+\RequirePackage{array}
+\RequirePackage{tabularx}
+\RequirePackage{etoolbox}
+\RequirePackage[hidelinks]{hyperref}
+
+\usetikzlibrary{calc}
+
+% --- Color palette (strict B/W minimalism) ---------------------------
+\definecolor{cvText}{HTML}{1A1A1A}   % near-black body text
+\definecolor{cvBlack}{HTML}{0D0D0D}  % black fills / chips / tags
+\definecolor{cvMuted}{HTML}{555555}  % muted secondary text
+\definecolor{cvRule}{HTML}{1A1A1A}
+
+\color{cvText}
+\pagecolor{white}
+
+% --- Fonts -----------------------------------------------------------
+% Body / headings: humanist sans -- prefer Lato, fall back to Fira Sans.
+\IfFontExistsTF{Lato}{%
+  \setmainfont{Lato}%
+  \setsansfont{Lato}%
+}{%
+  \IfFontExistsTF{Fira Sans}{%
+    \setmainfont{Fira Sans}%
+    \setsansfont{Fira Sans}%
+  }{%
+    % last-resort: stick with default Latin Modern
+  }%
+}
+\renewcommand{\familydefault}{\sfdefault}
+
+% Monospace for tech-stack lines: prefer a system "Inconsolata"; if that
+% is not discoverable (common on TeX Live, where it ships as the OTF
+% "Inconsolatazi4"), load that OTF directly via fontspec; then fall back
+% to Fira Mono, then to the default \ttfamily. This keeps tech-stack
+% lines truly monospaced under XeLaTeX (the inconsolata.sty package sets
+% an OT1-only \ttdefault that fontspec cannot map, so it is avoided).
+\IfFontExistsTF{Inconsolatazi4-Regular.otf}{%
+  \setmonofont{Inconsolatazi4-Regular.otf}%  Inconsolata as shipped by TeX Live
+}{%
+  \IfFontExistsTF{Inconsolata}{%
+    \setmonofont{Inconsolata}%  system-installed Inconsolata
+  }{%
+    \IfFontExistsTF{Fira Mono}{%
+      \setmonofont{Fira Mono}%
+    }{%
+      % keep default typewriter family (Latin Modern Mono)
+    }%
+  }%
+}
+
+% --- hyperref ---------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=cvText,
+  urlcolor=cvText,
+  citecolor=cvText,
+  pdfborder={0 0 0}
+}
+
+% --- List styling -----------------------------------------------------
+\setlist{nosep,leftmargin=1.2em}
+\setlist[itemize,1]{label=\textbullet,labelsep=.5em}
+\setlist[itemize,2]{label=\textopenbullet,labelsep=.5em,leftmargin=1.2em}
+
+% --- Layout dimensions ------------------------------------------------
+\newlength{\cv@datecol}
+\setlength{\cv@datecol}{0.18\linewidth}
+\newlength{\cv@barmax}
+\setlength{\cv@barmax}{4.2cm}
+\newlength{\cv@barlabel}
+\setlength{\cv@barlabel}{2.4cm}
+
+% =====================================================================
+%  PUBLIC API
+% =====================================================================
+
+% --- \cvtopbanner ----------------------------------------------------
+% No-op: this minimalist style has a pure white background.
+\newcommand{\cvtopbanner}{}
+
+% --- \cvname{firstline}{secondline} ----------------------------------
+% Two stacked HUGE BOLD ALL-CAPS lines (condensed leading), then a
+% regular sentence-case job-title line passed as #2.
+\newcommand{\cvname}[2]{%
+  {\bfseries\fontsize{34pt}{34pt}\selectfont\MakeUppercase{#1}}\par
+  {\bfseries\fontsize{34pt}{36pt}\selectfont\MakeUppercase{#2}}\par
+  \vspace{0.6em}%
+}
+
+% --- Private: black rounded-square icon chip with white glyph --------
+\newcommand{\cv@iconchip}[1]{%
+  \tikz[baseline=-0.55ex]{%
+    \node[rounded corners=2pt,fill=cvBlack,inner sep=2.4pt,
+          text=white,font=\scriptsize] {#1};%
+  }%
+}
+
+% --- \cvcontact{icon}{text} ------------------------------------------
+% One icon-chip + text pair. Designed to be placed inside a 2-col grid
+% (see main document) but also works standalone.
+\newcommand{\cvcontact}[2]{%
+  \cv@iconchip{#1}\hspace{0.6em}{\small #2}%
+}
+
+% --- \cvsummary{text} ------------------------------------------------
+\newcommand{\cvsummary}[1]{%
+  {\small #1\par}\vspace{0.6em}%
+}
+
+% --- \cvsection{TITLE} -----------------------------------------------
+% SIGNATURE: solid black rectangle "tag" with white uppercase bold text.
+\newcommand{\cvsection}[1]{%
+  \vspace{0.8em}\par\noindent
+  \colorbox{cvBlack}{%
+    \hspace{0.15em}\rule{0pt}{1.15em}%
+    \textcolor{white}{\bfseries\MakeUppercase{#1}}%
+    \hspace{0.15em}%
+  }%
+  \par\vspace{0.5em}%
+}
+
+% --- \cvsidesection{TITLE} -- alias ----------------------------------
+\newcommand{\cvsidesection}[1]{\cvsection{#1}}
+
+% --- \cventry{title}{date}{employer}{desc} ---------------------------
+% Left column (~18%) = date at top; main column = title (left) +
+% employer (right, smaller bold); then justified description.
+\newcommand{\cventry}[4]{%
+  \vspace{0.3em}\par\noindent
+  \begin{minipage}[t]{\cv@datecol}%
+    \raggedright{\small\color{cvMuted}#2}%
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
+    {\noindent\textbf{#1}\hfill{\bfseries\small #3}\par}%
+    \ifblank{#4}{}{\vspace{0.15em}{\small #4\par}}%
+  \end{minipage}%
+  \par\vspace{0.5em}%
+}
+
+% --- \cvsubentry{date}{title}{desc} ----------------------------------
+\newcommand{\cvsubentry}[3]{%
+  \vspace{0.15em}\par\noindent
+  \begin{minipage}[t]{\cv@datecol}%
+    \raggedright{\small\color{cvMuted}#1}%
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
+    {\small\textit{#2}\par}%
+    \begingroup
+      \setlist[itemize,1]{label=\textopenbullet,leftmargin=1.4em,labelsep=.4em}%
+      {\small #3}%
+    \endgroup
+  \end{minipage}%
+  \par\vspace{0.35em}%
+}
+
+% --- \cvchip{label} / \cvchiprow{labels} -----------------------------
+\newcommand{\cvchip}[1]{%
+  \tikz[baseline=(c.base)]{%
+    \node[draw=cvBlack,line width=0.5pt,inner xsep=6pt,inner ysep=3pt,
+          font=\small,text=cvText] (c) {#1};%
+  }%
+}
+\newcommand{\cvchiprow}[1]{%
+  \begingroup
+  \def\@cvchipsep{}%
+  \@for\@chip:=#1\do{%
+    \@cvchipsep\cvchip{\@chip}%
+    \def\@cvchipsep{\hspace{0.4em}}%
+  }%
+  \par\medskip
+  \endgroup
+}
+
+% --- \cvskillgroup{heading}{body} ------------------------------------
+\newcommand{\cvskillgroup}[2]{%
+  \vspace{0.25em}%
+  {\bfseries\small #1}\par
+  {\small #2}\par
+  \vspace{0.25em}%
+}
+
+% --- \cvlanguage{name}{sublabel}{level} ------------------------------
+% Plain text "name -- sublabel" (no widget). #3 (level) ignored.
+\newcommand{\cvlanguage}[3]{%
+  \noindent{\bfseries\small #1}\,{\small\color{cvMuted}--- #2}\par
+  \vspace{0.2em}%
+}
+
+% --- \cvsidelist{items} ----------------------------------------------
+% Plain bullet list. Empty-safe.
+\newcommand{\cvsidelist}[1]{%
+  \ifblank{#1}{}{%
+    \begingroup
+    \begin{itemize}
+      #1
+    \end{itemize}
+    \endgroup
+  }%
+}
+
+% --- \cvruled --------------------------------------------------------
+\newcommand{\cvruled}{%
+  \par\vspace{0.4em}{\color{cvRule}\hrule height 0.3pt}\par\vspace{0.4em}%
+}
+
+% --- \cvtechstack{a / b / c} -----------------------------------------
+% Monospace, slash-joined technology line (rendered as-is, mono font).
+\newcommand{\cvtechstack}[1]{%
+  \par\noindent{\ttfamily\small #1}\par\vspace{0.3em}%
+}
+
+% --- \cvskillbar{label}{frac} ----------------------------------------
+% Right-aligned label, then a solid black bar of length frac*max.
+% frac is in 0..1.
+\newcommand{\cvskillbar}[2]{%
+  \par\noindent
+  \makebox[\cv@barlabel][r]{\small #1}\hspace{0.6em}%
+  \begin{tikzpicture}[baseline=-0.55ex]
+    % track
+    \draw[cvMuted,line width=0.3pt]
+      (0,0) rectangle (\cv@barmax,0.55em);
+    % fill
+    \fill[cvBlack]
+      (0,0) rectangle ({#2*\cv@barmax},0.55em);
+  \end{tikzpicture}%
+  \par\vspace{0.3em}%
+}
+
+% --- \cvskillbubbles{l1/w1, l2/w2, ...} ------------------------------
+% Row of solid black circles, radius scaled by weight, label centered
+% above each circle. Robust: parses "label/weight" pairs.
+\newcommand{\cvskillbubbles}[1]{%
+  \par\vspace{0.4em}\noindent
+  \begin{tikzpicture}[baseline=0pt]
+    \def\cv@bx{0}%
+    \foreach \pair in {#1}{%
+      \edef\cv@tmp{\pair}%
+      \expandafter\cv@parsebubble\cv@tmp\@nil
+    }%
+  \end{tikzpicture}%
+  \par\vspace{0.3em}%
+}
+% Parse "label/weight": draw circle of radius scaled by weight, label above.
+\def\cv@parsebubble#1/#2\@nil{%
+  \pgfmathsetmacro{\cv@rad}{0.06 + 0.045*#2}% radius in cm, weight-scaled
+  \pgfmathsetmacro{\cv@cx}{\cv@bx + \cv@rad}%
+  \fill[cvBlack] (\cv@cx,0) circle (\cv@rad cm);
+  \node[font=\scriptsize,anchor=south] at (\cv@cx,0.42)
+    {\strut #1};%
+  \pgfmathsetmacro{\cv@bxnext}{\cv@cx + \cv@rad + 0.45}%
+  \xdef\cv@bx{\cv@bxnext}%
+}
+
+\endinput

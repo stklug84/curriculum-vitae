@@ -1,0 +1,335 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-sidebar-pw}[2026/06/22 Refined sidebar CV style -- PW grayscale (XeLaTeX)]
+
+% =====================================================================
+% cv-sidebar-pw.sty -- Refined two-column sidebar CV style (XeLaTeX)
+% ---------------------------------------------------------------------
+% Variant "" (PW): a refined grayscale evolution of
+% cv-sidebar.sty. US-CV convention: NO PHOTO.
+%
+% Engine:   XeLaTeX (required)
+% Layout:   37% sidebar (LEFT) / 63% main column via paracol
+% Font:     Fira Sans (via FiraSans + fontspec)
+% Icons:    fontawesome5
+%
+% NOTE ON PHOTO (US CV CONVENTIONS)
+% ---------------------------------------------------------------------
+% This style INTENTIONALLY omits any \cvphoto macro and any picture /
+% image box. Per United States CV/resume conventions a photograph is
+% NOT included (to avoid bias-related discrimination concerns). The
+% sidebar therefore begins directly with the contact block. Do not add
+% a photo slot here.
+%
+% PUBLIC API
+% ---------------------------------------------------------------------
+%   \cvtopbanner                          -- dark banner at page top (call once)
+%   \cvcontact{icon}{text}                -- one contact row (icon = \fa...)
+%   \cvname{firstline}{secondline}        -- main column name+role header
+%   \cvsummary{text}                      -- opening summary paragraph
+%   \cvsection{TITLE}                     -- main heading with accent bar
+%   \cvsidesection{TITLE}                 -- sidebar heading (accent bar)
+%   \cventry{title}{date}{employer}{desc} -- job/education entry
+%   \cvsubentry{date}{title}{desc}        -- nested sub-project
+%   \cvchip{label}                        -- rounded pill (single chip)
+%   \cvchiprow{labels}                    -- stack of chips (comma-separated)
+%   \cvskillgroup{heading}{body}          -- sidebar skill category
+%   \cvlanguage{name}{sublabel}{level}    -- language row + 5-dot rating
+%   \cvsidelist{items}                    -- plain bullet list (sidebar)
+%   \cvruled                              -- thin solid separator
+%   \cvruleddotted                        -- thin dotted separator
+%
+% USAGE
+% ---------------------------------------------------------------------
+%   \documentclass[a4paper,10pt]{article}
+%   \usepackage{cv-sidebar-pw}
+%   \begin{document}
+%   \cvtopbanner
+%   \begin{paracol}{2}
+%     % sidebar content (column 1) ... starts with \cvsidesection{Kontakt}
+%     \switchcolumn
+%     % main content (column 2) ...
+%   \end{paracol}
+%   \end{document}
+% =====================================================================
+
+% --- Engine guard ----------------------------------------------------
+\RequirePackage{iftex}
+\RequireXeTeX
+
+% --- Required packages -----------------------------------------------
+\RequirePackage{fontspec}
+\RequirePackage[sfdefault]{FiraSans}
+\RequirePackage[a4paper,top=1.8cm,bottom=1.2cm,left=1.2cm,right=1.2cm]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{paracol}
+\RequirePackage{tikz}
+\RequirePackage{fontawesome5}
+\RequirePackage{enumitem}
+\RequirePackage{microtype}
+\RequirePackage{calc}
+\RequirePackage{array}
+\RequirePackage{tabularx}
+\RequirePackage{etoolbox}
+\RequirePackage{eso-pic}
+\RequirePackage[hidelinks]{hyperref}
+
+\usetikzlibrary{calc}
+
+% --- Color palette (refined grayscale) -------------------------------
+\definecolor{cvAccent}{HTML}{221E1F}   % near-black accent (bars, headings)
+\definecolor{cvTopBar}{HTML}{221E1F}   % dark top banner
+\definecolor{cvPageBg}{HTML}{F1F2F2}   % full-page light-gray background
+\definecolor{cvDivider}{HTML}{A7A9AC}  % vertical hairline + employer text
+\definecolor{cvRule}{HTML}{A7A9AC}     % horizontal rules
+\definecolor{cvChipBg}{HTML}{D9D9D9}   % pill chip fill
+\definecolor{cvText}{HTML}{808184}     % body text gray
+\definecolor{cvDate}{HTML}{000000}     % dates -- true black
+\definecolor{cvMuted}{HTML}{A7A9AC}    % employer italic muted gray
+\definecolor{cvIconBg}{HTML}{808184}   % contact icon circle fill
+\definecolor{cvDot}{HTML}{000000}      % filled language dot -- true black
+\definecolor{cvDotEmpty}{HTML}{A7A9AC} % empty language dot
+
+\color{cvText}
+
+% --- paracol setup (37 / 63) -----------------------------------------
+\columnratio{0.37}
+\setlength{\columnsep}{1.2em}
+\globalcounter*
+
+% --- hyperref ---------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=cvAccent,
+  urlcolor=cvAccent,
+  citecolor=cvAccent,
+  pdfborder={0 0 0}
+}
+
+% --- List styling -----------------------------------------------------
+\setlist{nosep,leftmargin=1.2em}
+\setlist[itemize,1]{label=\textbullet,labelsep=.5em}
+\setlist[itemize,2]{label=\textopenbullet,labelsep=.5em,leftmargin=1.2em}
+
+% --- Layout metrics ---------------------------------------------------
+\newcommand{\cv@bannerheight}{0.9cm}
+\newcommand{\cv@sidebarwidthratio}{0.37}
+
+% --- Page background: full-page tint + banner + vertical divider ------
+% Edge-to-edge light-gray page, a dark top banner, and a thin vertical
+% hairline separating the sidebar from the main column (full height).
+\newcommand{\cvtopbanner}{%
+  \AddToShipoutPictureBG*{%
+    \begin{tikzpicture}[remember picture,overlay]
+      % Full-page light-gray background (edge to edge)
+      \fill[cvPageBg]
+        (current page.north west) rectangle (current page.south east);
+      % Top banner (full width)
+      \fill[cvTopBar]
+        (current page.north west)
+        rectangle ([yshift=-\cv@bannerheight]current page.north east);
+      % Vertical hairline divider between sidebar and main column
+      \draw[cvDivider,line width=0.4pt]
+        ([xshift=\cv@sidebarwidthratio\paperwidth,yshift=-\cv@bannerheight]current page.north west)
+        -- ([xshift=\cv@sidebarwidthratio\paperwidth]current page.south west);
+    \end{tikzpicture}%
+  }%
+}
+
+% --- Section heading font (letter-spaced uppercase) -------------------
+\newfontfamily\cv@headingfont{Fira Sans}[
+  UprightFeatures={LetterSpace=3.0},
+  BoldFeatures={LetterSpace=3.0},
+  Scale=1.0
+]
+\newcommand{\cv@headstyle}[1]{{\cv@headingfont\bfseries\MakeUppercase{#1}}}
+
+% --- Private helper: vertical accent bar (~2pt) ----------------------
+\newcommand{\cv@accentbar}{%
+  \tikz[baseline=(b.base)]{
+    \node[inner sep=0pt,outer sep=0pt] (b) {\strut};
+    \fill[cvAccent]
+      ([yshift=-0.15em]b.south west)
+      rectangle ([xshift=2pt,yshift=1.15em]b.south west);
+  }%
+}
+
+% --- Private helper: rounded chip pill -------------------------------
+\newcommand{\cv@chip}[1]{%
+  \tikz[baseline=(c.base)]{
+    \node[rounded corners=5pt,fill=cvChipBg,inner xsep=8pt,inner ysep=4pt,
+          font=\small,text=cvText] (c) {#1};
+  }%
+}
+
+% --- Private helper: 5-dot proficiency widget -----------------------
+% #1 = filled count (0..5)
+\newcommand{\cv@drawdots}[1]{%
+  \begin{tikzpicture}[baseline=-0.6ex,x=0.9em]
+    \foreach \i in {1,...,5}{%
+      \ifnum\i>#1\relax
+        \fill[cvDotEmpty] (\i,0) circle (0.28em);
+      \else
+        \fill[cvDot] (\i,0) circle (0.28em);
+      \fi
+    }
+  \end{tikzpicture}%
+}
+
+% =====================================================================
+%  PUBLIC API
+% =====================================================================
+
+% NOTE: \cvphoto is intentionally NOT defined (US CV conventions, see
+% the header note above). The sidebar begins with the contact block.
+
+% --- \cvcontact{icon}{text} ------------------------------------------
+% A single contact row: text right-aligned, with a gray filled circle
+% icon (white glyph) to the RIGHT of the text.
+\newcommand{\cvcontact}[2]{%
+  \noindent\makebox[\linewidth][r]{%
+    {\small\color{cvText} #2}\hspace{0.6em}%
+    \tikz[baseline=-0.6ex]{\node[circle,fill=cvIconBg,inner sep=2pt,
+                                 text=white,font=\scriptsize] {#1};}%
+  }\par\smallskip
+}
+
+% --- \cvname{firstline}{secondline} ----------------------------------
+% Main column header with a left vertical accent bar beside the name.
+\newcommand{\cvname}[2]{%
+  \noindent
+  \makebox[0pt][l]{\hspace*{-0.6em}\cv@accentbar}%
+  {\cv@headingfont\bfseries\color{cvAccent}\fontsize{22pt}{26pt}\selectfont\MakeUppercase{#1}}\par
+  \vspace{0.2em}
+  {\cv@headingfont\color{cvText}\fontsize{11pt}{13pt}\selectfont\MakeUppercase{#2}}\par
+  \vspace{0.8em}
+}
+
+% --- \cvsummary{text} ------------------------------------------------
+\newcommand{\cvsummary}[1]{%
+  {\small\color{cvText} #1}\par\vspace{0.6em}
+  {\color{cvRule}\hrule height 0.4pt}\vspace{0.8em}
+}
+
+% --- \cvsection{TITLE} -----------------------------------------------
+% Main-column heading with left vertical accent bar.
+\newcommand{\cvsection}[1]{%
+  \vspace{0.6em}%
+  \noindent
+  \makebox[0pt][l]{\hspace*{-0.6em}\cv@accentbar}%
+  {\cv@headingfont\bfseries\color{cvAccent}\fontsize{13pt}{15pt}\selectfont\MakeUppercase{#1}}%
+  \par\vspace{0.4em}
+}
+
+% --- \cvsidesection{TITLE} -------------------------------------------
+% Sidebar heading: same uppercase letter-spaced font, with accent bar.
+\newcommand{\cvsidesection}[1]{%
+  \vspace{0.6em}%
+  \noindent
+  \makebox[0pt][l]{\hspace*{-0.6em}\cv@accentbar}%
+  {\cv@headingfont\bfseries\color{cvAccent}\fontsize{12pt}{14pt}\selectfont\MakeUppercase{#1}}%
+  \par\vspace{0.3em}
+}
+
+% --- \cventry{title}{date}{employer}{desc} ---------------------------
+% Job/education entry. Title bold uppercase; date true-black right-flush;
+% employer italic muted; desc body gray.
+\newcommand{\cventry}[4]{%
+  \vspace{0.4em}%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}X r@{}}
+    {\bfseries\small\color{cvAccent}\MakeUppercase{#1}} & {\small\color{cvDate} #2}
+  \end{tabularx}\par
+  {\small\itshape\color{cvMuted} #3}\par
+  \vspace{0.2em}
+  {\small\color{cvText} #4}\par
+  \vspace{0.4em}
+}
+
+% --- \cvsubentry{date}{title}{desc} ----------------------------------
+% Nested sub-project under a job entry.
+\newcommand{\cvsubentry}[3]{%
+  \vspace{0.2em}%
+  {\small\color{cvDate} #1} {\small\color{cvText}\textbar{}} {\small\itshape\color{cvText} #2}\par
+  \vspace{0.1em}
+  \begingroup
+    \color{cvText}%
+    \setlist[itemize,1]{label=\textopenbullet,leftmargin=1.4em,labelsep=.4em}
+    #3
+  \endgroup
+  \vspace{0.3em}
+}
+
+% --- \cvchip{label} and \cvchiprow{labels} ---------------------------
+\newcommand{\cvchip}[1]{\cv@chip{#1}}
+
+% \cvchiprow stacks chips vertically (one per line, centered).
+\newcommand{\cvchiprow}[1]{%
+  \begingroup
+  \def\@cvchipsep{}%
+  \@for\@chip:=#1\do{%
+    \@cvchipsep
+    \par\centering\cv@chip{\@chip}%
+    \def\@cvchipsep{\par\vspace{0.3em}}%
+  }%
+  \par\medskip
+  \endgroup
+}
+
+% --- \cvskillgroup{heading}{body} ------------------------------------
+\newcommand{\cvskillgroup}[2]{%
+  \vspace{0.3em}%
+  {\bfseries\small\color{cvAccent} #1}\par
+  {\small\color{cvText} #2}\par
+  \vspace{0.3em}
+}
+
+% --- \cvlanguage{name}{sublabel}{level} ------------------------------
+% Language row: name bold, small sublabel below, 5-dot rating on right.
+\newcommand{\cvlanguage}[3]{%
+  \noindent
+  \begin{tabularx}{\linewidth}{@{}X r@{}}
+    \begin{tabular}[t]{@{}l@{}}
+      {\bfseries\small\color{cvAccent} #1}\\
+      {\scriptsize\color{cvMuted} #2}
+    \end{tabular}
+    & \cv@drawdots{#3}
+  \end{tabularx}\par
+  \vspace{0.3em}
+}
+
+% --- \cvsidelist{items} ----------------------------------------------
+% Plain bullet list for sidebar. Pass complete \item lines as #1.
+% Empty-safe: if #1 is blank (no items generated), the itemize is
+% suppressed entirely to avoid the LaTeX "missing \item" error.
+\newcommand{\cvsidelist}[1]{%
+  \ifblank{#1}{}{%
+    \begingroup
+    \color{cvText}%
+    \setlist[itemize,1]{label={},leftmargin=0pt,labelsep=0pt}
+    \begin{itemize}
+      #1
+    \end{itemize}
+    \endgroup
+  }%
+}
+
+% --- \cvruled (solid) ------------------------------------------------
+\newcommand{\cvruled}{%
+  \par\vspace{0.4em}%
+  {\color{cvRule}\hrule height 0.3pt}%
+  \par\vspace{0.4em}
+}
+
+% --- \cvruleddotted (dotted) -----------------------------------------
+% Thin dotted horizontal separator (full column width).
+\newcommand{\cvruleddotted}{%
+  \par\vspace{0.4em}%
+  \noindent
+  \textcolor{cvRule}{%
+    \tikz[baseline]{\draw[line width=0.5pt,dotted]
+      (0,0) -- (\linewidth,0);}%
+  }%
+  \par\vspace{0.4em}
+}
+
+\endinput

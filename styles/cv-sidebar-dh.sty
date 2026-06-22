@@ -1,0 +1,316 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{cv-sidebar-dh}[2026/06/22  sidebar CV style (XeLaTeX, US-CV no photo)]
+
+% =====================================================================
+% cv-sidebar-dh.sty -- "" (DH) sidebar CV style for XeLaTeX
+% ---------------------------------------------------------------------
+% Engine:   XeLaTeX (required)
+% Layout:   35% LEFT sidebar (light gray) / 65% main column (white)
+%           via paracol + tikz/eso-pic full-page-height background.
+% Font:     Carlito (Calibri-metric clone). Graceful fallback to
+%           Fira Sans if Carlito is absent. Sans is the document default.
+% Icons:    fontawesome5
+%
+% SIGNATURE element: full-width SOLID GREEN section banners (#70AD47)
+% with WHITE Title-Case text in the MAIN column (\cvsection).
+%
+% US-CV CONVENTION: This style intentionally defines NO photo macro and
+% renders NO photo box / picture / image. The charcoal photo band from
+% the original sidebar style is deliberately omitted. The sidebar opens
+% with the name + contact block over the light-gray fill.
+%
+% PUBLIC API
+% ---------------------------------------------------------------------
+%   \cvtopbanner                         -- thin green rule (light accent)
+%   \cvcontact{icon}{text}               -- one contact row (icon = \fa...)
+%   \cvname{firstline}{secondline}       -- ALL-CAPS letter-spaced name block
+%   \cvsummary{text}                     -- opening summary paragraph
+%   \cvsection{TITLE}                    -- main: solid green full-width banner
+%   \cvsidesection{TITLE}                -- sidebar: green Title-Case heading
+%   \cventry{title}{date}{employer}{desc}-- two-subcolumn entry row
+%   \cvsubentry{date}{title}{desc}       -- nested sub-project
+%   \cvchip{label}                       -- light-green-tinted pill
+%   \cvchiprow{labels}                   -- stack of chips (comma-separated)
+%   \cvskillgroup{heading}{body}         -- sidebar skill category
+%   \cvlanguage{name}{sublabel}{level}   -- "Name -- sublabel" text row
+%   \cvsidelist{items}                   -- plain bullet list (sidebar)
+%   \cvruled                             -- thin separator rule
+%
+% USAGE
+% ---------------------------------------------------------------------
+%   \documentclass[a4paper,10pt]{article}
+%   \usepackage{cv-sidebar-dh}
+%   \begin{document}
+%   \cvtopbanner
+%   \begin{paracol}{2}
+%     % sidebar content (column 1, LEFT) ...
+%     \switchcolumn
+%     % main content (column 2) ...
+%   \end{paracol}
+%   \end{document}
+% =====================================================================
+
+% --- Engine guard ----------------------------------------------------
+\RequirePackage{iftex}
+\RequireXeTeX
+
+% --- Required packages -----------------------------------------------
+\RequirePackage{fontspec}
+\RequirePackage[a4paper,top=1.8cm,bottom=1.2cm,left=1.2cm,right=1.2cm]{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{paracol}
+\RequirePackage{tikz}
+\RequirePackage{fontawesome5}
+\RequirePackage{enumitem}
+\RequirePackage{microtype}
+\RequirePackage{calc}
+\RequirePackage{array}
+\RequirePackage{tabularx}
+\RequirePackage{etoolbox}
+\RequirePackage{eso-pic}
+\RequirePackage[hidelinks]{hyperref}
+
+\usetikzlibrary{calc}
+
+% --- Color palette ---------------------------------------------------
+\definecolor{accentgreen}{HTML}{70AD47}
+\definecolor{sidebargray}{HTML}{F2F2F2}
+\definecolor{titleslate}{HTML}{44566C}
+\definecolor{bodygray}{HTML}{4C4949}
+\definecolor{cvChipBg}{HTML}{E2EFDA}   % light green tint for pills
+\definecolor{cvRule}{HTML}{D6D6D6}
+
+% Body default colour (regular dark gray ~#3A3A3A requested for body)
+\definecolor{cvBody}{HTML}{3A3A3A}
+\color{cvBody}
+
+% --- Font setup: Carlito with graceful fallback ----------------------
+% Sans is the document default. Prefer Carlito (Calibri-metric); fall
+% back to Fira Sans if Carlito is not installed in the TeX system.
+\IfFontExistsTF{Carlito}{%
+  \setmainfont{Carlito}%
+  \newcommand{\cv@fontname}{Carlito}%
+}{%
+  \IfFontExistsTF{Fira Sans}{%
+    \setmainfont{Fira Sans}%
+    \newcommand{\cv@fontname}{Fira Sans}%
+  }{%
+    % Last resort: keep Latin Modern; macros still work.
+    \newcommand{\cv@fontname}{Latin Modern Roman}%
+  }%
+}
+\renewcommand{\familydefault}{\sfdefault}
+\setsansfont{\cv@fontname}
+
+% --- paracol setup: 35% sidebar / 65% main ---------------------------
+\columnratio{0.35}
+\setlength{\columnsep}{1.2em}
+\globalcounter*
+
+% --- hyperref ---------------------------------------------------------
+\hypersetup{
+  colorlinks=true,
+  linkcolor=titleslate,
+  urlcolor=accentgreen,
+  citecolor=titleslate,
+  pdfborder={0 0 0}
+}
+
+% --- List styling -----------------------------------------------------
+\setlist{nosep,leftmargin=1.2em}
+\setlist[itemize,1]{label=\textbullet,labelsep=.5em}
+\setlist[itemize,2]{label=\textopenbullet,labelsep=.5em,leftmargin=1.2em}
+
+% --- Page background: full-height light-gray sidebar fill ------------
+% NOTE: No charcoal photo band / banner here — intentionally omitted per
+% US CV conventions. Only the light-gray sidebar fill is drawn.
+\newcommand{\cv@sidebarwidthratio}{0.35}
+
+\AddToShipoutPictureBG{%
+  \begin{tikzpicture}[remember picture,overlay]
+    \fill[sidebargray]
+      (current page.north west)
+      rectangle ([xshift=\cv@sidebarwidthratio\paperwidth]current page.south west);
+  \end{tikzpicture}%
+}
+
+% --- Heading font (letter-spaced) ------------------------------------
+\newfontfamily\cv@headingfont{\cv@fontname}[
+  UprightFeatures={LetterSpace=2.0},
+  BoldFeatures={LetterSpace=2.0},
+  Scale=1.0
+]
+% Wider tracking for the big name block.
+\newfontfamily\cv@namefont{\cv@fontname}[
+  UprightFeatures={LetterSpace=6.0},
+  BoldFeatures={LetterSpace=6.0},
+  Scale=1.0
+]
+
+% --- Title-Case helper -----------------------------------------------
+% Titles are passed already Title-Cased by callers; we keep text as-is
+% (no \MakeUppercase) so "Berufserfahrung" stays Title Case.
+
+% --- Private helper: light-green chip pill ---------------------------
+\newcommand{\cv@chip}[1]{%
+  \tikz[baseline=(c.base)]{
+    \node[rounded corners=4pt,fill=cvChipBg,inner xsep=8pt,inner ysep=4pt,
+          font=\small,text=titleslate] (c) {#1};
+  }%
+}
+
+% =====================================================================
+%  PUBLIC API
+% =====================================================================
+
+% --- \cvtopbanner -----------------------------------------------------
+% Thin green accent rule at the very top of the document (no-op-ish).
+\newcommand{\cvtopbanner}{%
+  \par\noindent{\color{accentgreen}\hrule height 1.2pt}\par\vspace{0.4em}%
+}
+
+% --- \cvcontact{icon}{text} ------------------------------------------
+% Left-aligned contact row: icon then text, in the sidebar.
+\newcommand{\cvcontact}[2]{%
+  \noindent
+  {\color{accentgreen}#1}\hspace{0.6em}{\small\color{bodygray}#2}%
+  \par\smallskip
+}
+
+% --- \cvname{firstline}{secondline} ----------------------------------
+% ALL CAPS, letter-spaced, dark slate. Second line is the role/subtitle.
+\newcommand{\cvname}[2]{%
+  {\cv@namefont\bfseries\fontsize{20pt}{24pt}\selectfont
+    \color{titleslate}\MakeUppercase{#1}}\par
+  \vspace{0.25em}
+  {\cv@headingfont\fontsize{10.5pt}{13pt}\selectfont
+    \color{accentgreen}\MakeUppercase{#2}}\par
+  \vspace{0.8em}
+}
+
+% --- \cvsummary{text} ------------------------------------------------
+\newcommand{\cvsummary}[1]{%
+  {\small\color{cvBody}#1}\par\vspace{0.6em}
+  {\color{cvRule}\hrule height 0.4pt}\vspace{0.8em}
+}
+
+% --- \cvsection{TITLE} -----------------------------------------------
+% SIGNATURE: full-width SOLID GREEN banner, white Title-Case text,
+% ~7mm tall, sharp corners. Lives in the main (white) column.
+\newcommand{\cvsection}[1]{%
+  \par\vspace{0.7em}%
+  \noindent
+  \colorbox{accentgreen}{%
+    \begin{minipage}[c][7mm][c]{\dimexpr\linewidth-2\fboxsep\relax}%
+      {\cv@headingfont\bfseries\fontsize{12pt}{14pt}\selectfont
+        \color{white}\hspace{0.3em}#1}%
+    \end{minipage}%
+  }%
+  \par\vspace{0.5em}
+}
+
+% --- \cvsidesection{TITLE} -------------------------------------------
+% Sidebar heading: green, Title Case, colour-only (no bar / underline).
+\newcommand{\cvsidesection}[1]{%
+  \par\vspace{0.6em}%
+  {\cv@headingfont\bfseries\fontsize{11.5pt}{14pt}\selectfont
+    \color{accentgreen}#1}%
+  \par\vspace{0.3em}
+}
+
+% --- \cventry{title}{date}{employer}{desc} ---------------------------
+% Two-subcolumn row: date in a ~34mm left sub-column; title (bold slate)
+% / employer (green) / description (body) in the right sub-column.
+\newlength{\cv@datecol}
+\setlength{\cv@datecol}{34mm}
+\newcommand{\cventry}[4]{%
+  \par\vspace{0.4em}%
+  \noindent
+  \begin{minipage}[t]{\cv@datecol}%
+    \raggedright\small\bfseries\color{titleslate}#2%
+  \end{minipage}%
+  \hspace{0.4em}%
+  \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
+    \raggedright
+    {\bfseries\small\color{titleslate}#1}\par
+    {\small\color{accentgreen}#3}\par
+    \ifblank{#4}{}{\vspace{0.2em}{\small\color{cvBody}#4}\par}%
+  \end{minipage}%
+  \par\vspace{0.5em}
+}
+
+% --- \cvsubentry{date}{title}{desc} ----------------------------------
+% Nested sub-project under a job entry.
+\newcommand{\cvsubentry}[3]{%
+  \par\vspace{0.2em}%
+  \noindent
+  \begin{minipage}[t]{\cv@datecol}%
+    \raggedright\small\color{titleslate}#1%
+  \end{minipage}%
+  \hspace{0.4em}%
+  \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
+    \raggedright
+    {\small\bfseries\color{titleslate}#2}\par
+    \begingroup
+      \setlist[itemize,1]{label=\textopenbullet,leftmargin=1.4em,labelsep=.4em}
+      {\small\color{cvBody}#3}%
+    \endgroup
+  \end{minipage}%
+  \par\vspace{0.4em}
+}
+
+% --- \cvchip{label} and \cvchiprow{labels} ---------------------------
+\newcommand{\cvchip}[1]{\cv@chip{#1}}
+
+\newcommand{\cvchiprow}[1]{%
+  \begingroup
+  \def\@cvchipsep{}%
+  \@for\@chip:=#1\do{%
+    \@cvchipsep
+    \par\cv@chip{\@chip}%
+    \def\@cvchipsep{\par\vspace{0.3em}}%
+  }%
+  \par\medskip
+  \endgroup
+}
+
+% --- \cvskillgroup{heading}{body} ------------------------------------
+\newcommand{\cvskillgroup}[2]{%
+  \par\vspace{0.3em}%
+  {\bfseries\small\color{titleslate}#1}\par
+  {\small\color{bodygray}#2}\par
+  \vspace{0.3em}
+}
+
+% --- \cvlanguage{name}{sublabel}{level} ------------------------------
+% No rating dots in this style: render as "Name -- sublabel" text.
+% The {level} argument is accepted but intentionally unused.
+\newcommand{\cvlanguage}[3]{%
+  \par\noindent
+  {\small\bfseries\color{titleslate}#1}%
+  \ifblank{#2}{}{{\small\color{bodygray}\ \textendash\ #2}}%
+  \par\vspace{0.25em}
+}
+
+% --- \cvsidelist{items} ----------------------------------------------
+% Plain bullet list for sidebar. Empty-safe.
+\newcommand{\cvsidelist}[1]{%
+  \ifblank{#1}{}{%
+    \begingroup
+    \setlist[itemize,1]{label=\textbullet,leftmargin=1.2em,labelsep=.5em}
+    \color{bodygray}\small
+    \begin{itemize}
+      #1
+    \end{itemize}
+    \endgroup
+  }%
+}
+
+% --- \cvruled --------------------------------------------------------
+\newcommand{\cvruled}{%
+  \par\vspace{0.4em}%
+  {\color{cvRule}\hrule height 0.3pt}%
+  \par\vspace{0.4em}
+}
+
+\endinput
