@@ -10,7 +10,7 @@
 #     - yamllint     : all YAML files (.yamllint.yml)
 #     - markdownlint : all Markdown files (.markdownlint.yml)
 #     - hadolint     : .github/docker/texlive/Dockerfile
-#     - cv-schema    : validate data/cv.yml against the cv/parse schema
+#     - cv-schema    : validate each data/cv-*.yml against cv/parse schema
 # ---
 name: Lint
 
@@ -89,19 +89,27 @@ jobs:
           dockerfile: .github/docker/texlive/Dockerfile
 
   cv-schema:
-    name: cv-schema (data/cv.yml)
+    name: cv-schema (${{ matrix.source }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Every CV data source feeding the variant matrix
+        # (data/variants.yml) must satisfy the cv/parse schema contract.
+        source:
+          - data/cv-academics.yml
+          - data/cv-databricks.yml
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # Validate the single source of truth against the cv/parse schema
+      # Validate the source of truth against the cv/parse schema
       # contract; --check writes nothing and fails the PR on the first
       # violation with a clear message.
-      - name: Validate data/cv.yml
-        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+      - name: Validate ${{ matrix.source }}
+        uses: stklug84/actions/cv/parse@cd9b63fdb53b6530c4cecdace6bd0fbc07964853  # v2.4.0
         with:
-          source: data/cv.yml
+          source: ${{ matrix.source }}
           check: "true"
           # out-dir is required by the action but unused in --check mode.
           out-dir: .
