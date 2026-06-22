@@ -27,12 +27,12 @@ The generated section files are also **committed** under each
 running the action first). Regenerate them after editing `cv.yml`:
 
 ```sh
-make gen     # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
-make check   # validate data/cv.yml against the cv/parse schema
+scripts/gen.sh           # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
+scripts/gen.sh --check   # validate data/cv.yml against the cv/parse schema
 ```
 
-Both delegate to `scripts/gen.sh`, which expects a sibling checkout of the
-action at `../actions/cv/parse` (override with `ACTION_DIR` / `PARSE_PY`).
+`scripts/gen.sh` expects a sibling checkout of the action at
+`../actions/cv/parse` (override with `ACTION_DIR` / `PARSE_PY`).
 
 Each variant main wraps the generated bodies in its own scaffolding. The
 generated files are:
@@ -101,8 +101,7 @@ PR builds additionally upload short-lived workflow artifacts for review
 │       ├── personal-info.tex     # Generated (committed fallback)
 │       ├── cv-*.tex              # Generated section bodies (committed fallback)
 │       └── .engine               # contents: xelatex
-├── scripts/gen.sh                # Regenerate section files from data/cv.yml
-├── Makefile                      # `make gen` / `make check`
+├── scripts/gen.sh                # Regenerate section files from data/cv.yml (--check validates)
 ├── .github/
 │   ├── CODEOWNERS                # Default reviewer: @stklug84
 │   ├── dependabot.yml            # Actions + TeX Live digest updates
@@ -126,9 +125,9 @@ automatically by the workflow and is the only thing you need locally too.
 ## Editing CV content
 
 Content is **not** edited in the `.tex` files — edit
-[`data/cv.yml`](data/cv.yml) (bilingual), then run `make gen` to
-regenerate the committed section files and `make check` to validate the
-schema. See [`data/README.md`](data/README.md). Do not hand-edit the
+[`data/cv.yml`](data/cv.yml) (bilingual), then run `scripts/gen.sh` to
+regenerate the committed section files and `scripts/gen.sh --check` to
+validate the schema. See [`data/README.md`](data/README.md). Do not hand-edit the
 generated `cv-*.tex` / `personal-info.tex` files; they carry a
 "do not edit by hand" banner and are overwritten on regeneration.
 
@@ -147,7 +146,7 @@ To add a third CV:
    `xelatex`, `latex-chain`. If `.engine` is missing, `latexmk` is used.
 4. Add the variant (and its `cv/parse` style) to the `generate` job in
    `.github/workflows/build.yml` and to the `VARIANTS` list in
-   `scripts/gen.sh`, then run `make gen` and commit the generated files.
+   `scripts/gen.sh`, then run `scripts/gen.sh` and commit the generated files.
 5. Open a pull request (`main` is protected; direct pushes are rejected).
    CI picks the new variant up automatically and uploads
    `<repo>-<name>-pdf` as a workflow artifact for review. After the merge,

@@ -8,13 +8,17 @@
 #	generated files (cv-*.tex + personal-info.tex) are committed as a
 #	local-build fallback so the repo builds without CI regeneration;
 #	run this whenever data/cv.yml changes and commit the result.
+#
+#	With --check, validate data/cv.yml against the cv/parse schema
+#	instead of generating (no files are written).
 # @dependencies:
 #	python3 (>= 3.9), PyYAML, Jinja2
 #	The cv/parse action checkout. Point PARSE_PY at its parse.py, or
 #	set ACTION_DIR to the action root. Defaults assume a sibling
 #	checkout at ../actions/cv/parse relative to this repo.
 # @usage:
-#	scripts/gen.sh
+#	scripts/gen.sh                 # regenerate section files
+#	scripts/gen.sh --check         # validate data/cv.yml only
 #	ACTION_DIR=/path/to/actions/cv/parse scripts/gen.sh
 #	PARSE_PY=/path/to/parse.py scripts/gen.sh
 
@@ -25,6 +29,24 @@ cd "$REPO_ROOT"
 
 SOURCE="${SOURCE:-data/cv.yml}"
 LANG_OUT="${CV_LANG:-de}"
+
+# Parse arguments. --check validates the source against the cv/parse
+# schema and exits without generating anything.
+CHECK_ONLY=0
+for arg in "$@"; do
+  case "$arg" in
+    --check) CHECK_ONLY=1 ;;
+    -h|--help)
+      sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *)
+      echo "error: unknown argument: $arg" >&2
+      echo "       usage: scripts/gen.sh [--check]" >&2
+      exit 2
+      ;;
+  esac
+done
 
 # Resolve the cv/parse emitter.
 if [ -n "${PARSE_PY:-}" ]; then
@@ -39,6 +61,13 @@ if [ ! -f "$PARSE_PY" ]; then
   echo "error: cv/parse emitter not found at: $PARSE_PY" >&2
   echo "       set ACTION_DIR or PARSE_PY (see header)." >&2
   exit 1
+fi
+
+# Validate-only mode: check the source against the cv/parse schema and
+# exit without writing any files.
+if [ "$CHECK_ONLY" -eq 1 ]; then
+  echo "Checking ${SOURCE} against the cv/parse schema"
+  exec python3 "$PARSE_PY" --source "$SOURCE" --check
 fi
 
 # variant-dir:style pairs.

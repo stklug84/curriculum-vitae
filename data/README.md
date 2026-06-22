@@ -20,12 +20,11 @@ downloads that artifact at the repo root (`prebuild-artifact`) **before**
 the TeX Live build, so the freshly generated files override the committed
 fallback (below).
 
-Locally, regenerate with the committed helper (see the repo `Makefile` and
-`scripts/gen.sh`):
+Locally, regenerate with the committed helper (`scripts/gen.sh`):
 
 ```sh
-make gen     # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
-make check   # validate data/cv.yml against the cv/parse schema
+scripts/gen.sh           # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
+scripts/gen.sh --check   # validate data/cv.yml against the cv/parse schema
 ```
 
 Both default to a sibling checkout of the action at `../actions/cv/parse`;
@@ -41,10 +40,10 @@ They are *not* gitignored. This snapshot lets the repo build locally (plain
 `pdflatex`/`xelatex`) and keeps history reviewable without requiring the
 action to run first. CI regenerates them anyway via the prebuild artifact,
 so the committed copy is a convenience fallback — keep it in sync with
-`make gen` whenever `cv.yml` changes.
+`scripts/gen.sh` whenever `cv.yml` changes.
 
-> Each variant's local `personal-info.tex` (resolved first via
-> `TEXINPUTS=.:...`) shadows the legacy repo-root `personal-info.tex`.
+> Each variant's local `personal-info.tex` is resolved first via
+> `TEXINPUTS=.:...` from inside `cvs/<variant>/`.
 
 ## Emitted section files (LaTeX mode)
 

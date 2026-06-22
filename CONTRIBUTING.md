@@ -13,15 +13,16 @@ be reusable — contributions to either are welcome.
   improvement) per PR.
 - Do not commit build byproducts (`*.aux`, `*.log`, `*.pdf`,
   `*.synctex.gz`, …). They are gitignored; keep it that way.
-- Do not commit personal data other than what `personal-info.tex` already
-  exposes intentionally.
+- Do not commit personal data other than what `data/cv.yml` (and the
+  `personal-info.tex` generated from it) already exposes intentionally.
 
 ## Repository layout
 
 | Path | Purpose |
 | --- | --- |
-| `cvs/<name>/` | One directory per CV variant (one main `.tex` + `.engine`) |
-| `styles/*.sty`, `personal-info.tex`, `images/` | Shared assets, resolved via `TEXINPUTS` |
+| `cvs/<name>/` | One directory per CV variant (one main `.tex` + `.engine` + generated `personal-info.tex` / `cv-*.tex`) |
+| `data/cv.yml` | Single source of truth; section files are generated from it (`scripts/gen.sh`) |
+| `styles/*.sty`, `images/` | Shared assets, resolved via `TEXINPUTS` |
 | `.github/workflows/build.yml` | Orchestration only: discover → build (matrix) → package |
 | `.github/docker/texlive/Dockerfile` | Digest pin for the TeX Live container (tracked by Dependabot) |
 
