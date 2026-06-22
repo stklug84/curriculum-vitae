@@ -1,15 +1,15 @@
-# `data/cv.yaml` — single source of truth
+# `data/cv.yml` — single source of truth
 
-`data/cv.yaml` is the **canonical, bilingual** source of every CV in this
+`data/cv.yml` is the **canonical, bilingual** source of every CV in this
 repository. The LaTeX section files under `cvs/<variant>/` and (elsewhere)
 the web `cv.yml` are all *generated* from it by the
 [`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions) action
-(major alias `v2`). Edit `cv.yaml`, regenerate, commit.
+(major alias `v2`). Edit `cv.yml`, regenerate, commit.
 
 ## Generate → build flow
 
 ```text
-data/cv.yaml ──(cv/parse --mode latex --style plain  --lang de)──▶ cvs/photo-2page/cv-*.tex + personal-info.tex
+data/cv.yml ──(cv/parse --mode latex --style plain  --lang de)──▶ cvs/photo-2page/cv-*.tex + personal-info.tex
             └──(cv/parse --mode latex --style sidebar --lang de)──▶ cvs/sidebar/cv-*.tex     + personal-info.tex
 ```
 
@@ -25,7 +25,7 @@ Locally, regenerate with the committed helper (see the repo `Makefile` and
 
 ```sh
 make gen     # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
-make check   # validate data/cv.yaml against the cv/parse schema
+make check   # validate data/cv.yml against the cv/parse schema
 ```
 
 Both default to a sibling checkout of the action at `../actions/cv/parse`;
@@ -41,7 +41,7 @@ They are *not* gitignored. This snapshot lets the repo build locally (plain
 `pdflatex`/`xelatex`) and keeps history reviewable without requiring the
 action to run first. CI regenerates them anyway via the prebuild artifact,
 so the committed copy is a convenience fallback — keep it in sync with
-`make gen` whenever `cv.yaml` changes.
+`make gen` whenever `cv.yml` changes.
 
 > Each variant's local `personal-info.tex` (resolved first via
 > `TEXINPUTS=.:...`) shadows the legacy repo-root `personal-info.tex`.
@@ -64,7 +64,7 @@ body in its own `\subsection*{…}\begin{longtable}{<cols>} … \input{…} …
 \end{longtable}`. The sidebar main `\input`s the bodies directly under its
 section headers inside the `paracol` layout.
 
-> **Do not** put LaTeX escapes (`\&`, `\LaTeX`, `\"a`, …) in `cv.yaml`.
+> **Do not** put LaTeX escapes (`\&`, `\LaTeX`, `\"a`, …) in `cv.yml`.
 > Write plain UTF-8 text (`&`, `LaTeX`, `ä`); the action escapes LaTeX
 > specials for you and preserves `---`/`--` dashes and `\href{url}{name}`.
 
@@ -115,4 +115,4 @@ generate, so a small amount of literal text stays inline in
 - **`\cvchiprow{…}` (Tech-Stack)** and **`\cvchip{…}` (Schlüsselkonzepte)**
   — decorative chip rows with no schema counterpart; kept inline.
 
-Everything else in both variants is generated from `cv.yaml`.
+Everything else in both variants is generated from `cv.yml`.

@@ -3,11 +3,11 @@
 #	Steffen Klug <45033201+stklug84@users.noreply.github.com>
 # @description:
 #	Regenerate the committed per-section .tex snapshot for every CV
-#	variant from the single source of truth data/cv.yaml, using the
+#	variant from the single source of truth data/cv.yml, using the
 #	cv/parse emitter (scripts/parse.py from stklug84/actions). The
 #	generated files (cv-*.tex + personal-info.tex) are committed as a
 #	local-build fallback so the repo builds without CI regeneration;
-#	run this whenever data/cv.yaml changes and commit the result.
+#	run this whenever data/cv.yml changes and commit the result.
 # @dependencies:
 #	python3 (>= 3.9), PyYAML, Jinja2
 #	The cv/parse action checkout. Point PARSE_PY at its parse.py, or
@@ -23,7 +23,7 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_ROOT"
 
-SOURCE="${SOURCE:-data/cv.yaml}"
+SOURCE="${SOURCE:-data/cv.yml}"
 LANG_OUT="${CV_LANG:-de}"
 
 # Resolve the cv/parse emitter.

@@ -1,8 +1,8 @@
 # Convenience targets for the CV repository.
 #
 # `make gen`   regenerate the committed per-section .tex snapshot from
-#              data/cv.yaml for every variant (see scripts/gen.sh).
-# `make check` validate data/cv.yaml against the cv/parse schema.
+#              data/cv.yml for every variant (see scripts/gen.sh).
+# `make check` validate data/cv.yml against the cv/parse schema.
 #
 # Both delegate to the cv/parse emitter (scripts/parse.py from
 # stklug84/actions). Point at it with ACTION_DIR or PARSE_PY; the
@@ -10,7 +10,7 @@
 
 SHELL := /usr/bin/env bash
 PARSE_PY ?= ../actions/cv/parse/scripts/parse.py
-SOURCE   ?= data/cv.yaml
+SOURCE   ?= data/cv.yml
 
 .PHONY: gen check
 

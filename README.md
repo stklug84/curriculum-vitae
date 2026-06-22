@@ -13,10 +13,10 @@ them in parallel inside a TeX Live container. Any build can be reproduced
 locally with the host TeX Live install or by replaying the workflow with
 [`nektos/act`](https://github.com/nektos/act) via the GitHub CLI.
 
-## Single source of truth: `data/cv.yaml`
+## Single source of truth: `data/cv.yml`
 
 All CV content lives in one canonical, bilingual (`de`/`en`) file:
-[`data/cv.yaml`](data/cv.yaml). The per-section LaTeX files each variant
+[`data/cv.yml`](data/cv.yml). The per-section LaTeX files each variant
 `\input`s are **generated** from it by the
 [`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions) action
 (major alias `v2`). See [`data/README.md`](data/README.md) for the full
@@ -24,11 +24,11 @@ schema, the `targets` contract, and the generate→build flow.
 
 The generated section files are also **committed** under each
 `cvs/<variant>/` as a local-build fallback (so the repo builds without
-running the action first). Regenerate them after editing `cv.yaml`:
+running the action first). Regenerate them after editing `cv.yml`:
 
 ```sh
 make gen     # regenerate cvs/<variant>/cv-*.tex + personal-info.tex
-make check   # validate data/cv.yaml against the cv/parse schema
+make check   # validate data/cv.yml against the cv/parse schema
 ```
 
 Both delegate to `scripts/gen.sh`, which expects a sibling checkout of the
@@ -84,7 +84,7 @@ PR builds additionally upload short-lived workflow artifacts for review
 ```text
 .
 ├── data/
-│   ├── cv.yaml                   # Single source of truth (bilingual de/en)
+│   ├── cv.yml                    # Single source of truth (bilingual de/en)
 │   └── README.md                 # Schema + targets contract
 ├── styles/
 │   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
@@ -101,7 +101,7 @@ PR builds additionally upload short-lived workflow artifacts for review
 │       ├── personal-info.tex     # Generated (committed fallback)
 │       ├── cv-*.tex              # Generated section bodies (committed fallback)
 │       └── .engine               # contents: xelatex
-├── scripts/gen.sh                # Regenerate section files from data/cv.yaml
+├── scripts/gen.sh                # Regenerate section files from data/cv.yml
 ├── Makefile                      # `make gen` / `make check`
 ├── .github/
 │   ├── CODEOWNERS                # Default reviewer: @stklug84
@@ -111,7 +111,7 @@ PR builds additionally upload short-lived workflow artifacts for review
 │       ├── build.yml             # generate (cv/parse) -> latex-build-cv (below)
 │       ├── codeql.yml            # CodeQL (actions language)
 │       └── lint.yml              # actionlint/yamllint/markdownlint/hadolint/cv-schema
-├── .markdownlint.yaml            # Markdown lint rules
+├── .markdownlint.yml             # Markdown lint rules
 ├── .yamllint.yml                 # YAML lint rules
 └── CONTRIBUTING.md               # Conventions and PR checklist
 ```
@@ -126,7 +126,7 @@ automatically by the workflow and is the only thing you need locally too.
 ## Editing CV content
 
 Content is **not** edited in the `.tex` files — edit
-[`data/cv.yaml`](data/cv.yaml) (bilingual), then run `make gen` to
+[`data/cv.yml`](data/cv.yml) (bilingual), then run `make gen` to
 regenerate the committed section files and `make check` to validate the
 schema. See [`data/README.md`](data/README.md). Do not hand-edit the
 generated `cv-*.tex` / `personal-info.tex` files; they carry a
@@ -222,7 +222,7 @@ The logic is layered across three repositories:
 | Layer | Where | Role |
 | --- | --- | --- |
 | Caller `build.yml` | this repo | Triggers, concurrency, permissions, the `generate` job (cv/parse), repo-specific inputs |
-| Composite action `cv/parse` | [`stklug84/actions`](https://github.com/stklug84/actions) (`v2`) | Renders `data/cv.yaml` → per-section `.tex` for each variant style |
+| Composite action `cv/parse` | [`stklug84/actions`](https://github.com/stklug84/actions) (`v2`) | Renders `data/cv.yml` → per-section `.tex` for each variant style |
 | Reusable workflow `latex-build-cv.yml` | [`stklug84/github-workflows`](https://github.com/stklug84/github-workflows) (SHA-pinned, `v1.6.0`) | Jobs: `discover` → `build` (matrix, with prebuild download) → `package` → `release` |
 | Composite actions `texlive/*` | [`stklug84/actions`](https://github.com/stklug84/actions) (SHA-pinned, `v1.3.0`) | Behavior: `discover-variants`, `build-pdf`, `upload-build-logs` |
 
@@ -238,9 +238,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: stklug84/actions/cv/parse@v2     # plain  -> cvs/photo-2page
-        with: {source: data/cv.yaml, mode: latex, style: plain,  lang: de, out-dir: cvs/photo-2page}
+        with: {source: data/cv.yml, mode: latex, style: plain,  lang: de, out-dir: cvs/photo-2page}
       - uses: stklug84/actions/cv/parse@v2     # sidebar -> cvs/sidebar
-        with: {source: data/cv.yaml, mode: latex, style: sidebar, lang: de, out-dir: cvs/sidebar}
+        with: {source: data/cv.yml, mode: latex, style: sidebar, lang: de, out-dir: cvs/sidebar}
       - uses: actions/upload-artifact@v4
         with: {name: cv-generated-tex, path: cvs/**/*.tex, if-no-files-found: error}
 

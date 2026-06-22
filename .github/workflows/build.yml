@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   # Render the per-section .tex files for every variant from the single
-  # source of truth (data/cv.yaml) via the cv/parse composite action,
+  # source of truth (data/cv.yml) via the cv/parse composite action,
   # then upload them as one artifact laid out under cvs/<variant>/. The
   # reusable workflow downloads this artifact at repo root (prebuild),
   # so every file must already sit under its variant directory.
@@ -43,7 +43,7 @@ jobs:
       - name: Generate plain (photo-2page)
         uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
         with:
-          source: data/cv.yaml
+          source: data/cv.yml
           mode: latex
           style: plain
           lang: de
@@ -54,7 +54,7 @@ jobs:
       - name: Generate sidebar
         uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
         with:
-          source: data/cv.yaml
+          source: data/cv.yml
           mode: latex
           style: sidebar
           lang: de
@@ -89,7 +89,7 @@ jobs:
       local: ${{ inputs.local }}
       # Download the generate job's section files at repo root before
       # the build, so cvs/<variant>/{cv-*.tex,personal-info.tex} reflect
-      # data/cv.yaml rather than the committed fallback snapshot.
+      # data/cv.yml rather than the committed fallback snapshot.
       prebuild-artifact: "cv-generated-tex"
       prebuild-into: "."
       # Publish the built PDFs as a versioned release (v<date>-r<run#>)
