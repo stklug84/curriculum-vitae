@@ -82,7 +82,7 @@ jobs:
     permissions:
       contents: write
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@ef8ccb7f951405e721fa4891008c45c47eb8dcb8  # v1.6.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@50a6d4b1ab8a8a817e552c1f53901661368673e5  # v1.7.0
     with:
       # Resolve repo-root shared assets (styles/*.sty, images/) from
       # inside cvs/<name>/.
