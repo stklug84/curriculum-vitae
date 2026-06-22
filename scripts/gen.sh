@@ -9,6 +9,12 @@
 #	local-build fallback so the repo builds without CI regeneration;
 #	run this whenever data/cv.yml changes and commit the result.
 #
+#	Each variant is declared in the VARIANTS array as a colon-separated
+#	dir:style:lang triple (e.g. cvs/databricks-en:sidebar:en). The third
+#	field selects that variant's output language; when omitted (a
+#	two-field dir:style entry) it falls back to the global LANG_OUT
+#	(CV_LANG, default de) for backward compatibility.
+#
 #	With --check, validate data/cv.yml against the cv/parse schema
 #	instead of generating (no files are written).
 # @dependencies:
@@ -37,7 +43,7 @@ for arg in "$@"; do
   case "$arg" in
     --check) CHECK_ONLY=1 ;;
     -h|--help)
-      sed -n '2,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      sed -n '2,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
       exit 0
       ;;
     *)
@@ -70,21 +76,27 @@ if [ "$CHECK_ONLY" -eq 1 ]; then
   exec python3 "$PARSE_PY" --source "$SOURCE" --check
 fi
 
-# variant-dir:style pairs.
+# variant-dir:style:lang triples. The optional third field selects the
+# output language for that variant; if omitted, it falls back to the
+# global $LANG_OUT (CV_LANG, default de) for backward compatibility.
 VARIANTS=(
-  "cvs/photo-2page:plain"
-  "cvs/sidebar:sidebar"
+  "cvs/photo-2page:plain:de"
+  "cvs/sidebar:sidebar:de"
+  "cvs/databricks-en:sidebar:en"
+  "cvs/databricks-de:sidebar:de"
 )
 
-for pair in "${VARIANTS[@]}"; do
-  dir="${pair%%:*}"
-  style="${pair##*:}"
-  echo "Generating ${style} (lang=${LANG_OUT}) into ${dir}/"
+for entry in "${VARIANTS[@]}"; do
+  # Split on ':' into fields: dir=1, style=2, lang=3 (optional).
+  IFS=':' read -r dir style lang <<<"$entry"
+  # Backward-compat: a two-field entry (no lang) falls back to $LANG_OUT.
+  lang="${lang:-$LANG_OUT}"
+  echo "Generating ${style} (lang=${lang}) into ${dir}/"
   python3 "$PARSE_PY" \
     --source "$SOURCE" \
     --mode latex \
     --style "$style" \
-    --lang "$LANG_OUT" \
+    --lang "$lang" \
     --out-dir "$dir"
 done
 

@@ -99,7 +99,7 @@ jobs:
       # contract; --check writes nothing and fails the PR on the first
       # violation with a clear message.
       - name: Validate data/cv.yml
-        uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
+        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
         with:
           source: data/cv.yml
           check: "true"

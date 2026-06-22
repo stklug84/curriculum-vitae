@@ -9,9 +9,15 @@ the web `cv.yml` are all *generated* from it by the
 ## Generate → build flow
 
 ```text
-data/cv.yml ──(cv/parse --mode latex --style plain  --lang de)──▶ cvs/photo-2page/cv-*.tex + personal-info.tex
-            └──(cv/parse --mode latex --style sidebar --lang de)──▶ cvs/sidebar/cv-*.tex     + personal-info.tex
+data/cv.yml ──(cv/parse --mode latex --style plain   --lang de)──▶ cvs/photo-2page/cv-*.tex   + personal-info.tex
+            ├──(cv/parse --mode latex --style sidebar --lang de)──▶ cvs/sidebar/cv-*.tex       + personal-info.tex
+            ├──(cv/parse --mode latex --style sidebar --lang en)──▶ cvs/databricks-en/cv-*.tex + personal-info.tex
+            └──(cv/parse --mode latex --style sidebar --lang de)──▶ cvs/databricks-de/cv-*.tex + personal-info.tex
 ```
+
+The Databricks variants render the same source in English and German via
+the per-variant `dir:style:lang` entries in `scripts/gen.sh`'s `VARIANTS`
+list (e.g. `cvs/databricks-en:sidebar:en`).
 
 In CI the `generate` job in `.github/workflows/build.yml` runs `cv/parse`
 once per variant and uploads the `cvs/**/*.tex` tree as the
@@ -77,10 +83,17 @@ section headers inside the `paracol` layout.
 Top-level required keys: `meta`, `contact`, `experience`, `education`,
 `conferences`, `skills`, `languages`, `certifications`, `interests`.
 
+`contact` additionally supports **optional** profile links — `linkedin`,
+`github` and `website` — each a `{url, label}` mapping (`url` required and
+non-empty; `label` optional and derived from the URL when omitted). When
+present they are emitted into `personal-info.tex` as `\cv<key>url` /
+`\cv<key>label` macros (plus `\cvemailurl` for the email); absence of all
+three remains valid.
+
 | Key | Shape (✱ = bilingual `{de,en}`) |
 | --- | --- |
 | `meta` | `display_name`, `author`, `pdf_author`, `lang_default`, `title`✱, `location`✱, `summary`✱ |
-| `contact` | `birthdate`, `birthplace`, `address` (list 1–3), `phone`, `email`, `location_signature`, `photo_path`, `signature_path` (all neutral) |
+| `contact` | `birthdate`, `birthplace`, `address` (list 1–3), `phone`, `email`, `location_signature`, `photo_path`, `signature_path` (all neutral); optional `linkedin`/`github`/`website` link mappings `{url, label}` (label optional/derived from the URL) |
 | `experience[]` | `id` (unique), `targets`, `period`✱, `year` (int), `role`✱, `org`, `location`✱, `kind`, `monogram`, `bg`, `logo` (optional/null), `summary`✱, `tags` (list), `bullets[{de,en}]`, `subentries[{date, title✱, bullets[{de,en}]}]` (optional) |
 | `education[]` | `id` (unique), `targets`, `period`, `degree`✱, `institution`✱, `grade` (optional), `details[{de,en}]` |
 | `conferences[]` | `targets`, `year` (int), `name`, `location`, `date`, `url` (optional) |

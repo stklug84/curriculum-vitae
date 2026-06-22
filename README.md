@@ -48,12 +48,18 @@ cvs/<variant>/cv-interests.tex
 cvs/<variant>/cv-certifications.tex
 ```
 
-Today the repo ships two variants:
+Today the repo ships four variants:
 
-| Variant            | Folder             | Engine   | Style file                  |
-| ------------------ | ------------------ | -------- | --------------------------- |
-| Classic two-page   | `cvs/photo-2page/` | pdflatex | `styles/cv-plain-style.sty` |
-| Sidebar two-column | `cvs/sidebar/`     | xelatex  | `styles/cv-sidebar.sty`     |
+| Variant             | Folder                | Engine   | Style file                  |
+| ------------------- | --------------------- | -------- | --------------------------- |
+| Classic two-page    | `cvs/photo-2page/`    | pdflatex | `styles/cv-plain-style.sty` |
+| Sidebar two-column  | `cvs/sidebar/`        | xelatex  | `styles/cv-sidebar.sty`     |
+| Databricks (EN)     | `cvs/databricks-en/`  | xelatex  | `styles/cv-sidebar.sty`     |
+| Databricks (DE)     | `cvs/databricks-de/`  | xelatex  | `styles/cv-sidebar.sty`     |
+
+The two Databricks variants render the same `data/cv.yml` in English and
+German respectively (sidebar style); `scripts/gen.sh` selects each
+variant's language via the `dir:style:lang` entry in its `VARIANTS` list.
 
 ## Downloading the PDFs
 
@@ -96,8 +102,18 @@ PR builds additionally upload short-lived workflow artifacts for review
 │   │   ├── personal-info.tex     # Generated (committed fallback)
 │   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
 │   │   └── .engine               # contents: pdflatex
-│   └── sidebar/
-│       ├── lebenslauf-sidebar.tex
+│   ├── sidebar/
+│   │   ├── lebenslauf-sidebar.tex
+│   │   ├── personal-info.tex     # Generated (committed fallback)
+│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
+│   │   └── .engine               # contents: xelatex
+│   ├── databricks-en/            # Databricks-tuned CV, English (sidebar, xelatex)
+│   │   ├── lebenslauf-databricks.tex
+│   │   ├── personal-info.tex     # Generated (committed fallback)
+│   │   ├── cv-*.tex              # Generated section bodies (committed fallback)
+│   │   └── .engine               # contents: xelatex
+│   └── databricks-de/            # Databricks-tuned CV, German (sidebar, xelatex)
+│       ├── lebenslauf-databricks.tex
 │       ├── personal-info.tex     # Generated (committed fallback)
 │       ├── cv-*.tex              # Generated section bodies (committed fallback)
 │       └── .engine               # contents: xelatex

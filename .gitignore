@@ -31,3 +31,6 @@ cvs/*/*.synctex.gz
 *~
 .vscode/
 .idea/
+
+# Example CV directory
+examples/

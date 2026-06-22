@@ -56,7 +56,7 @@ jobs:
       # plain style -> cvs/photo-2page/ (pdflatex variant). Emits
       # cv-*.tex + personal-info.tex for the plain longtable layout.
       - name: Generate plain (photo-2page)
-        uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
+        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
         with:
           source: data/cv.yml
           mode: latex
@@ -67,13 +67,35 @@ jobs:
       # sidebar style -> cvs/sidebar/ (xelatex variant). Emits
       # cv-*.tex + personal-info.tex using \cventry/\cvskillgroup/... .
       - name: Generate sidebar
-        uses: stklug84/actions/cv/parse@cb91fdcefccd47f24449549389216a5981a6455c  # v2.2.1
+        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
         with:
           source: data/cv.yml
           mode: latex
           style: sidebar
           lang: de
           out-dir: cvs/sidebar
+
+      # databricks-en -> cvs/databricks-en/ (xelatex variant). English
+      # render of the Databricks-tuned CV (sidebar style).
+      - name: Generate Databricks (EN)
+        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+        with:
+          source: data/cv.yml
+          mode: latex
+          style: sidebar
+          lang: en
+          out-dir: cvs/databricks-en
+
+      # databricks-de -> cvs/databricks-de/ (xelatex variant). German
+      # render of the Databricks-tuned CV (sidebar style).
+      - name: Generate Databricks (DE)
+        uses: stklug84/actions/cv/parse@a7e3fcd26ea01da83596d5308b1f2cee24f4a7ee  # v2.3.0
+        with:
+          source: data/cv.yml
+          mode: latex
+          style: sidebar
+          lang: de
+          out-dir: cvs/databricks-de
 
       - name: Upload generated section files
         uses: actions/upload-artifact@v7

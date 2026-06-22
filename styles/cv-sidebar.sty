@@ -280,13 +280,17 @@
 
 % --- \cvsidelist{items} ----------------------------------------------
 % Plain bullet list for sidebar. Pass complete \item lines as #1.
+% Empty-safe: if #1 is blank (no items generated), the itemize is
+% suppressed entirely to avoid the LaTeX "missing \item" error.
 \newcommand{\cvsidelist}[1]{%
-  \begingroup
-  \setlist[itemize,1]{label={},leftmargin=0pt,labelsep=0pt}
-  \begin{itemize}
-    #1
-  \end{itemize}
-  \endgroup
+  \ifblank{#1}{}{%
+    \begingroup
+    \setlist[itemize,1]{label={},leftmargin=0pt,labelsep=0pt}
+    \begin{itemize}
+      #1
+    \end{itemize}
+    \endgroup
+  }%
 }
 
 % --- \cvruled --------------------------------------------------------
