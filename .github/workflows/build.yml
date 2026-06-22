@@ -1,7 +1,7 @@
 ---
 name: Build Document
 
-on:  # yamllint disable-line rule:truthy
+on:
   pull_request:
   push:
     branches:
@@ -81,6 +81,7 @@ jobs:
     # jobs read the repo and upload artifacts.
     permissions:
       contents: write
+    # yamllint disable-line rule:line-length
     uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@ef8ccb7f951405e721fa4891008c45c47eb8dcb8  # v1.6.0
     with:
       # Resolve repo-root shared assets (styles/*.sty, images/) from

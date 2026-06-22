@@ -10,6 +10,7 @@
 # reads its FROM line), and Dependabot bumps the digest as the upstream
 # texlive/texlive:latest tag moves.
 # Please see the documentation for all configuration options:
+# yamllint disable-line rule:line-length
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
 
 ---
