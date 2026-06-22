@@ -58,14 +58,10 @@ jobs:
     # jobs read the repo and upload artifacts.
     permissions:
       contents: write
-    # TODO(pin): this points at the github-workflows release that adds the
-    # built-in `generate` job (generate input + cv/generate). That release
-    # does not exist yet. After the github-workflows PR is merged and
-    # tagged, SHA-pin this to the new release (repo convention pins by
-    # commit SHA with a trailing `# vX.Y.Z` comment), e.g.
-    #   ...latex-build-cv.yml@<sha>  # v1.8.0
+    # SHA-pinned to github-workflows v1.9.0, the release that adds the
+    # built-in `generate` job (generate input + cv/generate).
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@v1.8.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@82172fdf613c67ddd69dce3f85530088b3980437  # v1.9.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix in data/variants.yml (defaults: templates/, data/).
