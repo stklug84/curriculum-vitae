@@ -29,6 +29,16 @@ on:
         required: false
         default: "false"
         type: string
+      generate-manifest:
+        description: >-
+          Build-matrix manifest fed to the generate job. Defaults to the
+          committed data/variants.yml (the remote matrix). Local-only
+          builds (e.g. `task cv:academics`) override this with a gitignored
+          overlay such as data/variants.local.yml so PII-bearing sources
+          are built locally without ever entering the committed matrix.
+        required: false
+        default: "data/variants.yml"
+        type: string
 
 # Least-privilege default; the calling job below grants contents: write,
 # which the called workflow's release job needs to publish versioned
@@ -66,8 +76,13 @@ jobs:
     uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@1fd0b5a94827c6ccad8766c5c25d006a822e56f4  # v1.9.4
     with:
       # Render the full variant tree before building, straight from the
-      # build matrix in data/variants.yml (defaults: templates/, data/).
+      # build matrix (defaults: templates/, data/).
       generate: "true"
+      # Manifest driving the generate job. The workflow_dispatch input
+      # defaults to data/variants.yml (the committed remote matrix); a
+      # local gh act run can point this at a gitignored overlay to build
+      # local-only, PII-bearing variants without committing them.
+      generate-manifest: ${{ inputs.generate-manifest || 'data/variants.yml' }}
       # Resolve repo-root shared assets (styles/*.sty, images/) from
       # inside cvs/<yaml>-<lang>/<style>/ (three levels below the repo
       # root, hence ../../..).

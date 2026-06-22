@@ -278,6 +278,34 @@ local mode even if you omit `--input local=true`. In local mode the PDFs
 land in their leaf folders via the bind mount; the upload, package, and
 release jobs are skipped.
 
+### Via `go-task` (recommended wrapper)
+
+A [`Taskfile.yml`](Taskfile.yml) wraps the `gh act` invocations above
+(including the Apple-Silicon `--container-architecture` flag, applied
+automatically on `darwin/arm64`). Requires
+[go-task](https://taskfile.dev) and the
+[`gh-act`](https://github.com/nektos/gh-act) extension.
+
+```sh
+task                 # list available tasks
+task cv:databricks   # build the committed matrix (cv-databricks) locally
+task cv:academics    # build the local-only, PII-bearing cv-academics variant
+task lint            # run the lint workflow locally
+task clean           # remove the overlay and the generated cvs/ tree
+```
+
+The committed build matrix (`data/variants.yml`) deliberately excludes
+`cv-academics`: its source `data/cv-academics.yml` carries critical PII
+(date and place of birth, home address, signature) and is **gitignored**,
+so it never reaches the remote. `task cv:academics` builds it locally by
+copying the matrix into a gitignored overlay (`data/variants.local.yml`)
+with the `cv-academics` block re-enabled, then running `gh act` with
+`--input generate-manifest=data/variants.local.yml`. The overlay is
+removed when the task finishes (success, failure, or interrupt), so no
+PII-bearing file ever enters the git index. By contrast
+`data/cv-databricks.yml` carries only professional contact details and is
+committed normally.
+
 ## CI workflow explained
 
 CI turns every CV variant into a PDF on every pull request, on every push
@@ -340,8 +368,10 @@ on:
   the rendered PDFs as artifacts before merging.
 - `push` to `main` — builds every CV and publishes the PDFs as a versioned
   GitHub release (see [Downloading the PDFs](#downloading-the-pdfs)).
-- `workflow_dispatch` — manual build. The only input is `local`, used by
-  `gh act` to skip artifact upload steps.
+- `workflow_dispatch` — manual build. Inputs: `local` (used by `gh act` to
+  skip artifact upload steps) and `generate-manifest` (the build-matrix
+  manifest, default `data/variants.yml`; overridden by `task cv:academics`
+  to point at the gitignored `data/variants.local.yml` overlay).
 
 ### Inputs and environment
 
@@ -350,6 +380,7 @@ Inputs this repo passes to the reusable workflow:
 | Name | Value here | Purpose |
 | --- | --- | --- |
 | `generate` | `"true"` | Run the built-in generate job (expand the matrix into the variant tree) before discovery |
+| `generate-manifest` | `${{ inputs.generate-manifest \|\| 'data/variants.yml' }}` | Build-matrix manifest fed to the generate job; the `workflow_dispatch` input lets a local `gh act` run swap in a gitignored overlay |
 | `texinputs` | `.:../../..:../../../styles:../../../images:` | Lets each leaf `sklug-cv.tex` resolve shared assets at the repo root (three levels up) |
 | `local` | `workflow_dispatch` input (default `"false"`) | Forces local mode for `gh act` (skips upload/package/release) |
 | `release` | `"true"` | Publish a versioned release on pushes to `main` |
