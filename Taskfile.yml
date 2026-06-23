@@ -2,19 +2,32 @@
 ---
 # Taskfile.yml — local CV builds via gh act + go-task.
 #
-# The remote CI builds only the variants in the committed data/variants.yml
-# (currently cv-databricks). The PII-bearing cv-academics variant is
-# gitignored and disabled in the committed matrix, so it is built ONLY
-# locally through `task cv:academics`, which:
+# Three build targets, each running the build workflow under gh act:
 #
-#   1. copies data/variants.yml to the gitignored overlay
-#      data/variants.local.yml and uncomments the cv-academics block,
-#   2. runs the build workflow under gh act, pointing the generate job at
-#      the overlay via the generate-manifest input, and
-#   3. always removes the overlay afterwards (success, failure, or Ctrl-C).
+#   build          The CI-equivalent build. Runs the workflow against the
+#                  committed data/variants.yml unchanged — the generic,
+#                  manifest-driven matrix build (whatever variants.yml
+#                  currently declares). No overlay, nothing local-only.
 #
-# Nothing PII-related ever enters the git index: data/cv-academics.yml and
-# data/variants.local.yml are both gitignored.
+#   cv:databricks  Builds ONLY language `en` across ALL non-plain styles.
+#                  The matrix is derived dynamically from the `styles`
+#                  registry in data/variants.yml (every style except
+#                  cv-plain-style), emitted into a gitignored overlay
+#                  (data/variants.local.yml). Self-contained: adding a new
+#                  non-plain style to the registry extends this build with
+#                  no edit here.
+#
+#   cv:academics   Builds ONLY the cv-plain-style + language `de` variant
+#                  from the PII-bearing, gitignored data/cv-academics.yml.
+#                  Like cv:databricks it writes its own matrix into the
+#                  gitignored overlay data/variants.local.yml.
+#
+# Both cv:* targets generate the overlay deterministically: they copy the
+# `styles`/`langs` registries from data/variants.yml, then append a fresh
+# `cvs:` block with their own matrix. The overlay is ALWAYS removed
+# afterwards (success, failure, or Ctrl-C). Nothing PII-related ever
+# enters the git index: data/cv-academics.yml and data/variants.local.yml
+# are both gitignored.
 #
 # Requires: go-task (https://taskfile.dev), gh + gh-act extension
 # (https://github.com/nektos/gh-act), Docker.
@@ -26,8 +39,14 @@ vars:
   ACT_RUNNER: catthehacker/ubuntu:act-latest
   BUILD_WF: .github/workflows/build.yml
   LINT_WF: .github/workflows/lint.yml
+  # Committed matrix / registry source. `build` uses it directly; the
+  # cv:* targets copy its `styles`/`langs` registries into the overlay.
+  VARIANTS_SRC: data/variants.yml
+  # Gitignored overlay the cv:* targets generate and feed to the workflow.
   OVERLAY: data/variants.local.yml
   ACADEMICS_SRC: data/cv-academics.yml
+  # The single plain style; cv:databricks excludes it from its matrix.
+  PLAIN_STYLE: cv-plain-style
   # On Apple Silicon the TeX Live image is pulled as arm64; act defaults to
   # amd64 and Docker refuses the mismatched digest. Force arm64 there.
   ARCH_FLAG:
@@ -46,33 +65,41 @@ tasks:
       - task --list
     silent: true
 
-  cv:databricks:
-    desc: Build the cv-databricks variants locally (the committed matrix) via gh act
+  build:
+    desc: Build the full committed matrix (data/variants.yml) via gh act
     cmds:
+      # No generate-manifest override: the workflow defaults to
+      # data/variants.yml — the generic, manifest-driven matrix build.
       - >-
         gh act workflow_dispatch -W {{.BUILD_WF}}
         --input local=true
         -P ubuntu-latest={{.ACT_RUNNER}}
         {{.ARCH_FLAG}} {{.ACT_ENV}}
 
-  cv:academics:
-    desc: Build the local-only, PII-bearing cv-academics variant via gh act
-    preconditions:
-      - sh: 'test -f {{.ACADEMICS_SRC}}'
-        msg: "{{.ACADEMICS_SRC}} not found (it is gitignored — provide it locally to build this variant)."
+  cv:databricks:
+    desc: Build language en across all non-plain styles via gh act
     cmds:
       # The overlay is always removed afterwards (success, failure, Ctrl-C).
       - defer: rm -f {{.OVERLAY}}
-      # Copy the committed matrix and uncomment the cv-academics block into
-      # the gitignored overlay, then verify the block is enabled.
+      # Build the overlay: keep the registries from variants.yml, then
+      # append a cv-databricks matrix of {style, lang: en} for every style
+      # in the registry except the plain one.
       - |
         set -euo pipefail
-        sed -E \
-          -e 's|^  # (cv-academics:)|  \1|' \
-          -e 's|^  #   (- \{style: cv-plain-style, lang: de\})|    \1|' \
-          data/variants.yml > {{.OVERLAY}}
-        if ! grep -qE '^  cv-academics:' {{.OVERLAY}}; then
-          echo "::error:: failed to enable cv-academics in {{.OVERLAY}}" >&2
+        # Registries only: everything up to (but excluding) the `cvs:` line.
+        sed '/^cvs:/,$d' {{.VARIANTS_SRC}} > {{.OVERLAY}}
+        {
+          echo 'cvs:'
+          echo '  cv-databricks:'
+          # Style registry keys are 2-space indented `  <style>: {...}`.
+          sed -nE 's|^  ([A-Za-z0-9_-]+):[[:space:]]*\{.*|\1|p' {{.VARIANTS_SRC}} \
+            | grep -vx '{{.PLAIN_STYLE}}' \
+            | while IFS= read -r style; do
+                echo "    - {style: ${style}, lang: en}"
+              done
+        } >> {{.OVERLAY}}
+        if ! grep -qE '^    - \{style: .*, lang: en\}$' {{.OVERLAY}}; then
+          echo "::error:: failed to build cv-databricks matrix in {{.OVERLAY}}" >&2
           exit 1
         fi
       # Run the build under gh act, pointing generation at the overlay.
@@ -83,10 +110,36 @@ tasks:
         -P ubuntu-latest={{.ACT_RUNNER}}
         {{.ARCH_FLAG}} {{.ACT_ENV}}
 
-  act:full:
-    desc: Build the entire committed matrix locally (alias of cv:databricks)
+  cv:academics:
+    desc: Build the local-only, PII-bearing cv-academics variant (cv-plain-style, de) via gh act
+    preconditions:
+      - sh: 'test -f {{.ACADEMICS_SRC}}'
+        msg: "{{.ACADEMICS_SRC}} not found (it is gitignored — provide it locally to build this variant)."
     cmds:
-      - task: cv:databricks
+      # The overlay is always removed afterwards (success, failure, Ctrl-C).
+      - defer: rm -f {{.OVERLAY}}
+      # Build the overlay: keep the registries from variants.yml, then
+      # append the single cv-academics leaf (cv-plain-style + de).
+      - |
+        set -euo pipefail
+        # Registries only: everything up to (but excluding) the `cvs:` line.
+        sed '/^cvs:/,$d' {{.VARIANTS_SRC}} > {{.OVERLAY}}
+        {
+          echo 'cvs:'
+          echo '  cv-academics:'
+          echo '    - {style: {{.PLAIN_STYLE}}, lang: de}'
+        } >> {{.OVERLAY}}
+        if ! grep -qE '^  cv-academics:' {{.OVERLAY}}; then
+          echo "::error:: failed to build cv-academics matrix in {{.OVERLAY}}" >&2
+          exit 1
+        fi
+      # Run the build under gh act, pointing generation at the overlay.
+      - >-
+        gh act workflow_dispatch -W {{.BUILD_WF}}
+        --input local=true
+        --input generate-manifest={{.OVERLAY}}
+        -P ubuntu-latest={{.ACT_RUNNER}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
 
   lint:
     desc: Run the lint workflow locally via gh act

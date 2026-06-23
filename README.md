@@ -288,23 +288,41 @@ automatically on `darwin/arm64`). Requires
 
 ```sh
 task                 # list available tasks
-task cv:databricks   # build the committed matrix (cv-databricks) locally
+task build           # build the full committed matrix (data/variants.yml)
+task cv:databricks   # build language en across all non-plain styles
 task cv:academics    # build the local-only, PII-bearing cv-academics variant
 task lint            # run the lint workflow locally
 task clean           # remove the overlay and the generated cvs/ tree
 ```
 
+There are three build targets:
+
+- **`task build`** runs the workflow against the committed
+  `data/variants.yml` unchanged — the generic, manifest-driven matrix
+  build (whatever the committed matrix currently declares). This is the
+  CI-equivalent local build; no overlay is involved.
+- **`task cv:databricks`** builds language `en` across **all non-plain
+  styles**. Its matrix is derived dynamically from the `styles` registry
+  in `data/variants.yml` (every style except `cv-plain-style`), emitted as
+  `{style, lang: en}` leaves into a gitignored overlay
+  (`data/variants.local.yml`). Adding a new non-plain style to the
+  registry extends this build with no edit to the Taskfile.
+- **`task cv:academics`** builds the single `cv-plain-style` + language
+  `de` variant from the PII-bearing source `data/cv-academics.yml`.
+
+Both `cv:*` targets generate the overlay deterministically: they copy the
+`styles`/`langs` registries from `data/variants.yml`, then append their own
+`cvs:` block, and run `gh act` with
+`--input generate-manifest=data/variants.local.yml`. The overlay is removed
+when the task finishes (success, failure, or interrupt), so no PII-bearing
+file ever enters the git index.
+
 The committed build matrix (`data/variants.yml`) deliberately excludes
 `cv-academics`: its source `data/cv-academics.yml` carries critical PII
 (date and place of birth, home address, signature) and is **gitignored**,
-so it never reaches the remote. `task cv:academics` builds it locally by
-copying the matrix into a gitignored overlay (`data/variants.local.yml`)
-with the `cv-academics` block re-enabled, then running `gh act` with
-`--input generate-manifest=data/variants.local.yml`. The overlay is
-removed when the task finishes (success, failure, or interrupt), so no
-PII-bearing file ever enters the git index. By contrast
-`data/cv-databricks.yml` carries only professional contact details and is
-committed normally.
+so it never reaches the remote — hence it is built only locally via
+`task cv:academics`. By contrast `data/cv-databricks.yml` carries only
+professional contact details and is committed normally.
 
 ## CI workflow explained
 
@@ -371,7 +389,8 @@ on:
 - `workflow_dispatch` — manual build. Inputs: `local` (used by `gh act` to
   skip artifact upload steps) and `generate-manifest` (the build-matrix
   manifest, default `data/variants.yml`; overridden by `task cv:academics`
-  to point at the gitignored `data/variants.local.yml` overlay).
+  and `task cv:databricks` to point at the gitignored
+  `data/variants.local.yml` overlay).
 
 ### Inputs and environment
 
