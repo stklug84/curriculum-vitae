@@ -68,12 +68,13 @@ jobs:
     # jobs read the repo and upload artifacts.
     permissions:
       contents: write
-    # SHA-pinned to github-workflows v1.9.5: bundles stklug84/actions
-    # v2.6.0 (cv/generate, texlive/*) and fixes the generated-tree
-    # artifact round-trip on hosted CI (preserves the cvs/ prefix and the
-    # per-variant .engine dotfile so XeTeX styles select xelatex).
+    # SHA-pinned to github-workflows v1.9.6: bundles stklug84/actions
+    # v2.6.0 (cv/generate, texlive/*) and gives every released PDF a
+    # unique asset name (stklug-<yaml>-<lang>-<style>.pdf) so all built
+    # variants appear in the release instead of colliding on the shared
+    # sklug-cv.pdf leaf-main basename.
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@002cd97dc1b5161368e42fa8ba0a9a7ffbea8a16  # v1.9.5
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@35e190ebad4f9aaaef0f05ac3d958088d3ced9c4  # v1.9.6
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).
