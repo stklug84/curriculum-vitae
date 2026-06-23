@@ -32,6 +32,12 @@ vars:
   # amd64 and Docker refuses the mismatched digest. Force arm64 there.
   ARCH_FLAG:
     sh: '[ "{{OS}}/{{ARCH}}" = "darwin/arm64" ] && echo "--container-architecture linux/arm64" || true'
+  # GitHub's hosted ubuntu-latest ships PyYAML/Jinja2 preinstalled, so the
+  # cv/generate action's on-demand `pip install --user` is skipped there.
+  # The catthehacker act image lacks them AND its Python 3.12 is
+  # PEP-668 externally-managed, which rejects that pip install. Allow it so
+  # local act runs match hosted-runner behaviour.
+  ACT_ENV: "--env PIP_BREAK_SYSTEM_PACKAGES=1"
 
 tasks:
   default:
@@ -47,7 +53,7 @@ tasks:
         gh act workflow_dispatch -W {{.BUILD_WF}}
         --input local=true
         -P ubuntu-latest={{.ACT_RUNNER}}
-        {{.ARCH_FLAG}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
 
   cv:academics:
     desc: Build the local-only, PII-bearing cv-academics variant via gh act
@@ -75,7 +81,7 @@ tasks:
         --input local=true
         --input generate-manifest={{.OVERLAY}}
         -P ubuntu-latest={{.ACT_RUNNER}}
-        {{.ARCH_FLAG}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
 
   act:full:
     desc: Build the entire committed matrix locally (alias of cv:databricks)
@@ -88,7 +94,7 @@ tasks:
       - >-
         gh act workflow_dispatch -W {{.LINT_WF}}
         -P ubuntu-latest={{.ACT_RUNNER}}
-        {{.ARCH_FLAG}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
 
   clean:
     desc: Remove the local-only overlay and generated variant tree

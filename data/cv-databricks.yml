@@ -41,21 +41,105 @@ contact:
   phone: +49 173 6734906
   email: steffen.klug84@gmail.com
   linkedin:
-    url: https://www.linkedin.com/in/steffen-klug
-    label: in/steffen-klug
+    url: www.linkedin.com/in/steffenklug
+    label: in/steffenklug
   github:
     url: https://github.com/stklug84
 
 experience:
-  - id: bosch
+  - id: bosch-eng-ai
     targets: [latex, web]
     period:
-      de: seit 09/2015
-      en: Since 09/2015
-    year: 2015
+      de: seit 01/2024
+      en: since 01/2024
+    year: 2024
     role:
-      de: IT-Systemarchitekt
-      en: IT Systems Architect
+      de: Cloud-, Daten- und KI-Lösungsarchitekt
+      en: Cloud, Data & AI Solutions Architect
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Schwieberdingen
+      en: Schwieberdingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    summary:
+      de: >-
+        abc
+      en: >-
+        abc
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+
+
+  - id: bosch-eng-data
+    targets: [latex, web]
+    period:
+      de: 03/2022 --- 12/2023
+      en: 03/2022 --- 12/2023
+    year: 2022
+    role:
+      de: Senior Datenarchitekt
+      en: Senior Data Architect
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Schwieberdingen
+      en: Schwieberdingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        abc
+      en: >-
+        abc
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+
+
+  - id: bosch-mfg-data
+    targets: [latex, web]
+    period:
+      de: 01/2018 --- 01/2022
+      en: 01/2018 --- 01/2022
+    year: 2018
+    role:
+      de: Data & ML Engineer
+      en: Data & ML Engineer
     org: Robert Bosch GmbH, Automotive Electronics
     location:
       de: Reutlingen
@@ -65,11 +149,53 @@ experience:
     bg: /assets/img/cv/bg/topology.svg
     summary:
       de: >-
-        Aufbau und Entwicklung einer AI-Plattform-Architektur basierend auf
+        abc
+      en: >-
+        abc
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+
+
+  - id: bosch-i40
+    targets: [latex, web]
+    period:
+      de: 09/2015 --- 12/2017
+      en: 09/2015 --- 12/2017
+    year: 2015
+    role:
+      de: I4.0 Data Scientist
+      en: Connected Industries Data Scientist
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Reutlingen
+      en: Reutlingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        Aufbau und Entwicklung einer Daten und AI-Plattform-Architektur basierend auf
         hybrid/public Cloud-Lösungen im industriellen und fertigungsnahen
         Umfeld.
       en: >-
-        Designed, built and deployed an end-to-end AI platform architecture
+        Designed, built and deployed an end-to-end Data & AI platform architecture
         on hybrid/public cloud, providing trusted technical guidance to
         cross-functional teams and delivering data engineering and analytics
         at scale in an industrial and manufacturing context.
@@ -129,6 +255,7 @@ experience:
               Semantic traceability of individual components in complex
               electronic products.
 
+
   - id: leiden
     targets: [latex, web]
     period:
@@ -137,8 +264,8 @@ experience:
     year: 2013
     role:
       de: Postdoc
-      en: Postdoc
-    org: Universität Leiden
+      en: Postdoc/Research Associate
+    org: Universiteit Leiden
     location:
       de: Niederlande
       en: Netherlands
@@ -160,6 +287,7 @@ experience:
         en: >-
           Simulated transport and thermodynamic properties of strongly
           correlated electronic materials.
+
 
   - id: mpi-munich
     targets: [latex, web]
@@ -191,108 +319,11 @@ experience:
       - de: Entwicklung numerischer und geometrischer Optimierer.
         en: Developed numerical and geometric optimisers.
 
-education:
-  - id: phd
-    targets: [latex]
-    period: 05/2010 --- 07/2013
-    degree:
-      de: Promotion in Theoretischer Physik
-      en: PhD in Theoretical Physics
-    institution:
-      de: Max-Planck-Institut für Physik und LMU München
-      en: Max Planck Institute for Physics and LMU Munich
-    grade: sehr gut, Note 0,9
-    details:
-      - de: >-
-          Dissertation: Gauge/Gravity Duality: Exploring Universal Features
-          in Quantum Matter.
-        en: >-
-          Dissertation: Gauge/Gravity Duality: Exploring Universal Features
-          in Quantum Matter.
-      - de: >-
-          Analytische und numerische Verfahren zur Lösung nicht-linearer
-          dynamischer Differentialgleichungen.
-        en: >-
-          Analytical and numerical methods for solving non-linear dynamical
-          differential equations.
-      - de: >-
-          Entwicklung und Implementierung von Algorithmen zur symbolischen
-          Manipulation mathematischer Modelle mittels Computeralgebrasysteme.
-        en: >-
-          Designed and implemented algorithms for the symbolic manipulation
-          of mathematical models using computer algebra systems.
-      - de: >-
-          Optimierung und Automatisierung paralleler numerischer
-          Lösungsverfahren.
-        en: Optimised and automated parallel numerical solution methods.
 
-  - id: diploma
-    targets: [latex]
-    period: 09/2006 --- 02/2010
-    degree:
-      de: Physikstudium (Diplom)
-      en: Physics (Diploma)
-    institution:
-      de: Universität Stuttgart
-      en: University of Stuttgart
-    grade: mit Auszeichnung, Note 0,7
-    details:
-      - de: >-
-          Diplomarbeit: Quantum Phase Transitions with Polar Molecules:
-          Towards the Realization of Ferro-Electric Liquids.
-        en: >-
-          Diploma thesis: Quantum Phase Transitions with Polar Molecules:
-          Towards the Realization of Ferro-Electric Liquids.
+education: []
 
-  - id: bachelor
-    targets: [latex]
-    period: 09/2004 --- 08/2006
-    degree:
-      de: Bachelorstudium in Computational Physics
-      en: Bachelor in Computational Physics
-    institution:
-      de: Universität Stuttgart
-      en: University of Stuttgart
-    details: []
-
-  - id: abitur
-    targets: [latex]
-    period: 09/1995 --- 07/2004
-    degree:
-      de: Allgemeine Hochschulreife
-      en: University-Entrance Diploma (Abitur)
-    institution:
-      de: Königin-Charlotte-Gymnasium, Stuttgart
-      en: Königin-Charlotte-Gymnasium, Stuttgart
-    grade: sehr gut, Note 1,3
-    details:
-      - de: Buchpreis der Deutschen Physikalischen Gesellschaft.
-        en: Book prize of the German Physical Society.
-      - de: >-
-          KIWANIS-Preis für hervorragende Leistungen in Geschichte und
-          Gemeinschaftskunde.
-        en: >-
-          KIWANIS prize for outstanding achievement in history and civics.
 
 conferences:
-  - targets: [latex]
-    year: 2021
-    name: Subsurface LIVE Winter 2021
-    location: Online
-    date: 01/2021
-    url: http://subsurfaceconf.com/winter/2021
-  - targets: [latex]
-    year: 2020
-    name: Scale By The Bay
-    location: Online
-    date: 11/2020
-    url: https://www.scale.bythebay.io
-  - targets: [latex]
-    year: 2020
-    name: ODSC Europe 2020 Virtual Conference
-    location: Online
-    date: 09/2020
-    url: https://odsc.com/dublin/schedule-overview
   - targets: [latex]
     year: 2019
     name: Scala Days 2019
@@ -360,6 +391,7 @@ conferences:
     date: 06/2016
     url: https://icml.cc/Conferences/2016/
 
+
 skills:
   - targets: [latex, web]
     group:
@@ -404,6 +436,7 @@ skills:
       en: Applications
     items: [Mathematica, Emacs, VSCode, Gnuplot, Inkscape, Microsoft Office]
 
+
 languages:
   - targets: [latex, web]
     name:
@@ -430,18 +463,17 @@ languages:
       en: Latinum
     level: 2
 
-certifications: []
-# To add Azure certifications later, replace the empty list above with
-# entries of this shape (targets optional; defaults to [latex, web]):
-# certifications:
-#   - targets: [latex, web]
-#     text:
-#       de: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
-#       en: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
-#   - targets: [latex, web]
-#     text:
-#       de: "Databricks Certified Data Engineer Associate"
-#       en: "Databricks Certified Data Engineer Associate"
+
+certifications:
+  - targets: [latex, web]
+    text:
+      de: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
+      en: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
+  - targets: [latex, web]
+    text:
+      de: "ABC"
+      en: "ABC"
+
 
 interests:
   - targets: [latex]
