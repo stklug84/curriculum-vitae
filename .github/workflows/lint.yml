@@ -88,17 +88,51 @@ jobs:
         with:
           dockerfile: .github/docker/texlive/Dockerfile
 
+  # Discover every CV data source present in the checkout. The matrix is
+  # built at runtime from data/cv-*.yml rather than hardcoded, so:
+  #   - the remote (which may carry no committed CV data) lints just what
+  #     exists and never fails on a missing source, and
+  #   - a local checkout that also has gitignored sources (e.g.
+  #     data/cv-academics.yml) lints them too, with no workflow edit.
+  discover-sources:
+    name: discover cv sources
+    runs-on: ubuntu-latest
+    outputs:
+      sources: ${{ steps.find.outputs.sources }}
+      has_sources: ${{ steps.find.outputs.has_sources }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Find data/cv-*.yml
+        id: find
+        run: |
+          set -euo pipefail
+          # Emit a JSON array of every CV source feeding the variant
+          # matrix. Sorted for deterministic matrix ordering. When none
+          # exist (e.g. all sources are gitignored/local-only), skip the
+          # schema matrix instead of failing.
+          sources="$(find data -maxdepth 1 -type f -name 'cv-*.yml' \
+            | sort | jq -R . | jq -cs .)"
+          echo "Discovered CV sources: ${sources}"
+          if [ "${sources}" = "[]" ]; then
+            echo "has_sources=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_sources=true" >> "${GITHUB_OUTPUT}"
+          fi
+          echo "sources=${sources}" >> "${GITHUB_OUTPUT}"
+
   cv-schema:
     name: cv-schema (${{ matrix.source }})
+    needs: discover-sources
+    if: needs.discover-sources.outputs.has_sources == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # Every CV data source feeding the variant matrix
-        # (data/variants.yml) must satisfy the cv/parse schema contract.
-        source:
-          - data/cv-academics.yml
-          - data/cv-databricks.yml
+        # Discovered at runtime by discover-sources; every data/cv-*.yml
+        # source must satisfy the cv/parse schema contract.
+        source: ${{ fromJSON(needs.discover-sources.outputs.sources) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
