@@ -1,0 +1,103 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+---
+# Taskfile.yml — local CV builds via gh act + go-task.
+#
+# The remote CI builds only the variants in the committed data/variants.yml
+# (currently cv-databricks). The PII-bearing cv-academics variant is
+# gitignored and disabled in the committed matrix, so it is built ONLY
+# locally through `task cv:academics`, which:
+#
+#   1. copies data/variants.yml to the gitignored overlay
+#      data/variants.local.yml and uncomments the cv-academics block,
+#   2. runs the build workflow under gh act, pointing the generate job at
+#      the overlay via the generate-manifest input, and
+#   3. always removes the overlay afterwards (success, failure, or Ctrl-C).
+#
+# Nothing PII-related ever enters the git index: data/cv-academics.yml and
+# data/variants.local.yml are both gitignored.
+#
+# Requires: go-task (https://taskfile.dev), gh + gh-act extension
+# (https://github.com/nektos/gh-act), Docker.
+version: "3"
+
+vars:
+  # act's default micro image lacks jq (needed by the discover job); the
+  # medium runner image matches GitHub's hosted toolset.
+  ACT_RUNNER: catthehacker/ubuntu:act-latest
+  BUILD_WF: .github/workflows/build.yml
+  LINT_WF: .github/workflows/lint.yml
+  OVERLAY: data/variants.local.yml
+  ACADEMICS_SRC: data/cv-academics.yml
+  # On Apple Silicon the TeX Live image is pulled as arm64; act defaults to
+  # amd64 and Docker refuses the mismatched digest. Force arm64 there.
+  ARCH_FLAG:
+    sh: '[ "{{OS}}/{{ARCH}}" = "darwin/arm64" ] && echo "--container-architecture linux/arm64" || true'
+  # GitHub's hosted ubuntu-latest ships PyYAML/Jinja2 preinstalled, so the
+  # cv/generate action's on-demand `pip install --user` is skipped there.
+  # The catthehacker act image lacks them AND its Python 3.12 is
+  # PEP-668 externally-managed, which rejects that pip install. Allow it so
+  # local act runs match hosted-runner behaviour.
+  ACT_ENV: "--env PIP_BREAK_SYSTEM_PACKAGES=1"
+
+tasks:
+  default:
+    desc: List available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  cv:databricks:
+    desc: Build the cv-databricks variants locally (the committed matrix) via gh act
+    cmds:
+      - >-
+        gh act workflow_dispatch -W {{.BUILD_WF}}
+        --input local=true
+        -P ubuntu-latest={{.ACT_RUNNER}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
+
+  cv:academics:
+    desc: Build the local-only, PII-bearing cv-academics variant via gh act
+    preconditions:
+      - sh: 'test -f {{.ACADEMICS_SRC}}'
+        msg: "{{.ACADEMICS_SRC}} not found (it is gitignored — provide it locally to build this variant)."
+    cmds:
+      # The overlay is always removed afterwards (success, failure, Ctrl-C).
+      - defer: rm -f {{.OVERLAY}}
+      # Copy the committed matrix and uncomment the cv-academics block into
+      # the gitignored overlay, then verify the block is enabled.
+      - |
+        set -euo pipefail
+        sed -E \
+          -e 's|^  # (cv-academics:)|  \1|' \
+          -e 's|^  #   (- \{style: cv-plain-style, lang: de\})|    \1|' \
+          data/variants.yml > {{.OVERLAY}}
+        if ! grep -qE '^  cv-academics:' {{.OVERLAY}}; then
+          echo "::error:: failed to enable cv-academics in {{.OVERLAY}}" >&2
+          exit 1
+        fi
+      # Run the build under gh act, pointing generation at the overlay.
+      - >-
+        gh act workflow_dispatch -W {{.BUILD_WF}}
+        --input local=true
+        --input generate-manifest={{.OVERLAY}}
+        -P ubuntu-latest={{.ACT_RUNNER}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
+
+  act:full:
+    desc: Build the entire committed matrix locally (alias of cv:databricks)
+    cmds:
+      - task: cv:databricks
+
+  lint:
+    desc: Run the lint workflow locally via gh act
+    cmds:
+      - >-
+        gh act workflow_dispatch -W {{.LINT_WF}}
+        -P ubuntu-latest={{.ACT_RUNNER}}
+        {{.ARCH_FLAG}} {{.ACT_ENV}}
+
+  clean:
+    desc: Remove the local-only overlay and generated variant tree
+    cmds:
+      - rm -f {{.OVERLAY}}
+      - rm -rf cvs

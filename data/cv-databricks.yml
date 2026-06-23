@@ -1,0 +1,496 @@
+---
+# data/cv.yml — canonical, bilingual single source of truth for the CV.
+#
+# Consumed by stklug84/actions cv/parse (v2), which emits per-section
+# .tex files for each LaTeX variant (plain | sidebar, de | en) and a
+# skcloud-schema cv.yml for the web. See data/README.md for the schema
+# and the `targets` contract.
+#
+# Conventions:
+#   * Bilingual text fields are {de, en} (both required).
+#   * Neutral fields (org, year, monogram, paths, ...) are scalars.
+#   * `targets` selects consumers; absent => [latex, web].
+
+meta:
+  display_name: Steffen Klug
+  author: Dr.\@ rer.\@ nat.\@ Steffen Klug
+  pdf_author: Dr. rer. nat. Steffen Klug
+  lang_default: de
+  title:
+    de: IT-Systemarchitekt
+    en: Data & AI Solutions Architect
+  location:
+    de: Deutschland
+    en: Germany
+  summary:
+    de: >-
+      Promovierter Physiker mit langjähriger Erfahrung im Aufbau
+      hybrider AI-Plattform-Architekturen im industriellen Umfeld.
+      Schwerpunkte: Cloud-native Daten- und ML-Systeme, semantische
+      Datenanalyse, Industrialisierung produktiver Analytics-Lösungen.
+    en: >-
+      PhD physicist who designs, builds and delivers distributed data and
+      analytics platforms on Apache Spark (Scala/Python) and cloud-native
+      data and ML systems (Azure primary, AWS/GCP aware). Brings MLOps and
+      CI/CD discipline to productionise analytics at scale, and partners
+      directly with cross-functional teams across Europe, North America and
+      Asia to deliver and advise. Adjacent strengths in GenAI, semantic data,
+      explainable AI and knowledge graphs.
+
+contact:
+  phone: +49 173 6734906
+  email: steffen.klug84@gmail.com
+  linkedin:
+    url: www.linkedin.com/in/steffenklug
+    label: in/steffenklug
+  github:
+    url: https://github.com/stklug84
+
+experience:
+  - id: bosch-eng-ai
+    targets: [latex, web]
+    period:
+      de: seit 01/2024
+      en: since 01/2024
+    year: 2024
+    role:
+      de: Cloud-, Daten- und KI-Lösungsarchitekt
+      en: Cloud, Data & AI Solutions Architect
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Schwieberdingen
+      en: Schwieberdingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    summary:
+      de: >-
+        abc
+      en: >-
+        abc
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+
+
+  - id: bosch-eng-data
+    targets: [latex, web]
+    period:
+      de: 03/2022 --- 12/2023
+      en: 03/2022 --- 12/2023
+    year: 2022
+    role:
+      de: Senior Datenarchitekt
+      en: Senior Data Architect
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Schwieberdingen
+      en: Schwieberdingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        abc
+      en: >-
+        abc
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+
+
+  - id: bosch-mfg-data
+    targets: [latex, web]
+    period:
+      de: 01/2018 --- 01/2022
+      en: 01/2018 --- 01/2022
+    year: 2018
+    role:
+      de: Data & ML Engineer
+      en: Data & ML Engineer
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Reutlingen
+      en: Reutlingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        abc
+      en: >-
+        abc
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+
+
+  - id: bosch-i40
+    targets: [latex, web]
+    period:
+      de: 09/2015 --- 12/2017
+      en: 09/2015 --- 12/2017
+    year: 2015
+    role:
+      de: I4.0 Data Scientist
+      en: Connected Industries Data Scientist
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Reutlingen
+      en: Reutlingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        Aufbau und Entwicklung einer Daten und AI-Plattform-Architektur basierend auf
+        hybrid/public Cloud-Lösungen im industriellen und fertigungsnahen
+        Umfeld.
+      en: >-
+        Designed, built and deployed an end-to-end Data & AI platform architecture
+        on hybrid/public cloud, providing trusted technical guidance to
+        cross-functional teams and delivering data engineering and analytics
+        at scale in an industrial and manufacturing context.
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+      - de: >-
+          Optimierung von Fertigungsprozessen zur Kostenreduzierung und
+          Qualitätsverbesserung mittels datengetriebener Analytics-Lösungen.
+        en: >-
+          Optimised manufacturing processes for cost reduction and quality
+          improvement by delivering data-driven analytics solutions at scale.
+      - de: >-
+          Digitalisierung, Standardisierung und Harmonisierung
+          wertstromübergreifender Daten zur Erstellung und Verbesserung von
+          KI-Modellen.
+        en: >-
+          Engineered, standardised and harmonised cross-value-stream data
+          pipelines to build and continuously improve production AI models.
+      - de: >-
+          Industrialisierung und Automatisierung produktiver
+          Analytics-Lösungen inklusive Konzeptionierung, Implementierung und
+          Deployment.
+        en: >-
+          Industrialised and productionised analytics solutions end-to-end,
+          owning design, implementation, deployment and MLOps automation.
+      - de: >-
+          Funktionsübergreifende Teamarbeit zur Entwicklung von AI- und
+          I4.0-Lösungen mit Entwicklungsstandorten und Werken in Europa,
+          Nordamerika und Asien.
+        en: >-
+          Partnered with cross-functional teams to deliver AI and Industry 4.0
+          solutions across development sites and plants in Europe, North
+          America and Asia.
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+          - de: Entwicklung domänenspezifischer Ontologien.
+            en: Developed domain-specific ontologies.
+          - de: >-
+              Semantische Nachverfolgung einzelner Komponenten in komplexen
+              elektronischen Produkten.
+            en: >-
+              Semantic traceability of individual components in complex
+              electronic products.
+
+
+  - id: leiden
+    targets: [latex, web]
+    period:
+      de: 09/2013 --- 08/2015
+      en: 09/2013 --- 08/2015
+    year: 2013
+    role:
+      de: Postdoc
+      en: Postdoc/Research Associate
+    org: Universiteit Leiden
+    location:
+      de: Niederlande
+      en: Netherlands
+    kind: study
+    monogram: UL
+    bg: /assets/img/cv/bg/grid.svg
+    summary:
+      de: >-
+        Modellierung und Berechnung nicht-linearer partieller
+        Differentialgleichungen.
+      en: >-
+        Modelling and computation of non-linear partial differential
+        equations.
+    tags: [Physics, Simulation, HPC]
+    bullets:
+      - de: >-
+          Simulation von Transport- und thermodynamischen Eigenschaften
+          stark korrelierter elektronischer Materialien.
+        en: >-
+          Simulated transport and thermodynamic properties of strongly
+          correlated electronic materials.
+
+
+  - id: mpi-munich
+    targets: [latex, web]
+    period:
+      de: 05/2010 --- 08/2013
+      en: 05/2010 --- 08/2013
+    year: 2010
+    role:
+      de: Wissenschaftlicher Angestellter
+      en: Research Associate
+    org: Max-Planck-Institut für Physik
+    location:
+      de: München
+      en: Munich, Germany
+    kind: study
+    monogram: MP
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        Grundlagenforschung im Bereich neuer Quanten-Materialien sowie
+        Entwicklung numerischer und geometrischer Optimierer.
+      en: >-
+        Fundamental research on novel quantum materials and development of
+        numerical and geometric optimisers.
+    tags: [Research, Numerics, Optimisation]
+    bullets:
+      - de: Grundlagenforschung im Bereich neuer Quanten-Materialien.
+        en: Fundamental research on novel quantum materials.
+      - de: Entwicklung numerischer und geometrischer Optimierer.
+        en: Developed numerical and geometric optimisers.
+
+
+education: []
+
+
+conferences:
+  - targets: [latex]
+    year: 2019
+    name: Scala Days 2019
+    location: Lausanne
+    date: 05/2019
+    url: https://www.scaladays.org/
+  - targets: [latex]
+    year: 2019
+    name: Spark + AI Summit 2019
+    location: San Francisco
+    date: 04/2019
+    url: https://databricks.com/sparkaisummit/north-america
+  - targets: [latex]
+    year: 2018
+    name: Scala eXchange 2018
+    location: London
+    date: 12/2018
+    url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
+  - targets: [latex]
+    year: 2018
+    name: Spark + AI Summit 2018
+    location: San Francisco
+    date: 06/2018
+    url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
+  - targets: [latex]
+    year: 2018
+    name: IEEE International Conference on Data Engineering (ICDE)
+    location: Paris
+    date: 04/2018
+    url: https://icde2018.org
+  - targets: [latex]
+    year: 2017
+    name: Spark Summit Europe 2017
+    location: Dublin
+    date: 10/2017
+    url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
+  - targets: [latex]
+    year: 2017
+    name: PyData
+    location: Berlin
+    date: 06--07/2017
+    url: https://pydata.org/berlin2017
+  - targets: [latex]
+    year: 2016
+    name: The R User Conference (UseR! 2016)
+    location: Stanford University
+    date: 06/2016
+    url: https://user2016.r-project.org
+  - targets: [latex]
+    year: 2016
+    name: Conference on Uncertainty in Artificial Intelligence (UAI)
+    location: New York
+    date: 06/2016
+    url: http://www.auai.org/uai2016
+  - targets: [latex]
+    year: 2016
+    name: Conference on Learning Theory (COLT)
+    location: Columbia University, NYC
+    date: 06/2016
+    url: http://proceedings.mlr.press/v49/
+  - targets: [latex]
+    year: 2016
+    name: International Conference on Machine Learning (ICML)
+    location: New York
+    date: 06/2016
+    url: https://icml.cc/Conferences/2016/
+
+
+skills:
+  - targets: [latex, web]
+    group:
+      de: Programmiersprachen
+      en: Programming languages
+    items: [Scala, Python, Julia, Rust, LISP/Clojure, C, FORTRAN]
+  - targets: [latex, web]
+    group:
+      de: Frameworks
+      en: Frameworks
+    items: [Spark, Delta Lake, MLflow, Microsoft Azure, Kubernetes, Hadoop Ecosystem, Keras, Tensorflow]
+  - targets: [latex, web]
+    group:
+      de: Skriptsprachen
+      en: Scripting languages
+    items: [SQL, bash/zsh, SPARQL, RDF, OWL, LaTeX]
+  - targets: [latex, web]
+    group:
+      de: Konzepte
+      en: Concepts
+    items:
+      - MLOps
+      - CI/CD
+      - Cloud Computing
+      - Agile Code Development
+      - Differential Programming
+      - Ontologies & Knowledge Graphs
+      - Parallel/Scientific Computing
+  - targets: [latex, web]
+    group:
+      de: Systeme
+      en: Systems
+    items: [Unix/Linux, macOS]
+  - targets: [latex, web]
+    group:
+      de: Tools
+      en: Tools
+    items: [sbt, git, (auto)make, docker, tmux]
+  - targets: [latex, web]
+    group:
+      de: Anwendungen
+      en: Applications
+    items: [Mathematica, Emacs, VSCode, Gnuplot, Inkscape, Microsoft Office]
+
+
+languages:
+  - targets: [latex, web]
+    name:
+      de: Deutsch
+      en: German
+    level_label:
+      de: Muttersprache
+      en: Native
+    level: 5
+  - targets: [latex, web]
+    name:
+      de: Englisch
+      en: English
+    level_label:
+      de: Verhandlungssicher
+      en: Fluent
+    level: 5
+  - targets: [latex, web]
+    name:
+      de: Latein
+      en: Latin
+    level_label:
+      de: Latinum
+      en: Latinum
+    level: 2
+
+
+certifications:
+  - targets: [latex, web]
+    text:
+      de: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
+      en: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
+  - targets: [latex, web]
+    text:
+      de: "ABC"
+      en: "ABC"
+
+
+interests:
+  - targets: [latex]
+    de: Radfahren
+    en: Cycling
+  - targets: [latex]
+    de: Bergwandern
+    en: Hiking
+  - targets: [latex]
+    de: Kulturelle Reisen in Europa/Nordamerika
+    en: Cultural travel in Europe/North America
+  - targets: [latex]
+    de: Europäische und globale Geschichte/Politik
+    en: European and global history/politics
+  - targets: [latex]
+    de: E-Mobilität
+    en: E-mobility
+  - targets: [latex]
+    de: Neue Informationstechnologien
+    en: New information technologies
