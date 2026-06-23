@@ -125,10 +125,19 @@ present they are emitted into `personal-info.tex` as `\cv<key>url` /
 `\cv<key>label` macros (plus `\cvemailurl` for the email); absence of all
 three remains valid.
 
+The neutral identity fields `birthdate`, `birthplace`, `address`,
+`location_signature`, `photo_path` and `signature_path` are **optional**.
+When omitted, `cv/parse` still emits their macros (`\cvbirthdate`,
+`\cvaddressone`, `\cvphotopath`, …) but **empty**, so styles that reference
+them never hit an undefined control sequence. `address`, when present, must
+still be a list of 1–3 non-empty strings. The plain style guards its photo
+and signature `\includegraphics` calls so an empty `photo_path` /
+`signature_path` simply suppresses the image instead of failing the build.
+
 | Key | Shape (✱ = bilingual `{de,en}`) |
 | --- | --- |
 | `meta` | `display_name`, `author`, `pdf_author`, `lang_default`, `title`✱, `location`✱, `summary`✱ |
-| `contact` | `birthdate`, `birthplace`, `address` (list 1–3), `phone`, `email`, `location_signature`, `photo_path`, `signature_path` (all neutral); optional `linkedin`/`github`/`website` link mappings `{url, label}` (label optional/derived from the URL) |
+| `contact` | required: `phone`, `email` (neutral). Optional (neutral, emitted empty when omitted): `birthdate`, `birthplace`, `address` (list 1–3 when present), `location_signature`, `photo_path`, `signature_path`. Optional `linkedin`/`github`/`website` link mappings `{url, label}` (label optional/derived from the URL) |
 | `experience[]` | `id` (unique), `targets`, `period`✱, `year` (int), `role`✱, `org`, `location`✱, `kind`, `monogram`, `bg`, `logo` (optional/null), `summary`✱, `tags` (list), `bullets[{de,en}]`, `subentries[{date, title✱, bullets[{de,en}]}]` (optional) |
 | `education[]` | `id` (unique), `targets`, `period`, `degree`✱, `institution`✱, `grade` (optional), `details[{de,en}]` |
 | `conferences[]` | `targets`, `year` (int), `name`, `location`, `date`, `url` (optional) |

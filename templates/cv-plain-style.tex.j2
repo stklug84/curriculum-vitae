@@ -40,7 +40,7 @@
                  \cvemail
                \end{tabular}
            }}
-           {\includegraphics[width=.18\textwidth]{\cvphotopath}}
+           {\ifx\cvphotopath\empty\else\includegraphics[width=.18\textwidth]{\cvphotopath}\fi}
 \end{figure}
 \renewcommand\arraystretch{.8}
 
@@ -80,7 +80,7 @@
 \normalsize
 \begin{flushleft}
   \cvlocation, \today\\
-  \includegraphics[width=.15\textwidth]{\cvsignature}
+  \ifx\cvsignature\empty\else\includegraphics[width=.15\textwidth]{\cvsignature}\fi
 \end{flushleft}
 
 
