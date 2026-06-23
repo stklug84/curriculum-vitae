@@ -63,7 +63,7 @@ jobs:
     # published v2.4.0 SHA. v1.9.0 referenced an unpublished actions SHA
     # and could not resolve cv/generate.
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@b9ed68b66eb439849b9902b08d2db7db7fe6c6ed  # v1.9.2
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@0ba913702aae8e390ead3fe41c18ad798b1cb3b6  # v1.9.3
     with:
       # Render the full variant tree before building, straight from the
       # build matrix in data/variants.yml (defaults: templates/, data/).
