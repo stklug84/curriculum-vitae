@@ -5,8 +5,8 @@ This directory holds everything that drives CV generation:
 | File | Role |
 | --- | --- |
 | [`variants.yml`](variants.yml) | **Build matrix control plane** — declares every style, language and `(yaml × style × lang)` leaf the repo generates and builds. |
-| [`cv-academics.yml`](cv-academics.yml) | Canonical, bilingual (`de`/`en`) CV source — academic-leaning content. |
-| [`cv-databricks.yml`](cv-databricks.yml) | Canonical, bilingual (`de`/`en`) CV source — Databricks/industry-leaning content. |
+| [`cv-databricks.yml`](cv-databricks.yml) | Canonical, bilingual (`de`/`en`) CV source — Databricks/industry-leaning content. In the committed matrix. |
+| `cv-academics.yml` | Canonical, bilingual (`de`/`en`) CV source — academic-leaning content. **Gitignored (carries PII); local-only**, built via `task cv:academics`. |
 
 Both `cv-*.yml` files follow the **same schema** (below). Each is a
 self-contained source of truth; the per-section LaTeX files under
