@@ -33,11 +33,11 @@
 # ---------------------------------------------------------------------
 styles:
   cv-plain-style: {engine: pdflatex, parse_style: plain}
-  cv-banking-fs: {engine: xelatex, parse_style: sidebar}
-  cv-tagged-ia: {engine: xelatex, parse_style: sidebar}
-  cv-sidebar-pw: {engine: xelatex, parse_style: sidebar}
-  cv-sidebar-dh: {engine: xelatex, parse_style: sidebar}
-  cv-sidebar-vs: {engine: xelatex, parse_style: sidebar}
+  # cv-banking-fs: {engine: xelatex, parse_style: sidebar}
+  cv-tagged-ia: {engine: xelatex, parse_style: tagged}
+  # cv-sidebar-pw: {engine: xelatex, parse_style: sidebar}
+  # cv-sidebar-dh: {engine: xelatex, parse_style: sidebar}
+  # cv-sidebar-vs: {engine: xelatex, parse_style: sidebar}
 
 # ---------------------------------------------------------------------
 # Language registry — centralized language tokens. The template selects
@@ -79,17 +79,13 @@ langs:
 # is valid; the entries below are the current selection.
 # ---------------------------------------------------------------------
 cvs:
-  # cv-academics is intentionally DISABLED in the committed matrix.
-  # Its source data/cv-academics.yml carries critical PII (date/place of
-  # birth, home address, signature) and is gitignored, so it never reaches
-  # the remote — leaving it active here would break CI (missing source).
-  # Build it locally via `task cv:academics`, which injects this block
-  # into a gitignored overlay (data/variants.local.yml) and runs gh act.
+  # cv-academics is built locally only (via `task cv:academics`), not in
+  # the committed matrix. Example entry:
   # cv-academics:
   #   - {style: cv-plain-style, lang: de}
   cv-databricks:
-    - {style: cv-banking-fs, lang: en}
+    # - {style: cv-banking-fs, lang: en}
     - {style: cv-tagged-ia, lang: en}
-    - {style: cv-sidebar-pw, lang: en}
-    - {style: cv-sidebar-dh, lang: en}
-    - {style: cv-sidebar-vs, lang: en}
+    # - {style: cv-sidebar-pw, lang: en}
+    # - {style: cv-sidebar-dh, lang: en}
+    # - {style: cv-sidebar-vs, lang: en}

@@ -29,13 +29,14 @@ meta:
       Schwerpunkte: Cloud-native Daten- und ML-Systeme, semantische
       Datenanalyse, Industrialisierung produktiver Analytics-Lösungen.
     en: >-
-      PhD physicist who designs, builds and delivers distributed data and
-      analytics platforms on Apache Spark (Scala/Python) and cloud-native
-      data and ML systems (Azure primary, AWS/GCP aware). Brings MLOps and
-      CI/CD discipline to productionise analytics at scale, and partners
-      directly with cross-functional teams across Europe, North America and
-      Asia to deliver and advise. Adjacent strengths in GenAI, semantic data,
-      explainable AI and knowledge graphs.
+      PhD physicist that loves to design, build and deliver distributed data and
+      analytics platforms based on Apache Spark/Kafka/Flink (in Scala/Python)
+      and cloud-native data and AI/ML systems (Azure primary, AWS/GCP aware).
+      Brings MLOps and CI/CD discipline to productionise analytics at scale,
+      and partners directly with cross-functional teams across Europe, North America
+      and Asia to deliver support and advise. Adjacent strengths in GenAI,
+      semantic data, explainable AI and knowledge graphs to implement agentic
+      solutions to provide insights and business benefits.
 
 contact:
   phone: +49 173 6734906
@@ -63,19 +64,44 @@ experience:
     kind: work
     monogram: RB
     bg: /assets/img/cv/bg/topology.svg
-    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    tags: [Azure, Kubernetes, Knowledge Graphs]
     summary:
       de: >-
-        abc
+        TODO
       en: >-
-        abc
+        Designed and introduced an end-to-end Data & AI platform architecture
+        on hybrid/public cloud, providing trusted technical guidance to
+        cross-functional teams and delivering data engineering and analytics
+        at scale in an industrial and manufacturing context. Solution architect
+        for the following integrated productive solutions:
     bullets:
       - de: >-
-          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
-          Daten (explainable/interpretable AI und Knowledge Graphs).
+          TODO
         en: >-
-          Designed and delivered modern AI systems incorporating semantic
-          data (explainable/interpretable AI and knowledge graphs).
+          Rich-code multi-agent orchestration platform that allows for autonomous
+          and dynamic agentic systems adapting their topology depending on the
+          context-based CAE task of optimizing layout, geometry and design of
+          automotive ECU components.
+      - de: >-
+         TODO
+        en: >-
+          Delivered a modern AI and data-driven system incorporating
+          semantic data (explainable/interpretable AI and knowledge graphs) for
+          end-to-end engineering processes providing a self-service interface
+          to democratize knowledge sharing and process improvement.
+      - de: >-
+          TODO
+        en: >-
+          Hybrid cloud infrastructure framework for running virtual load
+          simulations of ECU designs on-site HPC in a highly AI optimized runtime
+          that controls the seamlessly off-loading of spikes to cloud HPC compute
+          nodes.
+      - de: >-
+          TODO
+        en: >-
+          Event-based near real-time streaming data pipeline design enabling
+          test engineers to access long-running environmental test data for early
+          warning systems and anomaly detection
     subentries:
       - date: 2018 -- heute
         title:
@@ -107,17 +133,29 @@ experience:
     bg: /assets/img/cv/bg/topology.svg
     summary:
       de: >-
-        abc
+        TODO
       en: >-
-        abc
+        Introduced modern data modeling and data mesh methodology to implement
+        data-driven decision-making by providing high-fidelity curated data products
+        and unified digital CVs along the complete ECU component product development
+        life cycle. Led a team of data modeling domain experts and data engineers to
+        build a unified data model from (physical) sources up to the target business
+        layer.
     tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
     bullets:
       - de: >-
-          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
-          Daten (explainable/interpretable AI und Knowledge Graphs).
+          TODO
         en: >-
-          Designed and delivered modern AI systems incorporating semantic
-          data (explainable/interpretable AI and knowledge graphs).
+          Data product design describing the full chain from requirements over the
+          design to manufacturing capabilities, enabling design matching to
+          existing shop-floor layouts for cost optimization
+      - de: >-
+          TODO
+        en: >-
+          Data product design describing the full chain from requirements over the
+          design to manufacturing capabilities, enabling design matching to
+          existing shopfloor layouts for cost optimization based on graph-based
+          and semantic technologies and a federated data layer
     subentries:
       - date: 2018 -- heute
         title:
@@ -195,10 +233,7 @@ experience:
         hybrid/public Cloud-Lösungen im industriellen und fertigungsnahen
         Umfeld.
       en: >-
-        Designed, built and deployed an end-to-end Data & AI platform architecture
-        on hybrid/public cloud, providing trusted technical guidance to
-        cross-functional teams and delivering data engineering and analytics
-        at scale in an industrial and manufacturing context.
+        abc
     tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
     bullets:
       - de: >-
@@ -289,41 +324,63 @@ experience:
           correlated electronic materials.
 
 
-  - id: mpi-munich
-    targets: [latex, web]
-    period:
-      de: 05/2010 --- 08/2013
-      en: 05/2010 --- 08/2013
-    year: 2010
-    role:
-      de: Wissenschaftlicher Angestellter
-      en: Research Associate
-    org: Max-Planck-Institut für Physik
-    location:
-      de: München
-      en: Munich, Germany
-    kind: study
-    monogram: MP
-    bg: /assets/img/cv/bg/topology.svg
-    summary:
-      de: >-
-        Grundlagenforschung im Bereich neuer Quanten-Materialien sowie
-        Entwicklung numerischer und geometrischer Optimierer.
-      en: >-
-        Fundamental research on novel quantum materials and development of
-        numerical and geometric optimisers.
-    tags: [Research, Numerics, Optimisation]
-    bullets:
-      - de: Grundlagenforschung im Bereich neuer Quanten-Materialien.
-        en: Fundamental research on novel quantum materials.
-      - de: Entwicklung numerischer und geometrischer Optimierer.
-        en: Developed numerical and geometric optimisers.
-
-
-education: []
+education:
+  - id: phd
+    targets: [latex]
+    period: 05/2010 --- 07/2013
+    degree:
+      de: Promotion in Theoretischer Physik
+      en: PhD in Theoretical Physics
+    institution:
+      de: Max-Planck-Institut für Physik und LMU München
+      en: Max Planck Institute for Physics and LMU Munich
+    # grade: sehr gut, Note 0,9
+    details:
+      - de: >-
+          Dissertation: Gauge/Gravity Duality: Exploring Universal Features
+          in Quantum Matter.
+        en: >-
+          Dissertation: Gauge/Gravity Duality: Exploring Universal Features
+          in Quantum Matter.
 
 
 conferences:
+  - targets: [latex]
+    year: 2026
+    name: Data+AI Summit 2026
+    location: San Francisco
+    date: 06/2026
+    url:
+  - targets: [latex]
+    year: 2026
+    name: Scalar
+    location: Warsaw
+    date: 03/2026
+    url:
+  - targets: [latex]
+    year: 2025
+    name: IEEE International Conference on Cloud Engineering (I2CE)
+    location: Rennes
+    date: 09/2025
+    url:
+  - targets: [latex]
+    year: 2024
+    name: IEEE International Conference on Data Engineering (ICDE)
+    location: Utrecht
+    date: 05/2024
+    url:
+  - targets: [latex]
+    year: 2023
+    name: AI Summit ODSC Europe
+    location: London
+    date: 06/2023
+    url:
+  - targets: [latex]
+    year: 2022
+    name: Data+AI Summit 2022
+    location: San Francisco
+    date: 06/2022
+    url:
   - targets: [latex]
     year: 2019
     name: Scala Days 2019
@@ -364,7 +421,7 @@ conferences:
     year: 2017
     name: PyData
     location: Berlin
-    date: 06--07/2017
+    date: 06/2017
     url: https://pydata.org/berlin2017
   - targets: [latex]
     year: 2016
@@ -392,50 +449,74 @@ conferences:
     url: https://icml.cc/Conferences/2016/
 
 
+# concepts[] feeds the tagged style's \cvskillbubbles macro, where each
+# bubble's radius is 0.06 + 0.045*size (cm). `size` here is therefore the
+# bubble WEIGHT (not a 0..1 fraction like skills[].size): values ~3..9 give
+# clearly differentiated, visible circles. Tune these to taste.
+concepts:
+  - targets: [latex, web]
+    text: MLOps
+    size: 8
+  - targets: [latex, web]
+    text: Everything as Code CI/CD
+    size: 9
+  - targets: [latex, web]
+    text: Cloud Computing
+    size: 6
+  - targets: [latex, web]
+    text: Agentic Code Development
+    size: 4
+  - targets: [latex, web]
+    text: Data Engineering
+    size: 8
+  - targets: [latex, web]
+    text: Differential Programming
+    size: 5
+  - targets: [latex, web]
+    text: Ontologies & Knowledge Graphs
+    size: 7
+  - targets: [latex, web]
+    text: Parallel/Scientific Computing
+    size: 3
+
+
 skills:
   - targets: [latex, web]
     group:
       de: Programmiersprachen
-      en: Programming languages
-    items: [Scala, Python, Julia, Rust, LISP/Clojure, C, FORTRAN]
+      en: Programming Languages
+    items: [Scala, Python, Rust, LISP/Clojure, C, FORTRAN]
+    size: .5
   - targets: [latex, web]
     group:
-      de: Frameworks
-      en: Frameworks
-    items: [Spark, Delta Lake, MLflow, Microsoft Azure, Kubernetes, Hadoop Ecosystem, Keras, Tensorflow]
+      de: AI Frameworks
+      en: AI Frameworks
+    items: [mlflow, langchain, Google ADK, Keras, Tensorflow]
+    size: .5
   - targets: [latex, web]
     group:
-      de: Skriptsprachen
-      en: Scripting languages
-    items: [SQL, bash/zsh, SPARQL, RDF, OWL, LaTeX]
+      de: Data Engineering
+      en: Data Engineering
+    items: [Kafka, Flink, Spark, Delta Lake, SQL, SPARQL, RDF, OWL]
+    size: .5
   - targets: [latex, web]
     group:
-      de: Konzepte
-      en: Concepts
-    items:
-      - MLOps
-      - CI/CD
-      - Cloud Computing
-      - Agile Code Development
-      - Differential Programming
-      - Ontologies & Knowledge Graphs
-      - Parallel/Scientific Computing
+      de: Infrastruktur und Systeme
+      en: Infrastructure & Systems
+    items: [AWS, Azure, GCP, Unix/Linux, macOS]
+    size: .5
   - targets: [latex, web]
     group:
-      de: Systeme
-      en: Systems
-    items: [Unix/Linux, macOS]
+      de: Cloud-natives Tooling
+      en: Cloud-Native Tooling
+    items: [ArgoCD, Kubernetes, OpenLineage/Marquez]
+    size: .5
   - targets: [latex, web]
     group:
-      de: Tools
-      en: Tools
-    items: [sbt, git, (auto)make, docker, tmux]
-  - targets: [latex, web]
-    group:
-      de: Anwendungen
-      en: Applications
-    items: [Mathematica, Emacs, VSCode, Gnuplot, Inkscape, Microsoft Office]
-
+      de: Plattformen
+      en: Platforms
+    items: [Confluence Cloud, Databricks]
+    size: .5
 
 languages:
   - targets: [latex, web]
@@ -467,12 +548,44 @@ languages:
 certifications:
   - targets: [latex, web]
     text:
-      de: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
-      en: "Microsoft Certified: Azure Solutions Architect Expert (AZ-305)"
+      de: "Microsoft Azure Administrator (AZ-104)"
+      en: "Microsoft Azure Administrator (AZ-104)"
   - targets: [latex, web]
     text:
-      de: "ABC"
-      en: "ABC"
+      de: "Developing Solutions for Microsoft Azure (AZ-204)"
+      en: "Developing Solutions for Microsoft Azure (AZ-204)"
+  - targets: [latex, web]
+    text:
+      de: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
+      en: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
+  - targets: [latex, web]
+    text:
+      de: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
+      en: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
+  - targets: [latex, web]
+    text:
+      de: "Microsoft Azure Security Technologies (AZ-500)"
+      en: "Microsoft Azure Security Technologies (AZ-500)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Microsoft Azure AI Fundamentals (AI-900)"
+  #     en: "Microsoft Azure AI Fundamentals (AI-900)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Microsoft Azure Data Fundamentals (DP-900)"
+  #     en: "Microsoft Azure Data Fundamentals (DP-900)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Microsoft Azure Fundamentals (AZ-900)"
+  #     en: "Microsoft Azure Fundamentals (AZ-900)"
+  - targets: [latex, web]
+    text:
+      de: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
+      en: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
+  - targets: [latex, web]
+    text:
+      de: "Data Engineering on Microsoft Azure (DP-203)"
+      en: "Data Engineering on Microsoft Azure (DP-203)"
 
 
 interests:
@@ -480,17 +593,11 @@ interests:
     de: Radfahren
     en: Cycling
   - targets: [latex]
-    de: Bergwandern
-    en: Hiking
+    de: Brettspiel Design
+    en: Designing Boardgames
   - targets: [latex]
-    de: Kulturelle Reisen in Europa/Nordamerika
-    en: Cultural travel in Europe/North America
+    de: "Pen&Paper RPG und TCG Spiele"
+    en: "Playing Pen&Paper RPG and TCG"
   - targets: [latex]
-    de: Europäische und globale Geschichte/Politik
-    en: European and global history/politics
-  - targets: [latex]
-    de: E-Mobilität
-    en: E-mobility
-  - targets: [latex]
-    de: Neue Informationstechnologien
-    en: New information technologies
+    de: Computer Musikprogrammierung
+    en: Listening to and programming computer music

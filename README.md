@@ -51,13 +51,19 @@ cvs/<yaml>-<lang>/<style>/sklug-cv.pdf
 
 ## Source CVs and styles
 
-Two canonical sources live under `data/`, each rendered into several
-styles and languages:
+Two canonical sources live under `data/`. Only `cv-databricks` is in the
+committed build matrix; `cv-academics` is a local-only source (its YAML is
+gitignored) built on demand via `task cv:academics`:
 
-| Source YAML | Focus | Variants today |
-| --- | --- | --- |
-| `data/cv-academics.yml` | Academic-leaning | plain (de) + 5 styles (en) |
-| `data/cv-databricks.yml` | Industry / Databricks | 5 styles (en) |
+| Source YAML | Focus | Variants | Built |
+| --- | --- | --- | --- |
+| `data/cv-databricks.yml` | Industry / Databricks | cv-tagged-ia (en) | Committed matrix (CI + local) |
+| `data/cv-academics.yml` | Academic-leaning | cv-plain-style (de) | Local only (`task cv:academics`) |
+
+All six styles below are authored and available in the repo. The committed
+matrix currently activates a single one (`cv-tagged-ia`) against the
+`cv-databricks` source; the others remain ready to enable by uncommenting
+their `styles` registry entries and adding matrix lines.
 
 Styles are declared in `data/variants.yml`'s `styles` registry. Each maps
 to a TeX engine and a `cv/parse` body emitter (`plain` or the
@@ -78,22 +84,23 @@ single source YAML renders into every style unchanged.
 
 ## The build matrix
 
-`data/variants.yml` is the single control plane. A condensed view of the
-current matrix:
+`data/variants.yml` is the single control plane. The committed matrix
+currently declares one active `cv-databricks` leaf, with the remaining
+styles commented out (ready to re-enable):
 
-| Source | Style | Lang | Leaf directory | Engine |
-| --- | --- | --- | --- | --- |
-| cv-academics | cv-plain-style | de | `cvs/cv-academics-de/cv-plain-style/` | pdflatex |
-| cv-academics | cv-banking-fs | en | `cvs/cv-academics-en/cv-banking-fs/` | xelatex |
-| cv-academics | cv-tagged-ia | en | `cvs/cv-academics-en/cv-tagged-ia/` | xelatex |
-| cv-academics | cv-sidebar-pw | en | `cvs/cv-academics-en/cv-sidebar-pw/` | xelatex |
-| cv-academics | cv-sidebar-dh | en | `cvs/cv-academics-en/cv-sidebar-dh/` | xelatex |
-| cv-academics | cv-sidebar-vs | en | `cvs/cv-academics-en/cv-sidebar-vs/` | xelatex |
-| cv-databricks | cv-banking-fs | en | `cvs/cv-databricks-en/cv-banking-fs/` | xelatex |
-| cv-databricks | cv-tagged-ia | en | `cvs/cv-databricks-en/cv-tagged-ia/` | xelatex |
-| cv-databricks | cv-sidebar-pw | en | `cvs/cv-databricks-en/cv-sidebar-pw/` | xelatex |
-| cv-databricks | cv-sidebar-dh | en | `cvs/cv-databricks-en/cv-sidebar-dh/` | xelatex |
-| cv-databricks | cv-sidebar-vs | en | `cvs/cv-databricks-en/cv-sidebar-vs/` | xelatex |
+| Source | Style | Lang | Leaf directory | Engine | Active |
+| --- | --- | --- | --- | --- | --- |
+| cv-databricks | cv-tagged-ia | en | `cvs/cv-databricks-en/cv-tagged-ia/` | xelatex | yes |
+| cv-databricks | cv-banking-fs | en | `cvs/cv-databricks-en/cv-banking-fs/` | xelatex | commented |
+| cv-databricks | cv-sidebar-pw | en | `cvs/cv-databricks-en/cv-sidebar-pw/` | xelatex | commented |
+| cv-databricks | cv-sidebar-dh | en | `cvs/cv-databricks-en/cv-sidebar-dh/` | xelatex | commented |
+| cv-databricks | cv-sidebar-vs | en | `cvs/cv-databricks-en/cv-sidebar-vs/` | xelatex | commented |
+
+Uncomment a matrix line (and its `styles` registry entry) to build that
+style. `cv-academics` is intentionally absent from the committed matrix
+(its gitignored source carries PII); it builds locally via
+`task cv:academics` into `cvs/cv-academics-de/cv-plain-style/` (pdflatex).
+Any registered `{ style, lang }` pairing remains expressible in the matrix.
 
 The leaf main is always `sklug-cv.tex`. The directory scheme is
 `cvs/<yaml-without-extension>-<lang>/<style>/`. Languages and their
@@ -120,7 +127,7 @@ gh release download -R stklug84/curriculum-vitae -p '*.pdf'
 Or a specific revision:
 
 ```sh
-gh release download v2026.06.12-r17 -R stklug84/curriculum-vitae
+gh release download v2026.06.23-r19 -R stklug84/curriculum-vitae
 ```
 
 PR builds additionally upload short-lived workflow artifacts for review
@@ -351,9 +358,10 @@ jobs:
   build:
     permissions:
       contents: write          # consumed only by the release job
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.8.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@<sha>  # v1.9.6
     with:
-      generate: "true"          # render the variant tree from data/variants.yml first
+      generate: "true"          # render the variant tree from the matrix first
+      generate-manifest: ${{ inputs.generate-manifest || 'data/variants.yml' }}
       texinputs: ".:../../..:../../../styles:../../../images:"
       local: ${{ inputs.local }}
       release: "true"           # versioned release on pushes to main

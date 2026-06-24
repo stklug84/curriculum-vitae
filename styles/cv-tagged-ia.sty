@@ -116,7 +116,7 @@
 \newlength{\cv@barmax}
 \setlength{\cv@barmax}{4.2cm}
 \newlength{\cv@barlabel}
-\setlength{\cv@barlabel}{2.4cm}
+\setlength{\cv@barlabel}{4.6cm}
 
 % =====================================================================
 %  PUBLIC API
@@ -264,7 +264,7 @@
 % frac is in 0..1.
 \newcommand{\cvskillbar}[2]{%
   \par\noindent
-  \makebox[\cv@barlabel][r]{\small #1}\hspace{0.6em}%
+  \makebox[\cv@barlabel][l]{\small #1}\hspace{0.6em}%
   \begin{tikzpicture}[baseline=-0.55ex]
     % track
     \draw[cvMuted,line width=0.3pt]
@@ -276,9 +276,15 @@
   \par\vspace{0.3em}%
 }
 
-% --- \cvskillbubbles{l1/w1, l2/w2, ...} ------------------------------
-% Row of solid black circles, radius scaled by weight, label centered
-% above each circle. Robust: parses "label/weight" pairs.
+% --- \cvskillbubbles{l1;w1, l2;w2, ...} ------------------------------
+% Row of solid black circles, radius scaled by weight, with a diagonal
+% label above each circle. Pairs are separated by ',' and each pair's
+% label/weight by ';' (so labels may freely contain '/'). Labels are
+% rotated 40 degrees and anchored at the bubble centre so neighbouring
+% labels of varied length do not collide. The horizontal advance is a
+% fixed, generous step to keep the row evenly spaced and overlap-free.
+\newlength{\cv@bubblestep}
+\setlength{\cv@bubblestep}{1.15cm}
 \newcommand{\cvskillbubbles}[1]{%
   \par\vspace{0.4em}\noindent
   \begin{tikzpicture}[baseline=0pt]
@@ -290,14 +296,17 @@
   \end{tikzpicture}%
   \par\vspace{0.3em}%
 }
-% Parse "label/weight": draw circle of radius scaled by weight, label above.
-\def\cv@parsebubble#1/#2\@nil{%
+% Parse "label;weight": draw a weight-scaled circle and a 40-degree
+% diagonal label above it. Bubble centres advance by a fixed step so the
+% layout stays even regardless of individual label widths.
+\def\cv@parsebubble#1;#2\@nil{%
   \pgfmathsetmacro{\cv@rad}{0.06 + 0.045*#2}% radius in cm, weight-scaled
   \pgfmathsetmacro{\cv@cx}{\cv@bx + \cv@rad}%
   \fill[cvBlack] (\cv@cx,0) circle (\cv@rad cm);
-  \node[font=\scriptsize,anchor=south] at (\cv@cx,0.42)
-    {\strut #1};%
-  \pgfmathsetmacro{\cv@bxnext}{\cv@cx + \cv@rad + 0.45}%
+  \node[font=\scriptsize,anchor=west,rotate=40,inner sep=1.5pt]
+    at (\cv@cx,{\cv@rad + 0.12}) {\strut #1};%
+  \pgfmathsetmacro{\cv@bxnext}{\cv@bx + \cv@rad +
+    \cv@bubblestep/1cm}%
   \xdef\cv@bx{\cv@bxnext}%
 }
 
