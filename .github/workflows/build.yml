@@ -68,16 +68,19 @@ jobs:
     # jobs read the repo and upload artifacts.
     permissions:
       contents: write
-    # SHA-pinned to github-workflows v1.11.0: bundles stklug84/actions
+    # SHA-pinned to github-workflows v1.11.1: bundles stklug84/actions
     # v2.8.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
     # driving cv-tagged-ia skill bars / concept bubbles / tech stacks, and
     # now emitting meta.location/title/summary plus experience bullets) and
     # gives every released PDF a
     # unique asset name (stklug-<yaml>-<lang>-<style>.pdf) so all built
     # variants appear in the release instead of colliding on the shared
-    # sklug-cv.pdf leaf-main basename.
+    # sklug-cv.pdf leaf-main basename. v1.11.1 fixes the release/package
+    # jobs to download artifacts per-name (one subdir each) so a build
+    # producing a single PDF variant releases correctly instead of failing
+    # the flatten step with "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@e6a1e0619107b3f699b93a9e246114036cb8295e  # v1.11.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@23189ab15abae693926e35e42158bc93daba0c8b  # v1.11.1
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).
