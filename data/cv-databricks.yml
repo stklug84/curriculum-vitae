@@ -72,7 +72,7 @@ experience:
     monogram: RB
     bg: /assets/img/cv/bg/topology.svg
     tags:
-      - Azure Infrastructure
+      - Azure
       - Confluent Cloud
       - Databricks
       - Delta Lake
@@ -195,7 +195,7 @@ experience:
         build a unified data model — from physical sources up to the target
         business layer.
     tags:
-      - Azure Infrastructure
+      - Azure
       - Databricks
       - RDF/OWL Ontologies
       - Spark
@@ -266,7 +266,7 @@ experience:
         owning the full MLOps lifecycle on edge and cloud to improve quality and
         reduce cost on the production line.
     tags:
-      - Azure Infrastructure
+      - Azure
       - Hadoop Ecosystem
       - Impala
       - Keras
@@ -421,15 +421,15 @@ experience:
         Differentialgleichungen.
       en: >-
         Modelling and computation of non-linear partial differential
-        equations.
-    tags: [Physics, Simulation, HPC]
-    bullets:
-      - de: >-
-          Simulation von Transport- und thermodynamischen Eigenschaften
-          stark korrelierter elektronischer Materialien.
-        en: >-
-          Simulated transport and thermodynamic properties of strongly
-          correlated electronic materials.
+        equations on HPC supercomputing clusters
+    tags: [C, FORTRAN, HPC, OpenMP, MPI]
+    # bullets:
+    #   - de: >-
+    #       Simulation von Transport- und thermodynamischen Eigenschaften
+    #       stark korrelierter elektronischer Materialien.
+    #     en: >-
+    #       Simulated transport and thermodynamic properties of strongly
+    #       correlated electronic materials.
 
 
 education:
@@ -466,7 +466,7 @@ education:
           Diplomarbeit: Quantum Phase Transitions with Polar Molecules:
           Towards the Realization of Ferro-Electric Liquids.
         en: >-
-          Diploma thesis: Quantum Phase Transitions with Polar Molecules:
+          Thesis: Quantum Phase Transitions with Polar Molecules:
           Towards the Realization of Ferro-Electric Liquids.
 
 
@@ -645,7 +645,7 @@ skills:
     group:
       de: Programmiersprachen
       en: Programming Languages
-    items: [Scala, Python, Rust, LISP/Clojure, C, FORTRAN]
+    items: [Scala, Python, Rust, C, FORTRAN]
     size: .5
   - targets: [latex, web]
     group:
@@ -655,7 +655,7 @@ skills:
     size: .5
   - targets: [latex, web]
     group:
-      de: Data Engineering
+      de: Data Engineering & Modeling
       en: Data Engineering
     items: [Kafka, Flink, Spark, PySpark, Delta Lake, SQL, SPARQL, RDF, OWL]
     size: .5
@@ -675,7 +675,7 @@ skills:
     group:
       de: Plattformen
       en: Platforms
-    items: [Confluent Cloud, Databricks, Unity Catalog]
+    items: [Confluent Cloud, Databricks]
     size: .5
 
 languages:

@@ -88,13 +88,13 @@ single source YAML renders into every style unchanged.
 currently declares one active `cv-databricks` leaf, with the remaining
 styles commented out (ready to re-enable):
 
-| Source | Style | Lang | Leaf directory | Engine | Active |
-| --- | --- | --- | --- | --- | --- |
-| cv-databricks | cv-tagged-ia | en | `cvs/cv-databricks-en/cv-tagged-ia/` | xelatex | yes |
-| cv-databricks | cv-banking-fs | en | `cvs/cv-databricks-en/cv-banking-fs/` | xelatex | commented |
-| cv-databricks | cv-sidebar-pw | en | `cvs/cv-databricks-en/cv-sidebar-pw/` | xelatex | commented |
-| cv-databricks | cv-sidebar-dh | en | `cvs/cv-databricks-en/cv-sidebar-dh/` | xelatex | commented |
-| cv-databricks | cv-sidebar-vs | en | `cvs/cv-databricks-en/cv-sidebar-vs/` | xelatex | commented |
+| Style | Lang | Leaf directory | Engine | Active |
+| --- | --- | --- | --- | --- |
+| cv-tagged-ia | en | `cvs/cv-databricks-en/cv-tagged-ia/` | xelatex | yes |
+| cv-banking-fs | en | `cvs/cv-databricks-en/cv-banking-fs/` | xelatex | commented |
+| cv-sidebar-pw | en | `cvs/cv-databricks-en/cv-sidebar-pw/` | xelatex | commented |
+| cv-sidebar-dh | en | `cvs/cv-databricks-en/cv-sidebar-dh/` | xelatex | commented |
+| cv-sidebar-vs | en | `cvs/cv-databricks-en/cv-sidebar-vs/` | xelatex | commented |
 
 Uncomment a matrix line (and its `styles` registry entry) to build that
 style. `cv-academics` is intentionally absent from the committed matrix
@@ -134,44 +134,6 @@ PR builds additionally upload short-lived workflow artifacts for review
 (see [Artifact names](#artifact-names)).
 
 ## Repository layout
-
-```text
-.
-├── data/
-│   ├── variants.yml              # Build matrix: styles × langs × cvs
-│   ├── cv-academics.yml          # Canonical source (bilingual de/en)
-│   ├── cv-databricks.yml         # Canonical source (bilingual de/en)
-│   └── README.md                 # Manifest + schema + targets contract
-├── templates/
-│   ├── cv-plain-style.tex.j2     # Per-style leaf main templates (Jinja2)
-│   ├── cv-banking-fs.tex.j2
-│   ├── cv-tagged-ia.tex.j2
-│   ├── cv-sidebar-pw.tex.j2
-│   ├── cv-sidebar-dh.tex.j2
-│   └── cv-sidebar-vs.tex.j2
-├── styles/
-│   ├── cv-plain-style.sty        # Classic two-page CV style (pdflatex)
-│   ├── cv-banking-fs.sty         # single column (banking)
-│   ├── cv-tagged-ia.sty          # single column (black tags)
-│   ├── cv-sidebar-pw.sty         # sidebar (grayscale, no photo)
-│   ├── cv-sidebar-dh.sty         # sidebar (green banners, no photo)
-│   └── cv-sidebar-vs.sty         # right sidebar (blue, donut)
-├── images/                       # Shared assets (photo, signature)
-├── cvs/                          # Generated variant tree (gitignored, never committed)
-│   └── <yaml>-<lang>/<style>/    # Per leaf: sklug-cv.tex, personal-info.tex,
-│                                 #   cv-*.tex bodies, .engine — all from cv/generate
-├── .github/
-│   ├── CODEOWNERS                # Default reviewer: @stklug84
-│   ├── dependabot.yml            # Actions + TeX Live digest updates
-│   ├── docker/texlive/Dockerfile # Digest pin for the TeX Live image
-│   └── workflows/
-│       ├── build.yml             # Thin caller -> latex-build-cv (generate + build)
-│       ├── codeql.yml            # CodeQL (actions language)
-│       └── lint.yml              # actionlint/yamllint/markdownlint/hadolint/cv-schema
-├── .markdownlint.yml             # Markdown lint rules
-├── .yamllint.yml                 # YAML lint rules
-└── CONTRIBUTING.md               # Conventions and PR checklist
-```
 
 Each leaf sits **three** directories below the repo root
 (`cvs/<yaml>-<lang>/<style>/`). Shared assets (`images/` and the `*.sty`

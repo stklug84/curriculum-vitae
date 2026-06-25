@@ -187,13 +187,27 @@ conference location heatmap on top of the shared schema:
   `\cvfirstname`/`\cvlastname`; the template stacks them via
   `\cvname{first}{last}`. The leaf provides a `\providecommand` fallback to
   the full name so older `personal-info.tex` files still compile.
-- **Two-column header.** Name, role line, contact grid and the Summary sit
-  in the left column; the full Skills section (proficiency bars, group lists,
-  concept bubbles) sits in the right column, rendered with `\cvskillscompact`.
-  Each skill group's proficiency bar is drawn inline, right-aligned on the
-  same line as the group heading, with the comma-joined item list beneath it.
-  The meta-section contact markers (`\faMapMarker`, `\faLinkedin`, `\faGithub`,
-  `\faPhone`, `\faAt`) all render in an identical fixed-size square chip.
+- **Two-column header.** The left column holds the name with the contact
+  metadata grid sitting **immediately to its right** (name left-aligned,
+  contacts beside it on the same row), then the role line and Summary below;
+  the full Skills section (proficiency bars + group lists) sits in the right
+  column, rendered with `\cvskillscompact`. Each skill group's proficiency
+  bar is drawn inline, right-aligned on the same line as the group heading,
+  with the comma-joined item list beneath it. The meta-section contact
+  markers (`\faMapMarker`, `\faLinkedin`, `\faGithub`, `\faPhone`, `\faAt`)
+  all render in an identical fixed-size square chip.
+- **Entry date alignment.** In `\cventry`/`\cvsubentry` the date column and
+  the main column share a common first baseline (via matching `\strut`s), so
+  the date range (e.g. "09/2013 — 08/2010") lines up exactly with the entry's
+  title headline rather than floating above it.
+- **Concepts & Certifications.** The concept cloud emitted at the tail of
+  `cv-skills.tex` (`\cvskillbubbles`) is captured in the header and replayed
+  in a dedicated full-width row lower down: a left **Concepts** column (the
+  weighted bubble cloud, scaled to fit) faces a right **Certifications**
+  column listing `certifications[]` via the already-emitted
+  `cv-certifications.tex`. This keeps the narrow header Skills column free of
+  the bubble cloud and surfaces certifications, which the style previously
+  emitted but never displayed.
 - **Languages | Interests.** These two sections face each other in a single
   full-width row of side-by-side minipages.
 - **Conference location map.** When `conferences[]` entries carry optional
@@ -201,16 +215,22 @@ conference location heatmap on top of the shared schema:
   by coordinate into a weighted `\cvheatmap{lon/lat/weight, …}` line. The
   `tagged` style renders a **real equirectangular world map**
   (`images/worldmap.pdf` — the public-domain *BlankMap-World-Equirectangular*
-  vectorised to PDF) overlaid with one black dot per location, radius scaled
-  by visit count. Dots are projected linearly into the image box (longitude
-  −180..180, latitude +83.6..−90, the asset's documented extent). The map is
-  laid out in the left column with the conference list compacted into the
-  column to its right. Conferences without coordinates still appear in the
-  list. The map is a committed PDF asset, so the CI build needs no SVG
-  converter (the texlive image has none).
-- **Tech-stack line.** `experience[].tags` render as a `\cvtechstack` block:
-  a small bold "TECH STACK" label on its own line with the slash-joined tags
-  on the line beneath, indented to line up with the entry body (offset by the
-  date/timeline column) instead of spilling left.
+  vectorised to PDF, then path-simplified to keep the committed asset small)
+  overlaid with one black dot per location, radius scaled by visit count.
+  Dots are projected linearly into the image box (longitude −180..180,
+  latitude +83.6..−90, the asset's documented extent). The map is laid out in
+  the left column with the conference list compacted into the column to its
+  right. Conferences without coordinates still appear in the list. The map is
+  a committed PDF asset, so the CI build needs no SVG converter (the texlive
+  image has none).
+- **Tech-stack line.** `experience[].tags` render as a `\cvtechstack` line:
+  a small bold "TECH STACK" label followed (on the same line, after a wide
+  gap) by the tags in **small caps**, separated by centered dots. The cv/parse
+  emitter joins tags with a spaced `" / "`, which `\cvtechstack` re-joins with
+  a centered dot — intra-tag slashes (e.g. `Unix/Linux`, `RDF/OWL`) are left
+  intact. Lato has no small-caps face, so the line uses a dedicated
+  small-caps-capable family (TeX Gyre Heros, Latin Modern Roman fallback) via
+  fontspec's `Letters=SmallCaps`. The block is indented to line up with the
+  entry body (offset by the date/timeline column) instead of spilling left.
 - **Bullets and spacing.** Itemised bullets use a small filled-square marker
   with generous inter-item spacing for readability.

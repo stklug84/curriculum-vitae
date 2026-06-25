@@ -49,16 +49,25 @@
 
 \noindent
 \begin{minipage}[t]{0.58\linewidth}
-  \cvname{\cvfirstname}{\cvlastname}
+  % Name (left, left-aligned) with the contact metadata grid sitting
+  % immediately to its RIGHT on the same row, top-aligned against the name.
+  \noindent
+  \begin{minipage}[t]{0.46\linewidth}
+    \cvname{\cvfirstname}{\cvlastname}
+  \end{minipage}%
+  \hfill
+  \begin{minipage}[t]{0.50\linewidth}
+    \begin{tabularx}{\linewidth}{@{}X@{}}
+      \cvcontact{\faMapMarker}{\cvaddresstwo}                         \\[0.5em]
+      \cvcontact{\faPhone}{\cvphone}                                  \\[0.5em]
+      \cvcontact{\faAt}{\href{\cvemailurl}{\cvemail}}                 \\[0.5em]
+      \cvcontact{\faLinkedin}{\href{\cvlinkedinurl}{\cvlinkedinlabel}} \\[0.5em]
+      \cvcontact{\faGithub}{\href{\cvgithuburl}{\cvgithublabel}}       \\
+    \end{tabularx}
+  \end{minipage}
 
   {\large \cvroleline}\par
   \vspace{0.8em}
-
-  \begin{tabularx}{\linewidth}{@{}X X@{}}
-    \cvcontact{\faMapMarker}{\cvaddresstwo}          & \cvcontact{\faGithub}{\href{\cvgithuburl}{\cvgithublabel}}      \\[0.5em]
-    \cvcontact{\faPhone}{\cvphone}                   & \cvcontact{\faLinkedin}{\href{\cvlinkedinurl}{\cvlinkedinlabel}} \\[0.5em]
-    \cvcontact{\faAt}{\href{\cvemailurl}{\cvemail}}  & \\
-  \end{tabularx}
 
   % ---- {{ label_summary }} ----
   \cvsection{{ '{' }}{{ label_summary }}{{ '}' }}
@@ -66,8 +75,19 @@
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.38\linewidth}
-  % Compact skill geometry so the bars/labels/bubbles fit this column.
+  % Compact skill geometry so the bars/labels fit this column. The concept
+  % bubble cloud emitted at the tail of cv-skills.tex is captured here and
+  % re-rendered later in the dedicated Concepts section; \cvskillbubbles is
+  % redefined to stash its argument and render nothing in this column.
   \cvskillscompact
+  {% raw %}\makeatletter
+  \global\let\cv@savedbubbles\@empty
+  \global\let\cv@realskillbubbles\cvskillbubbles
+  % Capture the bubble argument verbatim (\unexpanded keeps fragile tokens
+  % like \& intact) into \cv@savedbubbles and render nothing here; the
+  % Concepts section restores \cvskillbubbles and replays it.
+  \renewcommand{\cvskillbubbles}[1]{\xdef\cv@savedbubbles{\unexpanded{#1}}}%
+  \makeatother{% endraw %}
   \cvsection{{ '{' }}{{ label_skills }}{{ '}' }}
   \input{cv-skills}
 \end{minipage}
@@ -85,6 +105,41 @@
 % =====================================================================
 \cvsection{{ '{' }}{{ label_education }}{{ '}' }}
 \input{cv-education}
+
+% =====================================================================
+% Concepts (left) + Certifications (right)
+% Two sections facing each other in a single full-width row. The concept
+% bubble cloud was captured from cv-skills.tex into \cv@savedbubbles in the
+% header (so it no longer crowds the narrow Skills column); we restore the
+% real \cvskillbubbles here and render it. Certifications come from the
+% already-emitted cv-certifications.tex (\cvsidelist), which this style did
+% not previously surface. Hardcoded en headings: this variant is en-only.
+% =====================================================================
+{% raw %}\makeatletter
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+  \cvsection{Concepts}
+  \let\cvskillbubbles\cv@realskillbubbles
+  % Fit the bubble cloud (circles + rotated labels) to this half-width
+  % column: \cv@bubblefittrue makes \cvskillbubbles \resizebox the whole
+  % picture to \linewidth, so the diagonal labels cannot spill into the
+  % Certifications column on the right.
+  \cv@bubblefittrue
+  % Expand \cv@savedbubbles into the braced argument so \cvskillbubbles'
+  % internal \foreach sees the raw comma-list and splits it into pairs
+  % (passing the bare macro leaves it as a single unsplit token).
+  \ifx\cv@savedbubbles\@empty\else
+    \expandafter\cvskillbubbles\expandafter{\cv@savedbubbles}%
+  \fi
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+  \cvsection{Certifications}
+  \input{cv-certifications}
+\end{minipage}
+\makeatother{% endraw %}
+
+\vspace{0.4em}
 
 % =====================================================================
 % {{ label_languages }} (left)  +  {{ label_interests }} (right)
