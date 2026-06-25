@@ -97,6 +97,18 @@
   }%
 }
 
+% Small-caps family for the tech-stack line. Lato ships NO small-caps face
+% (\scshape silently falls back to the regular shape), so we load a real
+% small-caps-capable family via fontspec's OpenType "Letters=SmallCaps"
+% feature: TeX Gyre Heros (a Helvetica-class humanist sans that harmonises
+% with Lato) is preferred; Latin Modern Roman is the last-resort fallback.
+% Both ship with the TeX Live image, so the CI build always has true SC.
+\IfFontExistsTF{TeX Gyre Heros}{%
+  \newfontfamily\cvscfont{TeX Gyre Heros}[Letters=SmallCaps]%
+}{%
+  \newfontfamily\cvscfont{Latin Modern Roman}[Letters=SmallCaps]%
+}
+
 % --- hyperref ---------------------------------------------------------
 \hypersetup{
   colorlinks=true,
@@ -199,14 +211,18 @@
 % --- \cventry{title}{date}{employer}{desc} ---------------------------
 % Left column (~18%) = date at top; main column = title (left) +
 % employer (right, smaller bold); then justified description.
+% The date column and the main column are both top-aligned [t]; a shared
+% \strut on the first line of each minipage pins them to a common first
+% baseline so the date (e.g. "09/2013 --- 08/2010") lines up exactly with
+% the entry's title headline rather than floating a hair above it.
 \newcommand{\cventry}[4]{%
   \vspace{0.3em}\par\noindent
   \begin{minipage}[t]{\cv@datecol}%
-    \raggedright{\small\color{cvMuted}#2}%
+    \raggedright{\strut\small\color{cvMuted}#2}%
   \end{minipage}%
   \hfill
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
-    {\noindent\textbf{#1}\hfill{\bfseries\small #3}\par}%
+    {\noindent\strut\textbf{#1}\hfill{\bfseries\small #3}\par}%
     \ifblank{#4}{}{\vspace{0.15em}{\small #4\par}}%
   \end{minipage}%
   \par\vspace{0.5em}%
@@ -216,11 +232,11 @@
 \newcommand{\cvsubentry}[3]{%
   \vspace{0.15em}\par\noindent
   \begin{minipage}[t]{\cv@datecol}%
-    \raggedright{\small\color{cvMuted}#1}%
+    \raggedright{\small\color{cvMuted}\strut #1}%
   \end{minipage}%
   \hfill
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
-    {\small\textit{#2}\par}%
+    {\small\strut\textit{#2}\par}%
     \begingroup
       \setlist[itemize,1]{label=\cv@sqbullet,leftmargin=1.4em,labelsep=.5em,%
         topsep=0.25em,itemsep=0.35em,parsep=0.1em}%
@@ -296,19 +312,33 @@
 }
 
 % --- \cvtechstack{a / b / c} -----------------------------------------
-% Monospace, slash-joined technology line, prefixed by a small bold
-% "Tech Stack" label. The whole block is indented to line up with the
-% \cventry main column (left margin + date column + the 0.4em gutter) so
-% it sits flush under the entry text instead of spilling left under the
-% timeline/date column.
+% Small-caps technology line, prefixed inline by a small bold "TECH STACK"
+% label with a generous gap, all on one line (wrapping naturally if long).
+% The cv/parse emitter joins tags with a SPACED " / " separator while any
+% intra-tag slash (e.g. "Unix/Linux", "LISP/Clojure") is unspaced; we
+% therefore split on the spaced separator only and re-join the tags with a
+% centered dot, leaving intra-tag slashes untouched. The whole block is
+% indented to line up with the \cventry main column (left margin + date
+% column + the 0.4em gutter) so it sits flush under the entry text instead
+% of spilling left under the timeline/date column.
+%
+% \cv@dotjoin recurses over the " / "-delimited list: it prints the head
+% tag, then if a separator remains prints a centered dot and recurses on
+% the tail. A trailing sentinel " / \cv@dotstop" marks the end.
+\newcommand{\cv@dotsep}{\;\textperiodcentered\;}
+\def\cv@dotstop{\cv@dotstop}%  unique sentinel token
+\def\cv@dotjoin#1 / #2\@nil{%
+  #1%
+  \ifx\cv@dotstop#2\else\cv@dotsep\cv@dotjoin#2\@nil\fi
+}
 \newcommand{\cvtechstack}[1]{%
   \par\noindent
   \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
-    {\footnotesize\bfseries\color{cvMuted}\MakeUppercase{Tech Stack}}\par
-    \vspace{0.15em}%
-    {\ttfamily\small #1}%
+    {\footnotesize\bfseries\color{cvMuted}\MakeUppercase{Tech Stack}}%
+    \hspace{1.5em}%
+    {\small\cvscfont\cv@dotjoin#1 / \cv@dotstop\@nil}%
   \end{minipage}%
   \par\vspace{0.3em}%
 }
