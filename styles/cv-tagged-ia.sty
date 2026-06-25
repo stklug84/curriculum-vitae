@@ -118,6 +118,21 @@
 \newlength{\cv@barlabel}
 \setlength{\cv@barlabel}{4.6cm}
 
+% --- \cvskillscompact -------------------------------------------------
+% Shrink the skill-bar geometry so the Skills section fits a narrow
+% column (e.g. the right column of the two-column header). Call it once
+% before the skills content is emitted; it also narrows the bubble step.
+% Idempotent enough for a single header use; scope it in a group if a
+% later full-width skills block is rendered in the same document.
+\newcommand{\cvskillscompact}{%
+  \setlength{\cv@barmax}{2.3cm}%
+  \setlength{\cv@barlabel}{2.7cm}%
+  \setlength{\cv@bubblestep}{0.92cm}%
+  \cv@barlabelledfalse  % suppress the bar's text label (group name repeats
+                        % immediately below via \cvskillgroup)
+  \cv@bubblefittrue     % shrink the concept-bubble row to the column width
+}
+
 % =====================================================================
 %  PUBLIC API
 % =====================================================================
@@ -254,17 +269,35 @@
 }
 
 % --- \cvtechstack{a / b / c} -----------------------------------------
-% Monospace, slash-joined technology line (rendered as-is, mono font).
+% Monospace, slash-joined technology line, prefixed by a small bold
+% "Tech Stack" label. The whole block is indented to line up with the
+% \cventry main column (left margin + date column + the 0.4em gutter) so
+% it sits flush under the entry text instead of spilling left under the
+% timeline/date column.
 \newcommand{\cvtechstack}[1]{%
-  \par\noindent{\ttfamily\small #1}\par\vspace{0.3em}%
+  \par\noindent
+  \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
+  \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
+    \raggedright
+    {\footnotesize\bfseries\color{cvMuted}\MakeUppercase{Tech Stack}}\;%
+    {\ttfamily\small #1}%
+  \end{minipage}%
+  \par\vspace{0.3em}%
 }
 
 % --- \cvskillbar{label}{frac} ----------------------------------------
-% Right-aligned label, then a solid black bar of length frac*max.
-% frac is in 0..1.
+% Default (wide) layout: left label box of width \cv@barlabel, then a solid
+% black bar of length frac*max. In compact mode (\cvskillscompact) the text
+% label is suppressed and only the bar is drawn: the skills template repeats
+% the group name immediately below via \cvskillgroup, so a narrow column
+% would otherwise overlap the label with the bar. frac is in 0..1.
+\newif\ifcv@barlabelled
+\cv@barlabelledtrue
 \newcommand{\cvskillbar}[2]{%
   \par\noindent
-  \makebox[\cv@barlabel][l]{\small #1}\hspace{0.6em}%
+  \ifcv@barlabelled
+    \makebox[\cv@barlabel][l]{\small #1}\hspace{0.6em}%
+  \fi
   \begin{tikzpicture}[baseline=-0.55ex]
     % track
     \draw[cvMuted,line width=0.3pt]
@@ -285,15 +318,22 @@
 % fixed, generous step to keep the row evenly spaced and overlap-free.
 \newlength{\cv@bubblestep}
 \setlength{\cv@bubblestep}{1.15cm}
+% When true (set by \cvskillscompact) the bubble row is shrunk to the
+% current \linewidth so a long concept cloud cannot overflow a narrow
+% column; the diagonal labels scale with it.
+\newif\ifcv@bubblefit
 \newcommand{\cvskillbubbles}[1]{%
   \par\vspace{0.4em}\noindent
-  \begin{tikzpicture}[baseline=0pt]
-    \def\cv@bx{0}%
-    \foreach \pair in {#1}{%
-      \edef\cv@tmp{\pair}%
-      \expandafter\cv@parsebubble\cv@tmp\@nil
-    }%
-  \end{tikzpicture}%
+  \ifcv@bubblefit\resizebox{\linewidth}{!}{%
+  \else\leavevmode\fi
+    \begin{tikzpicture}[baseline=0pt]
+      \def\cv@bx{0}%
+      \foreach \pair in {#1}{%
+        \edef\cv@tmp{\pair}%
+        \expandafter\cv@parsebubble\cv@tmp\@nil
+      }%
+    \end{tikzpicture}%
+  \ifcv@bubblefit}\fi
   \par\vspace{0.3em}%
 }
 % Parse "label;weight": draw a weight-scaled circle and a 40-degree
@@ -308,6 +348,100 @@
   \pgfmathsetmacro{\cv@bxnext}{\cv@bx + \cv@rad +
     \cv@bubblestep/1cm}%
   \xdef\cv@bx{\cv@bxnext}%
+}
+
+% --- \cvheatmap{lon/lat/weight, lon/lat/weight, ...} -----------------
+% A minimalist conference "location heatmap": an equirectangular world
+% map drawn as light vector outlines, overlaid with a solid black dot per
+% location whose radius scales with the weight (visit count). Overlapping
+% dots use partial opacity so dense locations read darker ("heat").
+%
+% Projection: longitude -180..180 -> x 0..\cv@mapw, latitude -90..90 ->
+% y 0..\cv@maph (equirectangular). The continent outlines are deliberately
+% coarse single-stroke polylines -- enough to anchor the dots
+% geographically without pretending to be a precise cartographic map and
+% without any external assets (pure TikZ, XeLaTeX-safe).
+\newlength{\cv@mapw}\setlength{\cv@mapw}{\linewidth}
+\newlength{\cv@maph}\setlength{\cv@maph}{0.5\linewidth}
+% Equirectangular projection (lon -180..180 -> 0..width, lat -90..90 ->
+% 0..height) is applied inline at each vertex via \pgfmathsetmacro in
+% \cv@polypt and \cv@parseheat, using \cv@mapwcm/\cv@maphcm (pt numbers).
+\newcommand{\cvheatmap}[1]{%
+  \par\vspace{0.4em}\noindent
+  % Resolve the map box into plain pt numbers usable in pgfmath. pgfmath
+  % reads a length register as its value in pt, so this yields bare numbers
+  % the projection macros can scale (the tikzpicture uses x=1pt,y=1pt).
+  \pgfmathsetmacro{\cv@mapwcm}{\cv@mapw/1pt}%  width  in pt (bare number)
+  \pgfmathsetmacro{\cv@maphcm}{\cv@maph/1pt}%  height in pt (bare number)
+  \begin{tikzpicture}[x=1pt,y=1pt,baseline=0pt]
+    % Frame + graticule (equator, prime meridian) in light grey.
+    \draw[cvMuted,line width=0.3pt]
+      (0,0) rectangle (\cv@mapwcm,\cv@maphcm);
+    \draw[cvMuted!50,line width=0.2pt]
+      (0,{\cv@maphcm/2}) -- (\cv@mapwcm,{\cv@maphcm/2});% equator
+    \draw[cvMuted!50,line width=0.2pt]
+      ({\cv@mapwcm/2},0) -- ({\cv@mapwcm/2},\cv@maphcm);% prime meridian
+    % Coarse continent hints (very light). Each continent is one open
+    % polyline drawn via \cv@poly, which projects every (lon,lat) vertex to
+    % numeric pt coordinates and draws the connected segments. Intentionally
+    % schematic -- enough to anchor the dots geographically, no assets.
+    \begin{scope}[cvMuted!60,line width=0.35pt,line join=round]
+      % North America
+      \cv@poly{-130/55, -100/49, -80/45, -75/40, -97/26, -110/30,
+        -125/40, -130/55}%
+      % South America
+      \cv@poly{-80/5, -60/8, -35/-8, -55/-35, -72/-45, -80/-15, -80/5}%
+      % Europe + Africa
+      \cv@poly{-10/55, 5/60, 30/58, 40/40, 33/30, 32/10, 10/5, 10/-15,
+        18/-34, -12/8, -10/35, -10/55}%
+      % Asia + India
+      \cv@poly{40/40, 60/55, 100/60, 140/55, 135/35, 120/22, 100/8,
+        80/8, 70/22, 55/25, 45/35, 40/40}%
+      % Australia
+      \cv@poly{115/-20, 130/-12, 145/-18, 150/-35, 135/-38, 118/-35,
+        115/-20}%
+    \end{scope}
+    % Location dots, weight-scaled, semi-opaque so overlaps darken.
+    \begin{scope}[cvBlack]
+      \foreach \pt in {#1}{%
+        \edef\cv@tmp{\pt}%
+        \expandafter\cv@parseheat\cv@tmp\@nil
+      }%
+    \end{scope}
+  \end{tikzpicture}%
+  \par\vspace{0.4em}%
+}
+% \cv@poly{lon/lat, lon/lat, ...}: draw a connected polyline. Each vertex
+% is projected to a numeric pt coordinate and appended to an \edef'd path
+% string of `(x,y) -- (x,y) -- ...` tokens, which is then handed to a
+% single \draw. Building the literal string first avoids \foreach-inside-
+% path-spec pitfalls and keeps coordinates plain numbers TikZ parses.
+\newcommand{\cv@poly}[1]{%
+  \gdef\cv@polypath{}%
+  \gdef\cv@polysep{}%
+  \foreach \ll in {#1}{%
+    \expandafter\cv@polypt\ll\relax
+  }%
+  \expandafter\draw\cv@polypath;%
+}
+\def\cv@polypt#1/#2\relax{%
+  % Divide BEFORE multiplying: pgfmath caps at ~16384, so width*(deg+180)
+  % would overflow; width*((deg+180)/360) keeps the intermediate small.
+  \pgfmathsetmacro{\cv@px}{\cv@mapwcm*(((#1)+180)/360)}%
+  \pgfmathsetmacro{\cv@py}{\cv@maphcm*(((#2)+90)/180)}%
+  % Coordinates are bare numbers (no unit): the picture's x=1pt,y=1pt makes
+  % each unit one point, so mixing explicit units here is what overflowed.
+  \xdef\cv@polypath{\cv@polypath\cv@polysep(\cv@px,\cv@py)}%
+  \gdef\cv@polysep{ -- }%
+}
+% Parse "lon/lat/weight": draw a weight-scaled, semi-opaque dot. Coordinates
+% and radius are bare numbers, scaled by the picture's x=1pt,y=1pt unit.
+\def\cv@parseheat#1/#2/#3\@nil{%
+  \pgfmathsetmacro{\cv@hr}{1.4 + 0.9*#3}% dot radius (pt units), weight-scaled
+  % Divide before multiplying to stay under pgfmath's ~16384 ceiling.
+  \pgfmathsetmacro{\cv@dx}{\cv@mapwcm*(((#1)+180)/360)}%
+  \pgfmathsetmacro{\cv@dy}{\cv@maphcm*(((#2)+90)/180)}%
+  \fill[opacity=0.78] (\cv@dx,\cv@dy) circle (\cv@hr);%
 }
 
 \endinput

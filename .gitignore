@@ -42,6 +42,7 @@ data/variants.local.yml
 *~
 .vscode/
 .idea/
+auto/
 
 # Example CV directory
 examples/
