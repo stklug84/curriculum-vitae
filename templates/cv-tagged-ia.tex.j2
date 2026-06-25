@@ -102,9 +102,47 @@
 \end{minipage}
 
 % =====================================================================
-% {{ label_conferences }} — final section: location heatmap + list
+% {{ label_conferences }} — final section: real world map (left) with the
+% conference list compacted into the column to its right.
+%
+% cv-conferences.tex emits "\cvheatmap{...}" followed by a flat stream of
+% "\cventry{...}" calls. We reshape that stream into a two-column row
+% WITHOUT touching the cv/parse emitter:
+%   * a scoped \cvheatmap renders the map in a left minipage, then opens
+%     the right minipage so the following entries flow beside the map;
+%   * \cventry is \let to the compact \cvconfentry for tight list rows;
+%   * the template closes the right minipage after \input.
 % =====================================================================
 \cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
-\input{cv-conferences}
+{% raw %}\makeatletter
+\begingroup
+  % Map occupies the left ~0.46; the list the right ~0.5. A flag tracks
+  % whether the map (and thus the right column) was actually opened, so the
+  % closing \end{minipage} is only emitted when there were geolocated
+  % conferences (the emitter omits \cvheatmap when none carry lat/lon).
+  % @-using control sequences (\cv@mapw, ...) need \makeatletter in the
+  % document body.
+  \newif\ifcv@mapopened
+  \setlength{\cv@mapw}{0.46\linewidth}
+  \let\cv@realheatmap\cvheatmap
+  % Wrap the emitter's single \cvheatmap{...} call: render the real map in a
+  % left minipage, then open the right minipage for the list. Defined with
+  % \long\def (single #1) to avoid the nested-parameter pitfall that bites
+  % \renewcommand when the captured map body itself runs a \foreach.
+  \long\def\cvheatmap#1{%
+    \cv@mapopenedtrue
+    \noindent
+    \begin{minipage}[t]{0.46\linewidth}%
+      \cv@realheatmap{#1}%
+    \end{minipage}%
+    \hfill
+    \begin{minipage}[t]{0.50\linewidth}%
+  }%
+  \let\cventry\cvconfentry
+  \input{cv-conferences}%
+  \ifcv@mapopened\end{minipage}\fi% close the right (list) column
+\endgroup
+\makeatother
+{% endraw %}
 
 \end{document}

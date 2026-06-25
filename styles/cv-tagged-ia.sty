@@ -40,6 +40,7 @@
 \RequirePackage{fontspec}
 \RequirePackage[a4paper,top=1.4cm,bottom=1.2cm,left=1.6cm,right=1.6cm]{geometry}
 \RequirePackage{xcolor}
+\RequirePackage{graphicx}
 \RequirePackage{tikz}
 \RequirePackage{fontawesome5}
 \RequirePackage{enumitem}
@@ -106,9 +107,14 @@
 }
 
 % --- List styling -----------------------------------------------------
-\setlist{nosep,leftmargin=1.2em}
-\setlist[itemize,1]{label=\textbullet,labelsep=.5em}
-\setlist[itemize,2]{label=\textopenbullet,labelsep=.5em,leftmargin=1.2em}
+% Square box bullets (a small filled \rule for crisp, size-controlled
+% markers) with generous inter-item spacing so individual bullets breathe.
+\newcommand{\cv@sqbullet}{\raisebox{0.18ex}{\rule{0.5em}{0.5em}}}
+\setlist{leftmargin=1.4em}
+\setlist[itemize,1]{label=\cv@sqbullet,labelsep=.6em,
+  topsep=0.35em,itemsep=0.45em,parsep=0.1em}
+\setlist[itemize,2]{label=\cv@sqbullet,labelsep=.5em,leftmargin=1.3em,
+  topsep=0.3em,itemsep=0.35em,parsep=0.1em}
 
 % --- Layout dimensions ------------------------------------------------
 \newlength{\cv@datecol}
@@ -151,10 +157,15 @@
 }
 
 % --- Private: black rounded-square icon chip with white glyph --------
+% Fixed-size square chip: every icon (\faMapMarker, \faLinkedin, \faGithub,
+% \faPhone, \faAt, ...) is drawn in an identical 1.5em square box regardless
+% of its glyph bounding box, so the meta-section markers all match in size.
+\newlength{\cv@chipside}\setlength{\cv@chipside}{1.5em}
 \newcommand{\cv@iconchip}[1]{%
   \tikz[baseline=-0.55ex]{%
-    \node[rounded corners=2pt,fill=cvBlack,inner sep=2.4pt,
-          text=white,font=\scriptsize] {#1};%
+    \node[rounded corners=2pt,fill=cvBlack,inner sep=0pt,
+          minimum width=\cv@chipside,minimum height=\cv@chipside,
+          align=center,text=white,font=\scriptsize] {#1};%
   }%
 }
 
@@ -211,7 +222,8 @@
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     {\small\textit{#2}\par}%
     \begingroup
-      \setlist[itemize,1]{label=\textopenbullet,leftmargin=1.4em,labelsep=.4em}%
+      \setlist[itemize,1]{label=\cv@sqbullet,leftmargin=1.4em,labelsep=.5em,%
+        topsep=0.25em,itemsep=0.35em,parsep=0.1em}%
       {\small #3}%
     \endgroup
   \end{minipage}%
@@ -237,9 +249,24 @@
 }
 
 % --- \cvskillgroup{heading}{body} ------------------------------------
+% Layout: the group heading and its proficiency bar share ONE line
+% (heading left, bar right-aligned in a fixed \cv@barmax column); the
+% comma-joined item list follows on the next line. The bar fraction is
+% stashed by the preceding \cvskillbar call (\cv@pendingfrac); if no bar
+% was stashed (\cv@pendingfrac empty) only the heading is shown.
+\def\cv@pendingfrac{}%
 \newcommand{\cvskillgroup}[2]{%
-  \vspace{0.25em}%
-  {\bfseries\small #1}\par
+  \vspace{0.25em}\par\noindent
+  {\bfseries\small #1}%
+  \ifx\cv@pendingfrac\@empty\else
+    \hfill
+    \begin{tikzpicture}[baseline=-0.55ex]
+      \draw[cvMuted,line width=0.3pt] (0,0) rectangle (\cv@barmax,0.5em);
+      \fill[cvBlack] (0,0) rectangle ({\cv@pendingfrac*\cv@barmax},0.5em);
+    \end{tikzpicture}%
+    \global\let\cv@pendingfrac\@empty
+  \fi
+  \par
   {\small #2}\par
   \vspace{0.25em}%
 }
@@ -279,7 +306,8 @@
   \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
-    {\footnotesize\bfseries\color{cvMuted}\MakeUppercase{Tech Stack}}\;%
+    {\footnotesize\bfseries\color{cvMuted}\MakeUppercase{Tech Stack}}\par
+    \vspace{0.15em}%
     {\ttfamily\small #1}%
   \end{minipage}%
   \par\vspace{0.3em}%
@@ -294,19 +322,21 @@
 \newif\ifcv@barlabelled
 \cv@barlabelledtrue
 \newcommand{\cvskillbar}[2]{%
-  \par\noindent
   \ifcv@barlabelled
+    % Wide/standalone layout (other styles): label box + bar on its own line.
+    \par\noindent
     \makebox[\cv@barlabel][l]{\small #1}\hspace{0.6em}%
+    \begin{tikzpicture}[baseline=-0.55ex]
+      \draw[cvMuted,line width=0.3pt] (0,0) rectangle (\cv@barmax,0.55em);
+      \fill[cvBlack] (0,0) rectangle ({#2*\cv@barmax},0.55em);
+    \end{tikzpicture}%
+    \par\vspace{0.3em}%
+  \else
+    % Compact (header) layout: don't draw here; stash the fraction so the
+    % immediately-following \cvskillgroup can render the bar inline next to
+    % the group heading. The label #1 is dropped (the group name repeats it).
+    \global\def\cv@pendingfrac{#2}%
   \fi
-  \begin{tikzpicture}[baseline=-0.55ex]
-    % track
-    \draw[cvMuted,line width=0.3pt]
-      (0,0) rectangle (\cv@barmax,0.55em);
-    % fill
-    \fill[cvBlack]
-      (0,0) rectangle ({#2*\cv@barmax},0.55em);
-  \end{tikzpicture}%
-  \par\vspace{0.3em}%
 }
 
 % --- \cvskillbubbles{l1;w1, l2;w2, ...} ------------------------------
@@ -351,56 +381,33 @@
 }
 
 % --- \cvheatmap{lon/lat/weight, lon/lat/weight, ...} -----------------
-% A minimalist conference "location heatmap": an equirectangular world
-% map drawn as light vector outlines, overlaid with a solid black dot per
-% location whose radius scales with the weight (visit count). Overlapping
-% dots use partial opacity so dense locations read darker ("heat").
+% Conference "location heatmap": a REAL equirectangular world map
+% (images/worldmap.pdf -- public-domain BlankMap-World-Equirectangular,
+% vectorised to PDF) overlaid with a solid black dot per location whose
+% radius scales with the weight (visit count). Overlapping dots are
+% semi-opaque so dense locations read darker ("heat").
 %
-% Projection: longitude -180..180 -> x 0..\cv@mapw, latitude -90..90 ->
-% y 0..\cv@maph (equirectangular). The continent outlines are deliberately
-% coarse single-stroke polylines -- enough to anchor the dots
-% geographically without pretending to be a precise cartographic map and
-% without any external assets (pure TikZ, XeLaTeX-safe).
+% Calibration of images/worldmap.pdf (704.81 x 357.546 pt): the image box
+% spans longitude -180..180 and latitude +83.6..-90 (the standard blank
+% map trims the far north; Antarctica fills the bottom strip). Dots are
+% projected linearly into the image box accordingly. The map width is the
+% settable length \cv@mapw (default \linewidth); the height follows the
+% asset's fixed aspect ratio so the projection always registers.
 \newlength{\cv@mapw}\setlength{\cv@mapw}{\linewidth}
-\newlength{\cv@maph}\setlength{\cv@maph}{0.5\linewidth}
-% Equirectangular projection (lon -180..180 -> 0..width, lat -90..90 ->
-% 0..height) is applied inline at each vertex via \pgfmathsetmacro in
-% \cv@polypt and \cv@parseheat, using \cv@mapwcm/\cv@maphcm (pt numbers).
+\def\cv@mapaspect{0.50729}%  height/width of images/worldmap.pdf (357.546/704.81)
+\def\cv@maplatmax{83.6}%     top edge latitude of the map image
+\def\cv@maplatmin{-90}%      bottom edge latitude of the map image
 \newcommand{\cvheatmap}[1]{%
   \par\vspace{0.4em}\noindent
-  % Resolve the map box into plain pt numbers usable in pgfmath. pgfmath
-  % reads a length register as its value in pt, so this yields bare numbers
-  % the projection macros can scale (the tikzpicture uses x=1pt,y=1pt).
-  \pgfmathsetmacro{\cv@mapwcm}{\cv@mapw/1pt}%  width  in pt (bare number)
-  \pgfmathsetmacro{\cv@maphcm}{\cv@maph/1pt}%  height in pt (bare number)
+  % Resolve the map box into plain pt numbers usable in pgfmath (a length
+  % register reads as its pt value); the picture uses x=1pt,y=1pt so these
+  % become coordinate units.
+  \pgfmathsetmacro{\cv@mapwpt}{\cv@mapw/1pt}%
+  \pgfmathsetmacro{\cv@maphpt}{\cv@mapwpt*\cv@mapaspect}%
   \begin{tikzpicture}[x=1pt,y=1pt,baseline=0pt]
-    % Frame + graticule (equator, prime meridian) in light grey.
-    \draw[cvMuted,line width=0.3pt]
-      (0,0) rectangle (\cv@mapwcm,\cv@maphcm);
-    \draw[cvMuted!50,line width=0.2pt]
-      (0,{\cv@maphcm/2}) -- (\cv@mapwcm,{\cv@maphcm/2});% equator
-    \draw[cvMuted!50,line width=0.2pt]
-      ({\cv@mapwcm/2},0) -- ({\cv@mapwcm/2},\cv@maphcm);% prime meridian
-    % Coarse continent hints (very light). Each continent is one open
-    % polyline drawn via \cv@poly, which projects every (lon,lat) vertex to
-    % numeric pt coordinates and draws the connected segments. Intentionally
-    % schematic -- enough to anchor the dots geographically, no assets.
-    \begin{scope}[cvMuted!60,line width=0.35pt,line join=round]
-      % North America
-      \cv@poly{-130/55, -100/49, -80/45, -75/40, -97/26, -110/30,
-        -125/40, -130/55}%
-      % South America
-      \cv@poly{-80/5, -60/8, -35/-8, -55/-35, -72/-45, -80/-15, -80/5}%
-      % Europe + Africa
-      \cv@poly{-10/55, 5/60, 30/58, 40/40, 33/30, 32/10, 10/5, 10/-15,
-        18/-34, -12/8, -10/35, -10/55}%
-      % Asia + India
-      \cv@poly{40/40, 60/55, 100/60, 140/55, 135/35, 120/22, 100/8,
-        80/8, 70/22, 55/25, 45/35, 40/40}%
-      % Australia
-      \cv@poly{115/-20, 130/-12, 145/-18, 150/-35, 135/-38, 118/-35,
-        115/-20}%
-    \end{scope}
+    % Real world map, anchored bottom-left at the origin, sized to \cv@mapw.
+    \node[anchor=south west,inner sep=0] at (0,0)
+      {\includegraphics[width=\cv@mapw]{worldmap}};
     % Location dots, weight-scaled, semi-opaque so overlaps darken.
     \begin{scope}[cvBlack]
       \foreach \pt in {#1}{%
@@ -411,37 +418,30 @@
   \end{tikzpicture}%
   \par\vspace{0.4em}%
 }
-% \cv@poly{lon/lat, lon/lat, ...}: draw a connected polyline. Each vertex
-% is projected to a numeric pt coordinate and appended to an \edef'd path
-% string of `(x,y) -- (x,y) -- ...` tokens, which is then handed to a
-% single \draw. Building the literal string first avoids \foreach-inside-
-% path-spec pitfalls and keeps coordinates plain numbers TikZ parses.
-\newcommand{\cv@poly}[1]{%
-  \gdef\cv@polypath{}%
-  \gdef\cv@polysep{}%
-  \foreach \ll in {#1}{%
-    \expandafter\cv@polypt\ll\relax
-  }%
-  \expandafter\draw\cv@polypath;%
-}
-\def\cv@polypt#1/#2\relax{%
-  % Divide BEFORE multiplying: pgfmath caps at ~16384, so width*(deg+180)
-  % would overflow; width*((deg+180)/360) keeps the intermediate small.
-  \pgfmathsetmacro{\cv@px}{\cv@mapwcm*(((#1)+180)/360)}%
-  \pgfmathsetmacro{\cv@py}{\cv@maphcm*(((#2)+90)/180)}%
-  % Coordinates are bare numbers (no unit): the picture's x=1pt,y=1pt makes
-  % each unit one point, so mixing explicit units here is what overflowed.
-  \xdef\cv@polypath{\cv@polypath\cv@polysep(\cv@px,\cv@py)}%
-  \gdef\cv@polysep{ -- }%
-}
 % Parse "lon/lat/weight": draw a weight-scaled, semi-opaque dot. Coordinates
 % and radius are bare numbers, scaled by the picture's x=1pt,y=1pt unit.
+% Projection: lon -180..180 -> 0..mapw; lat latmin..latmax -> 0..maph.
+% Divide before multiplying to stay under pgfmath's ~16384 ceiling.
 \def\cv@parseheat#1/#2/#3\@nil{%
-  \pgfmathsetmacro{\cv@hr}{1.4 + 0.9*#3}% dot radius (pt units), weight-scaled
-  % Divide before multiplying to stay under pgfmath's ~16384 ceiling.
-  \pgfmathsetmacro{\cv@dx}{\cv@mapwcm*(((#1)+180)/360)}%
-  \pgfmathsetmacro{\cv@dy}{\cv@maphcm*(((#2)+90)/180)}%
-  \fill[opacity=0.78] (\cv@dx,\cv@dy) circle (\cv@hr);%
+  \pgfmathsetmacro{\cv@hr}{1.2 + 0.8*#3}% dot radius (pt units), weight-scaled
+  \pgfmathsetmacro{\cv@dx}{\cv@mapwpt*(((#1)+180)/360)}%
+  \pgfmathsetmacro{\cv@dy}{\cv@maphpt*((#2-(\cv@maplatmin))/%
+    (\cv@maplatmax-(\cv@maplatmin)))}%
+  \fill[opacity=0.8] (\cv@dx,\cv@dy) circle (\cv@hr);%
+}
+
+% --- \cvconfentry{title}{date}{location} -----------------------------
+% Compact conference-list row for the column NEXT TO the world map: a tight
+% one-line "date — title (location)" at footnotesize, much denser than the
+% generic \cventry. The template \let\cventry=\cvconfentry inside the
+% conferences block so the cv/parse-emitted \cventry calls render compactly
+% without any emitter change. #4 (unused desc) is swallowed for arity parity.
+\newcommand{\cvconfentry}[4]{%
+  \par\noindent
+  {\footnotesize\color{cvMuted}#2}\hspace{0.4em}%
+  {\footnotesize #1}%
+  \ifblank{#3}{}{{\footnotesize\color{cvMuted}\space---\space#3}}%
+  \par\vspace{0.35em}%
 }
 
 \endinput
