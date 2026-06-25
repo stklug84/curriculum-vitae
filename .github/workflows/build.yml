@@ -65,9 +65,14 @@ jobs:
   build:
     # contents: write is consumed only by the called workflow's release
     # job (publishes versioned releases on pushes to main); all other
-    # jobs read the repo and upload artifacts.
+    # jobs read the repo and upload artifacts. actions: read is required by
+    # the called workflow's package/release jobs (v1.12.0+), which use
+    # `gh run download` / the run-artifacts REST API to fetch each per-CV
+    # PDF artifact by name; a caller must grant every permission the called
+    # workflow's jobs request or the run fails at startup.
     permissions:
       contents: write
+      actions: read
     # SHA-pinned to github-workflows v1.12.0: bundles stklug84/actions
     # v2.9.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
     # driving cv-tagged-ia skill bars / concept bubbles / tech stacks,
