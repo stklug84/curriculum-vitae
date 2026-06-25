@@ -188,19 +188,29 @@ conference location heatmap on top of the shared schema:
   `\cvname{first}{last}`. The leaf provides a `\providecommand` fallback to
   the full name so older `personal-info.tex` files still compile.
 - **Two-column header.** Name, role line, contact grid and the Summary sit
-  in the left column; the full Skills section (bars, group lists, concept
-  bubbles) sits in the right column, rendered with `\cvskillscompact` so the
-  bars drop their redundant text label and the bubble cloud is scaled to the
-  narrow column width.
+  in the left column; the full Skills section (proficiency bars, group lists,
+  concept bubbles) sits in the right column, rendered with `\cvskillscompact`.
+  Each skill group's proficiency bar is drawn inline, right-aligned on the
+  same line as the group heading, with the comma-joined item list beneath it.
+  The meta-section contact markers (`\faMapMarker`, `\faLinkedin`, `\faGithub`,
+  `\faPhone`, `\faAt`) all render in an identical fixed-size square chip.
 - **Languages | Interests.** These two sections face each other in a single
   full-width row of side-by-side minipages.
-- **Conference location heatmap.** When `conferences[]` entries carry
-  optional `lat`/`lon` (decimal degrees, supplied together), `cv/parse`
-  aggregates them by coordinate into a weighted `\cvheatmap{lon/lat/weight,
-  …}` line — an equirectangular TikZ world map with one black dot per
-  location, radius scaled by visit count. The macro divides before
-  multiplying to stay under pgfmath's ~16384 ceiling. Conferences without
-  coordinates still appear in the textual list below the map.
-- **Tech-stack line.** `experience[].tags` render as a `\cvtechstack` line
-  prefixed by a small bold "TECH STACK" label, indented to line up with the
-  entry body (offset by the date/timeline column) instead of spilling left.
+- **Conference location map.** When `conferences[]` entries carry optional
+  `lat`/`lon` (decimal degrees, supplied together), `cv/parse` aggregates them
+  by coordinate into a weighted `\cvheatmap{lon/lat/weight, …}` line. The
+  `tagged` style renders a **real equirectangular world map**
+  (`images/worldmap.pdf` — the public-domain *BlankMap-World-Equirectangular*
+  vectorised to PDF) overlaid with one black dot per location, radius scaled
+  by visit count. Dots are projected linearly into the image box (longitude
+  −180..180, latitude +83.6..−90, the asset's documented extent). The map is
+  laid out in the left column with the conference list compacted into the
+  column to its right. Conferences without coordinates still appear in the
+  list. The map is a committed PDF asset, so the CI build needs no SVG
+  converter (the texlive image has none).
+- **Tech-stack line.** `experience[].tags` render as a `\cvtechstack` block:
+  a small bold "TECH STACK" label on its own line with the slash-joined tags
+  on the line beneath, indented to line up with the entry body (offset by the
+  date/timeline column) instead of spilling left.
+- **Bullets and spacing.** Itemised bullets use a small filled-square marker
+  with generous inter-item spacing for readability.
