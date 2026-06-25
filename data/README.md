@@ -140,7 +140,7 @@ and signature `\includegraphics` calls so an empty `photo_path` /
 | `contact` | required: `phone`, `email` (neutral). Optional (neutral, emitted empty when omitted): `birthdate`, `birthplace`, `address` (list 1–3 when present), `location_signature`, `photo_path`, `signature_path`. Optional `linkedin`/`github`/`website` link mappings `{url, label}` (label optional/derived from the URL) |
 | `experience[]` | `id` (unique), `targets`, `period`✱, `year` (int), `role`✱, `org`, `location`✱, `kind`, `monogram`, `bg`, `logo` (optional/null), `summary`✱, `tags` (list), `bullets[{de,en}]`, `subentries[{date, title✱, bullets[{de,en}]}]` (optional) |
 | `education[]` | `id` (unique), `targets`, `period`, `degree`✱, `institution`✱, `grade` (optional), `details[{de,en}]` |
-| `conferences[]` | `targets`, `year` (int), `name`, `location`, `date`, `url` (optional) |
+| `conferences[]` | `targets`, `year` (int), `name`, `location`, `date`, `url` (optional), `lat`/`lon` (optional, decimal degrees, supplied together) |
 | `skills[]` | `targets`, `group`✱, `items` (list) |
 | `languages[]` | `targets`, `name`✱, `level_label`✱, `level` (1–5) |
 | `certifications[]` | `targets`, `text`✱ — empty list `[]` when none |
@@ -161,8 +161,46 @@ and signature `\includegraphics` calls so an empty `photo_path` /
 ## Role line and summary
 
 The leaf main templates declare empty `\providecommand` fallbacks for the
-role line and profile summary, so every document compiles even though the
-`cv/parse` emitter does not yet emit those macros. Populating them from
-`meta.title` / `meta.summary` is a pending `cv/parse` enhancement in
-[`stklug84/actions`](https://github.com/stklug84/actions); until it ships,
-those two lines render blank.
+role line and profile summary so every document compiles regardless of the
+`cv/parse` version in use. The `cv/parse` emitter populates them from
+`meta.title` (→ `\cvroleline`) and `meta.summary` (→ `\cvprofile`) in
+`personal-info.tex`, so the header role line and the Summary section render
+the meta content.
+
+## Header location
+
+`meta.location`✱ is the geographic location shown in the header. When the
+optional `contact.address` list is **omitted**, `cv/parse` backs the
+map-marker contact chip (`\cvaddresstwo`) with `meta.location`, so the
+location is never blank; a present `contact.address` always takes
+precedence. `\cvlocation` remains bound to `contact.location_signature`
+(consumed by the plain style's signature/date line) and is independent of
+`meta.location`.
+
+## `cv-tagged-ia` layout features
+
+The `tagged` style (`styles/cv-tagged-ia.sty` +
+`templates/cv-tagged-ia.tex.j2`) renders a two-column header and a
+conference location heatmap on top of the shared schema:
+
+- **Two-line name.** `cv/parse` splits `meta.display_name` into
+  `\cvfirstname`/`\cvlastname`; the template stacks them via
+  `\cvname{first}{last}`. The leaf provides a `\providecommand` fallback to
+  the full name so older `personal-info.tex` files still compile.
+- **Two-column header.** Name, role line, contact grid and the Summary sit
+  in the left column; the full Skills section (bars, group lists, concept
+  bubbles) sits in the right column, rendered with `\cvskillscompact` so the
+  bars drop their redundant text label and the bubble cloud is scaled to the
+  narrow column width.
+- **Languages | Interests.** These two sections face each other in a single
+  full-width row of side-by-side minipages.
+- **Conference location heatmap.** When `conferences[]` entries carry
+  optional `lat`/`lon` (decimal degrees, supplied together), `cv/parse`
+  aggregates them by coordinate into a weighted `\cvheatmap{lon/lat/weight,
+  …}` line — an equirectangular TikZ world map with one black dot per
+  location, radius scaled by visit count. The macro divides before
+  multiplying to stay under pgfmath's ~16384 ceiling. Conferences without
+  coordinates still appear in the textual list below the map.
+- **Tech-stack line.** `experience[].tags` render as a `\cvtechstack` line
+  prefixed by a small bold "TECH STACK" label, indented to line up with the
+  entry body (offset by the date/timeline column) instead of spilling left.

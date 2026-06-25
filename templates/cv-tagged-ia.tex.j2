@@ -36,26 +36,43 @@
 \cvtopbanner
 
 % =====================================================================
-% HEADER — name, role, contact grid
+% HEADER — two columns:
+%   LEFT  (~58%): two-line name, role, contact grid, summary
+%   RIGHT (~38%): the full Skills section (bars + groups + bubbles),
+%                 rendered compact so it fits the narrow column.
+% \cvname stacks first/last as two HUGE caps lines (\cvfirstname /
+% \cvlastname come from personal-info.tex; older committed files that
+% predate the split fall back to the full display name on line 1).
 % =====================================================================
-\cvname{\cvdisplayname}{}
-
-{\large \cvroleline}\par
-\vspace{0.8em}
+\providecommand{\cvfirstname}{\cvdisplayname}
+\providecommand{\cvlastname}{}
 
 \noindent
-\begin{tabularx}{\linewidth}{@{}X X@{}}
-  \cvcontact{\faMapMarker}{\cvaddresstwo}          & \cvcontact{\faGithub}{\href{\cvgithuburl}{\cvgithublabel}}      \\[0.5em]
-  \cvcontact{\faPhone}{\cvphone}                   & \cvcontact{\faLinkedin}{\href{\cvlinkedinurl}{\cvlinkedinlabel}} \\[0.5em]
-  \cvcontact{\faAt}{\href{\cvemailurl}{\cvemail}}  & \\
-\end{tabularx}
+\begin{minipage}[t]{0.58\linewidth}
+  \cvname{\cvfirstname}{\cvlastname}
 
-% =====================================================================
-% {{ label_summary }}
-% =====================================================================
-\cvsection{{ '{' }}{{ label_summary }}{{ '}' }}
+  {\large \cvroleline}\par
+  \vspace{0.8em}
 
-\cvsummary{\cvprofile}
+  \begin{tabularx}{\linewidth}{@{}X X@{}}
+    \cvcontact{\faMapMarker}{\cvaddresstwo}          & \cvcontact{\faGithub}{\href{\cvgithuburl}{\cvgithublabel}}      \\[0.5em]
+    \cvcontact{\faPhone}{\cvphone}                   & \cvcontact{\faLinkedin}{\href{\cvlinkedinurl}{\cvlinkedinlabel}} \\[0.5em]
+    \cvcontact{\faAt}{\href{\cvemailurl}{\cvemail}}  & \\
+  \end{tabularx}
+
+  % ---- {{ label_summary }} ----
+  \cvsection{{ '{' }}{{ label_summary }}{{ '}' }}
+  \cvsummary{\cvprofile}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.38\linewidth}
+  % Compact skill geometry so the bars/labels/bubbles fit this column.
+  \cvskillscompact
+  \cvsection{{ '{' }}{{ label_skills }}{{ '}' }}
+  \input{cv-skills}
+\end{minipage}
+
+\vspace{0.4em}
 
 % =====================================================================
 % {{ label_experience }}
@@ -70,21 +87,24 @@
 \input{cv-education}
 
 % =====================================================================
-% {{ label_skills }}
+% {{ label_languages }} (left)  +  {{ label_interests }} (right)
+% Two sections facing each other in a single full-width row.
 % =====================================================================
-\cvsection{{ '{' }}{{ label_skills }}{{ '}' }}
-\input{cv-skills}
+\noindent
+\begin{minipage}[t]{0.48\linewidth}
+  \cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
+  \input{cv-languages}
+\end{minipage}%
+\hfill
+\begin{minipage}[t]{0.48\linewidth}
+  \cvsection{{ '{' }}{{ label_interests }}{{ '}' }}
+  \input{cv-interests}
+\end{minipage}
 
 % =====================================================================
-% {{ label_languages }}
+% {{ label_conferences }} — final section: location heatmap + list
 % =====================================================================
-\cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
-\input{cv-languages}
-
-% =====================================================================
-% {{ label_interests }}
-% =====================================================================
-\cvsection{{ '{' }}{{ label_interests }}{{ '}' }}
-\input{cv-interests}
+\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
+\input{cv-conferences}
 
 \end{document}

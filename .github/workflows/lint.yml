@@ -141,7 +141,7 @@ jobs:
       # contract; --check writes nothing and fails the PR on the first
       # violation with a clear message.
       - name: Validate ${{ matrix.source }}
-        uses: stklug84/actions/cv/parse@185f6393e7e257c65ea604e9be134876d9e8ea1f  # v2.8.0
+        uses: stklug84/actions/cv/parse@b3c96a417782794fcbca8446cb9b1484d9556d37  # v2.9.0
         with:
           source: ${{ matrix.source }}
           check: "true"

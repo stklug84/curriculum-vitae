@@ -65,19 +65,28 @@ jobs:
   build:
     # contents: write is consumed only by the called workflow's release
     # job (publishes versioned releases on pushes to main); all other
-    # jobs read the repo and upload artifacts.
+    # jobs read the repo and upload artifacts. actions: read is required by
+    # the called workflow's package/release jobs (v1.12.0+), which use
+    # `gh run download` / the run-artifacts REST API to fetch each per-CV
+    # PDF artifact by name; a caller must grant every permission the called
+    # workflow's jobs request or the run fails at startup.
     permissions:
       contents: write
-    # SHA-pinned to github-workflows v1.11.0: bundles stklug84/actions
-    # v2.8.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
-    # driving cv-tagged-ia skill bars / concept bubbles / tech stacks, and
-    # now emitting meta.location/title/summary plus experience bullets) and
-    # gives every released PDF a
+      actions: read
+    # SHA-pinned to github-workflows v1.12.0: bundles stklug84/actions
+    # v2.9.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
+    # driving cv-tagged-ia skill bars / concept bubbles / tech stacks,
+    # emitting meta.location/title/summary plus experience bullets, and now
+    # the two-line name split and the conference location heatmap
+    # (lat/lon -> \cvheatmap)) and gives every released PDF a
     # unique asset name (stklug-<yaml>-<lang>-<style>.pdf) so all built
     # variants appear in the release instead of colliding on the shared
-    # sklug-cv.pdf leaf-main basename.
+    # sklug-cv.pdf leaf-main basename. The release/package jobs download
+    # artifacts per-name (one subdir each) so a build producing a single PDF
+    # variant releases correctly instead of failing the flatten step with
+    # "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@e6a1e0619107b3f699b93a9e246114036cb8295e  # v1.11.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@532bc66f920ca9d6c77882ef14a1f7804baa989e  # v1.12.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).

@@ -20,23 +20,30 @@ meta:
     de: IT-Systemarchitekt
     en: Data & AI Solutions Architect
   location:
-    de: Deutschland
-    en: Germany
+    de: Stuttgart, Deutschland
+    en: Stuttgart, Germany
   summary:
     de: >-
-      Promovierter Physiker mit langjähriger Erfahrung im Aufbau
-      hybrider AI-Plattform-Architekturen im industriellen Umfeld.
-      Schwerpunkte: Cloud-native Daten- und ML-Systeme, semantische
-      Datenanalyse, Industrialisierung produktiver Analytics-Lösungen.
+      Promovierter Physiker, der mit Begeisterung produktionsreife verteilte
+      Daten- und Analyseplattformen auf Basis von Apache Spark/Kafka/Flink
+      (PySpark, Scala, Python) sowie cloud-native AI/ML-Systeme (primär Azure,
+      AWS/GCP vertraut) konzipiert, aufbaut und liefert. Agiert als
+      vertrauenswürdiger technischer Berater für funktionsübergreifende Teams in
+      Europa, Nordamerika und Asien und bringt MLOps- und CI/CD-Disziplin ein,
+      um Analytics-Lösungen im großen Maßstab zu industrialisieren. Praktische
+      Stärken in GenAI — RAG, Multi-Agenten-Systeme und Evaluation — ergänzt
+      durch semantische Daten, erklärbare KI und Knowledge Graphs, um agentische
+      Lösungen mit messbarem geschäftlichem Mehrwert auszuliefern.
     en: >-
-      PhD physicist that loves to design, build and deliver distributed data and
-      analytics platforms based on Apache Spark/Kafka/Flink (in Scala/Python)
-      and cloud-native data and AI/ML systems (Azure primary, AWS/GCP aware).
-      Brings MLOps and CI/CD discipline to productionise analytics at scale,
-      and partners directly with cross-functional teams across Europe, North America
-      and Asia to deliver support and advise. Adjacent strengths in GenAI,
-      semantic data, explainable AI and knowledge graphs to implement agentic
-      solutions to provide insights and business benefits.
+      PhD physicist who loves to design, build and deliver production-grade
+      distributed data and analytics platforms on Apache Spark/Kafka/Flink
+      (PySpark, Scala, Python) and cloud-native AI/ML systems (Azure primary,
+      AWS/GCP aware). Acts as a trusted technical advisor to cross-functional
+      teams across Europe, North America and Asia, bringing MLOps and CI/CD
+      discipline to productionise analytics at scale. Hands-on strengths in
+      GenAI — RAG, multi-agent systems and evaluation — alongside semantic data,
+      explainable AI and knowledge graphs, to ship agentic solutions that
+      deliver measurable business value.
 
 contact:
   phone: +49 173 6734906
@@ -64,56 +71,94 @@ experience:
     kind: work
     monogram: RB
     bg: /assets/img/cv/bg/topology.svg
-    tags: [Azure, Kubernetes, Knowledge Graphs]
+    tags:
+      - Azure Infrastructure
+      - Confluent Cloud
+      - Databricks
+      - Delta Lake
+      - Flink
+      - Google ADK
+      - Kafka
+      - Kubernetes
+      - LakeFS
+      - LangGraph
+      - mlflow
+      - OpenLineage
+      - Spark
     summary:
       de: >-
-        TODO
+        Konzeption und Einführung einer durchgängigen Daten- &
+        AI-Plattformarchitektur auf Basis des Databricks Lakehouse über hybride
+        und öffentliche Cloud hinweg; als vertrauenswürdiger technischer Berater
+        für funktionsübergreifende Teams tätig und Lieferung produktionsreifer
+        Data-Engineering- und Analytics-Lösungen im großen Maßstab im
+        industriellen und fertigungsnahen Umfeld. Lösungsarchitekt für die
+        folgenden 4+ integrierten Produktivlösungen:
       en: >-
         Designed and introduced an end-to-end Data & AI platform architecture
-        on hybrid/public cloud, providing trusted technical guidance to
-        cross-functional teams and delivering data engineering and analytics
-        at scale in an industrial and manufacturing context. Solution architect
-        for the following integrated productive solutions:
+        on the Databricks Lakehouse across hybrid and public cloud, serving as
+        trusted technical advisor to cross-functional teams and delivering
+        production-grade data engineering and analytics at scale in an
+        industrial and manufacturing context. Solution architect across
+        4+ integrated production solutions:
     bullets:
+      # MAIde/MAOAM
       - de: >-
-          TODO
+          Konzeption einer rich-code Multi-Agenten-Orchestrierungsplattform
+          (LangGraph, Google ADK), die die Designqualität steigert und die
+          Layout-Durchlaufzeit um 26% reduziert, indem autonome, dynamische
+          agentische Systeme bereitgestellt werden, welche ihre Topologie an die
+          jeweilige CAE-Aufgabe anpassen — Optimierung von Layout, Geometrie und
+          Design automotiver ECU-Komponenten — und Ingenieure von repetitiven
+          Aufgaben entlasten.
         en: >-
-          Rich-code multi-agent orchestration platform that allows for autonomous
-          and dynamic agentic systems adapting their topology depending on the
-          context-based CAE task of optimizing layout, geometry and design of
-          automotive ECU components.
+          Architected a rich-code multi-agent orchestration platform (LangGraph,
+          Google ADK) improving design quality and cutting layout cycle time by
+          26% through deploying autonomous, dynamic agentic systems that adapt
+          their topology to a particular CAE task — optimising layout, geometry and
+          design of automotive ECU components — freeing engineers from repetitive
+          tasks.
+      # NOVA Platform
       - de: >-
-         TODO
+          Lieferung eines modernen AI- und datengetriebenen Systems, das
+          semantische Daten (erklärbare/interpretierbare KI und Knowledge
+          Graphs) über durchgängige Engineering-Prozesse nutzt; eine
+          Self-Service-Schnittstelle demokratisierte den Wissensaustausch für
+          10+ Produkt- und Domänenteams durch beschleunigte Prozessverbesserung.
         en: >-
-          Delivered a modern AI and data-driven system incorporating
-          semantic data (explainable/interpretable AI and knowledge graphs) for
-          end-to-end engineering processes providing a self-service interface
-          to democratize knowledge sharing and process improvement.
+          Delivered a modern AI- and data-driven system leveraging semantic
+          data (explainable/interpretable AI and knowledge graphs) across
+          end-to-end engineering processes, with a self-service interface that
+          democratised knowledge sharing for 10+ product and domain teams via
+          accelerated process improvement.
+      # Virtual Load Platform
       - de: >-
-          TODO
+          Architektur und Prototyping eines Hybrid-Cloud-Infrastruktur-Frameworks
+          zur Ausführung virtueller Lastsimulationen von ECU-Designs auf
+          On-Premise-HPC-Systemen, mit einer KI-optimierten Laufzeitumgebung, die
+          Lastspitzen nahtlos auf Cloud-HPC-Knoten auslagert — Steigerung des
+          Simulationsdurchsatzes um den Faktor 5x für kleinere Jobs bei
+          gleichzeitiger Kontrolle der Compute-Kosten.
         en: >-
-          Hybrid cloud infrastructure framework for running virtual load
-          simulations of ECU designs on-site HPC in a highly AI optimized runtime
-          that controls the seamlessly off-loading of spikes to cloud HPC compute
-          nodes.
+          Architecting and prototyping a hybrid-cloud infrastructure framework
+          running virtual load simulations of ECU designs on on-site HPC systems,
+          with an AI-optimised runtime that seamlessly bursts demand spikes to
+          cloud HPC nodes — increasing simulation throughput by a factor of 5x for
+          smaller jobs while controlling compute cost.
+      # Endurance Test Cloud (Testing Alliance Infrastructure)
       - de: >-
-          TODO
+          Entwurf einer ereignisbasierten Streaming-Datenpipeline nahezu in
+          Echtzeit (Kafka, Flink, Delta Lake), die Testingenieuren nahezu in
+          Echtzeit Zugriff auf langlaufende Umwelt-Testdaten verschafft und
+          Frühwarn- sowie Anomalieerkennungssysteme speist, welche die Zeit bis
+          zur Erkennung um bis zu 2+ Wochen verkürzten und potenziell über
+          1 Mio. € pro Labor einsparen.
         en: >-
-          Event-based near real-time streaming data pipeline design enabling
-          test engineers to access long-running environmental test data for early
-          warning systems and anomaly detection
-    subentries:
-      - date: 2018 -- heute
-        title:
-          de: Semantic Data Access & Traceability
-          en: Semantic Data Access & Traceability
-        bullets:
-          - de: >-
-              Bereichsübergreifende Koordination zur Zusammenführung
-              heterogener Datenquellen.
-            en: >-
-              Coordinated across domains to unify heterogeneous data sources.
-
+          Designed an event-based, near-real-time streaming data pipeline
+          (Kafka, Flink, Delta Lake) giving test engineers near real-time access
+          to long-running environmental test data, powering early-warning and
+          anomaly-detection systems that reduced time-to-detection by up to 2+
+          weeks, potentially saving over €1M per lab.
 
   - id: bosch-eng-data
     targets: [latex, web]
@@ -133,41 +178,64 @@ experience:
     bg: /assets/img/cv/bg/topology.svg
     summary:
       de: >-
-        TODO
+        Einführung moderner Datenmodellierung und Data-Mesh-Methodik zur
+        Ermöglichung datengetriebener Entscheidungen; Bereitstellung hochwertiger
+        kuratierter Datenprodukte und einheitlicher digitaler Komponenten-CVs
+        über den gesamten ECU-Produktentwicklungszyklus. Leitung und fachliche
+        Beratung eines globalen, interdisziplinären Teams von 12
+        Datenmodellierungs-Experten und Data Engineers zum Aufbau eines
+        einheitlichen Datenmodells — von physischen Quellen bis zur
+        Ziel-Business-Schicht.
       en: >-
-        Introduced modern data modeling and data mesh methodology to implement
-        data-driven decision-making by providing high-fidelity curated data products
-        and unified digital CVs along the complete ECU component product development
-        life cycle. Led a team of data modeling domain experts and data engineers to
-        build a unified data model from (physical) sources up to the target business
-        layer.
-    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+        Introduced modern data modelling and data-mesh methodology to enable
+        data-driven decision-making, delivering high-fidelity curated data
+        products and unified digital component CVs across the complete ECU
+        product-development lifecycle. Led and advised a global, interdisciplinary
+        team of 12 data-modelling domain experts and data engineers to
+        build a unified data model — from physical sources up to the target
+        business layer.
+    tags:
+      - Azure Infrastructure
+      - Databricks
+      - RDF/OWL Ontologies
+      - Spark
+      - Stardog
+      - Unity Catalog
     bullets:
+      # Design2Line2Cost
       - de: >-
-          TODO
+          Entwurf eines Datenprodukts auf Basis graphbasierter semantischer
+          Technologien und einer föderierten Datenschicht, die die gesamte Kette
+          von Anforderungen über das Design bis zu den Fertigungskapazitäten
+          abbildet und ein Matching von Designs zu bestehenden Shop-Floor-Layouts
+          zur Kostenoptimierung des ECU-Produktportfolios ermöglicht. Senkung der
+          Barriere zwischen Entwicklung, Fertigung und Logistik — Reduktion der
+          Vorlauf- und Entwicklungszeit für neue Designverbesserungen um den
+          Faktor 2.
         en: >-
-          Data product design describing the full chain from requirements over the
-          design to manufacturing capabilities, enabling design matching to
-          existing shop-floor layouts for cost optimization
+          Designed a data product built on graph-based semantic technologies and
+          a federated data layer spanning the full chain from requirements
+          through design to manufacturing capabilities, enabling
+          design-to-shop-floor matching for cost optimisation across the ECU
+          product portfolio. Lowered the barrier between engineering,
+          manufacturing and logistics — reducing lead and development time for
+          new design improvements by a factor of 2.
+      # Architect
       - de: >-
-          TODO
+          Unterstützung der Einführung eines zentralen Werkzeugs, das eine
+          einheitliche Ontologie nutzt, um schnelle Machbarkeitsprüfungen neuer
+          Designs durch Referenzierung bestehender digitaler Produkt-CVs
+          durchzuführen, sowie Aufbau eines expliziten Show Cases für die
+          Fähigkeit von Databricks Delta in Kombination mit LakeFS, vollständige
+          Daten-Nachverfolgbarkeit und Baselining bereitzustellen — Verkürzung der
+          Durchlaufzeit der Machbarkeitsprüfung um 40%.
         en: >-
-          Data product design describing the full chain from requirements over the
-          design to manufacturing capabilities, enabling design matching to
-          existing shopfloor layouts for cost optimization based on graph-based
-          and semantic technologies and a federated data layer
-    subentries:
-      - date: 2018 -- heute
-        title:
-          de: Semantic Data Access & Traceability
-          en: Semantic Data Access & Traceability
-        bullets:
-          - de: >-
-              Bereichsübergreifende Koordination zur Zusammenführung
-              heterogener Datenquellen.
-            en: >-
-              Coordinated across domains to unify heterogeneous data sources.
-
+          Supported the introduction of a central tool that applies a unified
+          ontology to run rapid feasibility checks on new designs by referencing
+          existing product digital CVs and built an explicit show case for the
+          ability of Databricks Delta combined with LakeFS to provide full data
+          traceability and baselining cutting feasibility-check turnaround by
+          40%.
 
   - id: bosch-mfg-data
     targets: [latex, web]
@@ -187,10 +255,24 @@ experience:
     bg: /assets/img/cv/bg/topology.svg
     summary:
       de: >-
-        abc
+        Aufbau und Produktivsetzung von Machine-Learning-Systemen für die
+        Fertigung — von Datenpipelines über Modelltraining, Deployment und
+        Monitoring — mit Verantwortung für den gesamten MLOps-Lebenszyklus auf
+        Edge und Cloud zur Qualitätssteigerung und Kostensenkung in der
+        Produktionslinie.
       en: >-
-        abc
-    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+        Built and productionised machine-learning systems for manufacturing —
+        from data pipelines through model training, deployment and monitoring —
+        owning the full MLOps lifecycle on edge and cloud to improve quality and
+        reduce cost on the production line.
+    tags:
+      - Azure Infrastructure
+      - Hadoop Ecosystem
+      - Impala
+      - Keras
+      - mlflow
+      - Spark
+      - Tensorflow
     bullets:
       - de: >-
           Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
@@ -198,18 +280,37 @@ experience:
         en: >-
           Designed and delivered modern AI systems incorporating semantic
           data (explainable/interpretable AI and knowledge graphs).
-    subentries:
-      - date: 2018 -- heute
-        title:
-          de: Semantic Data Access & Traceability
-          en: Semantic Data Access & Traceability
-        bullets:
-          - de: >-
-              Bereichsübergreifende Koordination zur Zusammenführung
-              heterogener Datenquellen.
-            en: >-
-              Coordinated across domains to unify heterogeneous data sources.
-
+      # RCAS
+      - de: >-
+          Entwicklung von RCAS, einem Root-Cause-Recommender, der Fehler im Pin-
+          und Steckverbinder-Einpressprozess vorhersagt, indem er
+          charakteristische Muster in Messdaten erkennt und mit bekannten
+          8D-Reports abgleicht — Identifikation von Grundursachen über 50%
+          schneller bei 2x höherer Genauigkeit.
+        en: >-
+          Developed RCAS, a root-cause recommender that predicts failures in the
+          pin-and-connector press-in process by detecting distinctive patterns in
+          measurement data and cross-checking against known 8D reports —
+          surfacing root causes over 50% faster with 2x higher accuracy.
+      # AI@AOI
+      - de: >-
+          Aufbau eines Deep-Learning-Systems zur Unterstützung der
+          automatisierten optischen Inspektion (AOI) von Lötstellen, das als
+          Pseudofehler markierte Bilder bewertet und den potenziellen Fehlertyp
+          kategorisiert — Reduktion der manuell zu prüfenden Bilder um den Faktor
+          10 bei besserer Leistung als menschliche Prüfer und geringerer
+          Ermüdung. Ausgeliefert auf einem Edge-Gerät in der Produktionslinie
+          (MES-gesteuert) mit Shadow-Mode-Deployment, Model-Drift-Erkennung und
+          automatischen Retraining-Triggern für neue Bauteile/Fehlertypen.
+        en: >-
+          Built a deep-learning system supporting automated optical inspection
+          (AOI) of solder joints, scoring images flagged as pseudo-failures and
+          categorising the potential failure type — reducing manually reviewed
+          images by a factor of 10 and outperforming human operators while
+          cutting operator fatigue. Shipped to an edge device on the production
+          line (MES-controlled) with shadow-mode deployment, model-drift
+          detection and automated retraining triggers for new packages/failure
+          types.
 
   - id: bosch-i40
     targets: [latex, web]
@@ -229,67 +330,74 @@ experience:
     bg: /assets/img/cv/bg/topology.svg
     summary:
       de: >-
-        Aufbau und Entwicklung einer Daten und AI-Plattform-Architektur basierend auf
-        hybrid/public Cloud-Lösungen im industriellen und fertigungsnahen
-        Umfeld.
+        Aufbau und Weiterentwicklung einer frühen Daten- und
+        AI-Plattform-Architektur auf Basis hybrider und öffentlicher
+        Cloud-Lösungen; Grundlage für datengetriebene Analytics über
+        industrielle und fertigungsnahe Abläufe hinweg.
       en: >-
-        abc
-    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+        Built and evolved an early data and AI platform architecture on hybrid
+        and public cloud, laying the foundation for data-driven analytics across
+        industrial and manufacturing operations.
+    tags: [Hadoop Ecosystem, Impala, Oracle, SAP/CDC, SQL]
     bullets:
+      # SMT Process Monitor
       - de: >-
-          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
-          Daten (explainable/interpretable AI und Knowledge Graphs).
+          Aufbau eines SMT-Prozessmonitors, der Daten über den gesamten
+          Surface-Mount-Wertstrom integriert und harmonisiert — Lotpastenauftrag,
+          Pick-and-Place, Reflow-Löten, automatisierte optische Inspektion (AOI)
+          und In-Circuit-Test (ICT) — und Zykluszeitdaten jeder Maschine in einem
+          einheitlichen Modell konsolidiert. Durch die Korrelation der Daten über
+          den gesamten Wertstrom erkennt das System Fehler, die sonst erst bei der
+          AOI auffallen würden, bereits beim Lotpastenauftrag, sodass Ingenieure
+          das nackte Panel ausschleusen können, bevor teure Bauteile bestückt und
+          verlötet werden — Reduktion der Materialausschusskosten um 12%.
         en: >-
-          Designed and delivered modern AI systems incorporating semantic
-          data (explainable/interpretable AI and knowledge graphs).
+          Designed an SMT process monitor that integrates and harmonises data across
+          the full surface-mount value stream — solder-paste application,
+          pick-and-place, reflow soldering, automated optical inspection (AOI) and
+          in-circuit test (ICT) — consolidating cycle-time data from every machine
+          into a single unified model. By correlating data along the whole value
+          stream, the system flags defects that would only surface at AOI already
+          at the solder-paste stage, letting engineers scrap the bare panel before
+          expensive components are placed and soldered onto it — reducing material
+          scrap cost by 12%.
+      # Logistics Forecastingk
       - de: >-
-          Optimierung von Fertigungsprozessen zur Kostenreduzierung und
-          Qualitätsverbesserung mittels datengetriebener Analytics-Lösungen.
+          Aufbau eines Bedarfsprognosesystems zur Vorhersage von
+          Kundenbestellmengen über mehrere Zeithorizonte (1-, 3- und
+          12-Monats-Fenster) sowie zur Modellierung der systematischen
+          Prognoseverzerrung je Kunde — empirisches Lernen, wo Kunden ihren
+          künftigen Bedarf über- oder unterschätzen — um Produktionsvolumina
+          genauer zu planen und Materialbestellungen bei Lieferanten optimal
+          auszusteuern, bei niedrigen Beständen und einer um 60% verbesserten
+          Bedarfsprognosegenauigkeit sowie um 15% reduzierten Bestandskosten.
         en: >-
-          Optimised manufacturing processes for cost reduction and quality
-          improvement by delivering data-driven analytics solutions at scale.
-      - de: >-
-          Digitalisierung, Standardisierung und Harmonisierung
-          wertstromübergreifender Daten zur Erstellung und Verbesserung von
-          KI-Modellen.
-        en: >-
-          Engineered, standardised and harmonised cross-value-stream data
-          pipelines to build and continuously improve production AI models.
-      - de: >-
-          Industrialisierung und Automatisierung produktiver
-          Analytics-Lösungen inklusive Konzeptionierung, Implementierung und
-          Deployment.
-        en: >-
-          Industrialised and productionised analytics solutions end-to-end,
-          owning design, implementation, deployment and MLOps automation.
-      - de: >-
-          Funktionsübergreifende Teamarbeit zur Entwicklung von AI- und
-          I4.0-Lösungen mit Entwicklungsstandorten und Werken in Europa,
-          Nordamerika und Asien.
-        en: >-
-          Partnered with cross-functional teams to deliver AI and Industry 4.0
-          solutions across development sites and plants in Europe, North
-          America and Asia.
-    subentries:
-      - date: 2018 -- heute
-        title:
-          de: Semantic Data Access & Traceability
-          en: Semantic Data Access & Traceability
-        bullets:
-          - de: >-
-              Bereichsübergreifende Koordination zur Zusammenführung
-              heterogener Datenquellen.
-            en: >-
-              Coordinated across domains to unify heterogeneous data sources.
-          - de: Entwicklung domänenspezifischer Ontologien.
-            en: Developed domain-specific ontologies.
-          - de: >-
-              Semantische Nachverfolgung einzelner Komponenten in komplexen
-              elektronischen Produkten.
-            en: >-
-              Semantic traceability of individual components in complex
-              electronic products.
-
+          Built a demand-forecasting system predicting customer order volumes
+          across multiple horizons (1-, 3- and 12-month windows) and modelling
+          each customer's systematic forecast bias — learning empirically where
+          customers over- or under-estimate future demand — to plan production
+          volumes more accurately and optimise supplier material orders, keeping
+          inventories low while improving demand-forecast accuracy by
+          60% and reducing inventory costs by 15%.
+    # subentries:
+    #   - date: 2018 -- heute
+    #     title:
+    #       de: Semantic Data Access & Traceability
+    #       en: Semantic Data Access & Traceability
+    #     bullets:
+    #       - de: >-
+    #           Bereichsübergreifende Koordination zur Zusammenführung
+    #           heterogener Datenquellen.
+    #         en: >-
+    #           Coordinated across domains to unify heterogeneous data sources.
+    #       - de: Entwicklung domänenspezifischer Ontologien.
+    #         en: Developed domain-specific ontologies.
+    #       - de: >-
+    #           Semantische Nachverfolgung einzelner Komponenten in komplexen
+    #           elektronischen Produkten.
+    #         en: >-
+    #           Semantic traceability of individual components in complex
+    #           electronic products.
 
   - id: leiden
     targets: [latex, web]
@@ -334,7 +442,7 @@ education:
     institution:
       de: Max-Planck-Institut für Physik und LMU München
       en: Max Planck Institute for Physics and LMU Munich
-    # grade: sehr gut, Note 0,9
+    grade: Grade 0.9
     details:
       - de: >-
           Dissertation: Gauge/Gravity Duality: Exploring Universal Features
@@ -343,108 +451,160 @@ education:
           Dissertation: Gauge/Gravity Duality: Exploring Universal Features
           in Quantum Matter.
 
+  - id: diploma
+    targets: [latex]
+    period: 09/2006 --- 02/2010
+    degree:
+      de: Physikstudium (Diplom)
+      en: Physics (Diploma)
+    institution:
+      de: Universität Stuttgart
+      en: University of Stuttgart
+    grade: Grade 0.7 (highest possible)
+    details:
+      - de: >-
+          Diplomarbeit: Quantum Phase Transitions with Polar Molecules:
+          Towards the Realization of Ferro-Electric Liquids.
+        en: >-
+          Diploma thesis: Quantum Phase Transitions with Polar Molecules:
+          Towards the Realization of Ferro-Electric Liquids.
+
 
 conferences:
   - targets: [latex]
     year: 2026
     name: Data+AI Summit 2026
     location: San Francisco
+    lat: 37.77
+    lon: -122.42
     date: 06/2026
-    url:
+    url: https://www.databricks.com/dataaisummit
   - targets: [latex]
     year: 2026
     name: Scalar
     location: Warsaw
+    lat: 52.23
+    lon: 21.01
     date: 03/2026
-    url:
+    url: https://scalar-conf.com/
   - targets: [latex]
     year: 2025
     name: IEEE International Conference on Cloud Engineering (I2CE)
     location: Rennes
+    lat: 48.11
+    lon: -1.68
     date: 09/2025
-    url:
+    url: https://conferences.computer.org/IC2E/2025/
   - targets: [latex]
     year: 2024
     name: IEEE International Conference on Data Engineering (ICDE)
     location: Utrecht
+    lat: 52.09
+    lon: 5.12
     date: 05/2024
-    url:
+    url: https://ieee-icde.org/2024/
   - targets: [latex]
     year: 2023
     name: AI Summit ODSC Europe
     location: London
+    lat: 51.51
+    lon: -0.13
     date: 06/2023
-    url:
+    url: https://odsc.com/europe/
   - targets: [latex]
     year: 2022
     name: Data+AI Summit 2022
     location: San Francisco
+    lat: 37.77
+    lon: -122.42
     date: 06/2022
-    url:
+    url: https://www.databricks.com/dataaisummit
   - targets: [latex]
     year: 2019
     name: Scala Days 2019
     location: Lausanne
+    lat: 46.52
+    lon: 6.63
     date: 05/2019
     url: https://www.scaladays.org/
   - targets: [latex]
     year: 2019
     name: Spark + AI Summit 2019
     location: San Francisco
+    lat: 37.77
+    lon: -122.42
     date: 04/2019
     url: https://databricks.com/sparkaisummit/north-america
   - targets: [latex]
     year: 2018
     name: Scala eXchange 2018
     location: London
+    lat: 51.51
+    lon: -0.13
     date: 12/2018
     url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
   - targets: [latex]
     year: 2018
     name: Spark + AI Summit 2018
     location: San Francisco
+    lat: 37.77
+    lon: -122.42
     date: 06/2018
     url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
   - targets: [latex]
     year: 2018
     name: IEEE International Conference on Data Engineering (ICDE)
     location: Paris
+    lat: 48.86
+    lon: 2.35
     date: 04/2018
     url: https://icde2018.org
   - targets: [latex]
     year: 2017
     name: Spark Summit Europe 2017
     location: Dublin
+    lat: 53.35
+    lon: -6.26
     date: 10/2017
     url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
   - targets: [latex]
     year: 2017
     name: PyData
     location: Berlin
+    lat: 52.52
+    lon: 13.40
     date: 06/2017
     url: https://pydata.org/berlin2017
   - targets: [latex]
     year: 2016
     name: The R User Conference (UseR! 2016)
     location: Stanford University
+    lat: 37.43
+    lon: -122.17
     date: 06/2016
     url: https://user2016.r-project.org
   - targets: [latex]
     year: 2016
     name: Conference on Uncertainty in Artificial Intelligence (UAI)
     location: New York
+    lat: 40.71
+    lon: -74.01
     date: 06/2016
     url: http://www.auai.org/uai2016
   - targets: [latex]
     year: 2016
     name: Conference on Learning Theory (COLT)
     location: Columbia University, NYC
+    lat: 40.81
+    lon: -73.96
     date: 06/2016
     url: http://proceedings.mlr.press/v49/
   - targets: [latex]
     year: 2016
     name: International Conference on Machine Learning (ICML)
     location: New York
+    lat: 40.71
+    lon: -74.01
     date: 06/2016
     url: https://icml.cc/Conferences/2016/
 
@@ -491,13 +651,13 @@ skills:
     group:
       de: AI Frameworks
       en: AI Frameworks
-    items: [mlflow, langchain, Google ADK, Keras, Tensorflow]
+    items: [mlflow, langchain, LangGraph, Google ADK, Keras, Tensorflow]
     size: .5
   - targets: [latex, web]
     group:
       de: Data Engineering
       en: Data Engineering
-    items: [Kafka, Flink, Spark, Delta Lake, SQL, SPARQL, RDF, OWL]
+    items: [Kafka, Flink, Spark, PySpark, Delta Lake, SQL, SPARQL, RDF, OWL]
     size: .5
   - targets: [latex, web]
     group:
@@ -515,7 +675,7 @@ skills:
     group:
       de: Plattformen
       en: Platforms
-    items: [Confluence Cloud, Databricks]
+    items: [Confluent Cloud, Databricks, Unity Catalog]
     size: .5
 
 languages:
