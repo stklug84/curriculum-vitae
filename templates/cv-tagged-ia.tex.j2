@@ -176,7 +176,14 @@
 % if content was found do we emit the heading and run the real scaffold.
 % =====================================================================
 {% raw %}\makeatletter
+% Both \newif declarations live OUTSIDE the \ifcv@hasconf guard below: a
+% \newif inside a conditional branch that is SKIPPED leaves the flag
+% undefined, and TeX's conditional-skipping then fails to pair the inner
+% \ifcv@mapopened...\fi correctly, prematurely closing the outer guard
+% (manifesting as "Extra \endgroup"). Declaring them up front keeps the
+% \if.../\fi nesting balanced whether or not the branch is taken.
 \newif\ifcv@hasconf
+\newif\ifcv@mapopened
 \begingroup
   % Probe pass: detect whether the file carries any map or entries without
   % typesetting anything. \cvheatmap takes one braced arg; \cventry four.
@@ -195,8 +202,8 @@
   % closing \end{minipage} is only emitted when there were geolocated
   % conferences (the emitter omits \cvheatmap when none carry lat/lon).
   % @-using control sequences (\cv@mapw, ...) need \makeatletter in the
-  % document body.
-  \newif\ifcv@mapopened
+  % document body. (\ifcv@mapopened is declared above, outside the guard.)
+  \cv@mapopenedfalse
   \setlength{\cv@mapw}{0.46\linewidth}
   \let\cv@realheatmap\cvheatmap
   % Wrap the emitter's single \cvheatmap{...} call: render the real map in a
