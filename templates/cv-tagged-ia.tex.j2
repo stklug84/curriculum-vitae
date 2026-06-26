@@ -134,16 +134,18 @@
 \vspace{0.4em}
 
 % =====================================================================
-% {{ label_languages }} (left)  +  {{ label_interests }} (right)
-% Two sections facing each other in a single full-width row.
+% {{ label_languages }} (left ~30%)  +  {{ label_interests }} (right ~70%)
+% Two sections facing each other in a single full-width row. Languages is a
+% short three-line list, so it takes the narrow 0.28 column; Interests gets
+% the wide 0.68 column so its two inner sub-columns have room to breathe.
 % =====================================================================
 \noindent
-\begin{minipage}[t]{0.48\linewidth}
+\begin{minipage}[t]{0.28\linewidth}
   \cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
   \input{cv-languages}
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.48\linewidth}
+\begin{minipage}[t]{0.68\linewidth}
   \cvsection{{ '{' }}{{ label_interests }}{{ '}' }}
   % Interests flow across two inner columns within this half-width column.
   % cv-interests.tex emits a single \cvsidelist{...} (one itemize whose

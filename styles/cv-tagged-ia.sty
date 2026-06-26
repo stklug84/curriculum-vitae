@@ -29,7 +29,9 @@
 %   \cvruled                              -- thin separator (minimal)
 %   \cvtechstack{a / b / c}               -- monospace slash-joined line
 %   \cvskillbar{label}{frac}              -- solid black bar, frac of max
-%   \cvskillbubbles{l1/w1, l2/w2, ...}    -- row of black circles + labels
+%   \cvskillbubbles{l1;w1, l2;w2, ...}    -- even row of weight-scaled black
+%                                            circles, each with a centred,
+%                                            wrap-capable label beneath it
 % =====================================================================
 
 % --- Engine guard ----------------------------------------------------
@@ -62,6 +64,11 @@
 
 \color{cvText}
 \pagecolor{white}
+
+% No running header/footer: the default `plain` page style prints a
+% centered page number in the footer, which this minimalist CV does not
+% want. `empty` removes both header and footer on every page.
+\pagestyle{empty}
 
 % --- Fonts -----------------------------------------------------------
 % Body / headings: humanist sans -- prefer Lato, fall back to Fira Sans.
@@ -146,10 +153,10 @@
 \newcommand{\cvskillscompact}{%
   \setlength{\cv@barmax}{2.3cm}%
   \setlength{\cv@barlabel}{2.7cm}%
-  \setlength{\cv@bubblestep}{0.92cm}%
   \cv@barlabelledfalse  % suppress the bar's text label (group name repeats
                         % immediately below via \cvskillgroup)
-  \cv@bubblefittrue     % shrink the concept-bubble row to the column width
+  \cv@bubblefittrue     % retained flag (now a no-op for the slot-based
+                        % \cvskillbubbles layout, which always fits \linewidth)
 }
 
 % =====================================================================
@@ -409,44 +416,61 @@
 }
 
 % --- \cvskillbubbles{l1;w1, l2;w2, ...} ------------------------------
-% Row of solid black circles, radius scaled by weight, with a diagonal
-% label above each circle. Pairs are separated by ',' and each pair's
-% label/weight by ';' (so labels may freely contain '/'). Labels are
-% rotated 40 degrees and anchored at the bubble centre so neighbouring
-% labels of varied length do not collide. The horizontal advance is a
-% fixed, generous step to keep the row evenly spaced and overlap-free.
-\newlength{\cv@bubblestep}
-\setlength{\cv@bubblestep}{1.15cm}
-% When true (set by \cvskillscompact) the bubble row is shrunk to the
-% current \linewidth so a long concept cloud cannot overflow a narrow
-% column; the diagonal labels scale with it.
+% Row of solid black circles, radius scaled by weight, with a horizontal
+% label CENTRED BELOW each circle. Pairs are separated by ',' and each
+% pair's label/weight by ';' (so labels may freely contain '/'). The
+% bubbles are laid out in N equal-width slots spanning the full \linewidth
+% (N = number of pairs); each bubble is centred in its slot and its label
+% is a centred, fixed-width text box beneath it that wraps to a second line
+% when the label is too long ("center floating"). All labels share one top
+% edge (just under the largest possible bubble) so the row reads as a tidy
+% grid regardless of individual radii.
+%
+% \ifcv@bubblefit is retained for API compatibility (set by
+% \cvskillscompact) but is now a no-op: the layout is built directly in
+% \linewidth coordinates, so the picture already fits its column exactly
+% and needs no \resizebox.
 \newif\ifcv@bubblefit
+% Fixed geometry (cm). \cv@bubblelabeltop is the y of every label's top
+% edge; it must clear the largest bubble (max radius = 0.06+0.045*9 ~=
+% 0.47cm). \cv@bubblegutter is trimmed off each slot to give inter-label
+% breathing room for the wrapped text box.
+\def\cv@bubblelabeltop{-0.60}%      label top edge (cm, below the bubbles)
+\def\cv@bubblegutter{0.30}%         horizontal padding removed per slot (cm)
+\newcounter{cv@bubbleidx}
 \newcommand{\cvskillbubbles}[1]{%
   \par\vspace{0.4em}\noindent
-  \ifcv@bubblefit\resizebox{\linewidth}{!}{%
-  \else\leavevmode\fi
+  % Pass 1: count the pairs so we can size the equal-width slots.
+  \setcounter{cv@bubbleidx}{0}%
+  \foreach \pair in {#1}{\stepcounter{cv@bubbleidx}}%
+  \edef\cv@bubblecount{\thecv@bubbleidx}%
+  % Slot width = \linewidth / N, expressed in cm for the cm-unit picture.
+  \pgfmathsetmacro{\cv@lwcm}{\linewidth/1cm}%
+  \pgfmathsetmacro{\cv@slot}{\cv@lwcm/\cv@bubblecount}%
+  \pgfmathsetmacro{\cv@textw}{\cv@slot-\cv@bubblegutter}%
+  \leavevmode
     \begin{tikzpicture}[baseline=0pt]
-      \def\cv@bx{0}%
+      \setcounter{cv@bubbleidx}{0}%
       \foreach \pair in {#1}{%
         \edef\cv@tmp{\pair}%
         \expandafter\cv@parsebubble\cv@tmp\@nil
       }%
     \end{tikzpicture}%
-  \ifcv@bubblefit}\fi
   \par\vspace{0.3em}%
 }
-% Parse "label;weight": draw a weight-scaled circle and a 40-degree
-% diagonal label above it. Bubble centres advance by a fixed step so the
-% layout stays even regardless of individual label widths.
+% Parse "label;weight": draw a weight-scaled circle centred in this
+% bubble's slot, then a horizontal, centred, fixed-width label box beneath
+% it (anchored at a shared top edge so all labels align). Long labels wrap
+% within \cv@textw and stay centred under the bubble.
 \def\cv@parsebubble#1;#2\@nil{%
   \pgfmathsetmacro{\cv@rad}{0.06 + 0.045*#2}% radius in cm, weight-scaled
-  \pgfmathsetmacro{\cv@cx}{\cv@bx + \cv@rad}%
+  % Bubble centre = midpoint of slot i: (i + 0.5) * slot, i 0-based.
+  \pgfmathsetmacro{\cv@cx}{(\value{cv@bubbleidx}+0.5)*\cv@slot}%
   \fill[cvBlack] (\cv@cx,0) circle (\cv@rad cm);
-  \node[font=\scriptsize,anchor=west,rotate=40,inner sep=1.5pt]
-    at (\cv@cx,{\cv@rad + 0.12}) {\strut #1};%
-  \pgfmathsetmacro{\cv@bxnext}{\cv@bx + \cv@rad +
-    \cv@bubblestep/1cm}%
-  \xdef\cv@bx{\cv@bxnext}%
+  \node[font=\scriptsize,anchor=north,align=center,inner sep=1pt,
+        text width=\cv@textw cm]
+    at (\cv@cx,\cv@bubblelabeltop) {\strut #1};%
+  \stepcounter{cv@bubbleidx}%
 }
 
 % --- \cvheatmap{lon/lat/weight, lon/lat/weight, ...} -----------------
