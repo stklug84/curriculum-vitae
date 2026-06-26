@@ -471,142 +471,142 @@ education:
 
 
 conferences: []
-  # - targets: [latex]
-  #   year: 2026
-  #   name: Data+AI Summit 2026
-  #   location: San Francisco
-  #   lat: 37.77
-  #   lon: -122.42
-  #   date: 06/2026
-  #   url: https://www.databricks.com/dataaisummit
-  # - targets: [latex]
-  #   year: 2026
-  #   name: Scalar
-  #   location: Warsaw
-  #   lat: 52.23
-  #   lon: 21.01
-  #   date: 03/2026
-  #   url: https://scalar-conf.com/
-  # - targets: [latex]
-  #   year: 2025
-  #   name: IEEE International Conference on Cloud Engineering (I2CE)
-  #   location: Rennes
-  #   lat: 48.11
-  #   lon: -1.68
-  #   date: 09/2025
-  #   url: https://conferences.computer.org/IC2E/2025/
-  # - targets: [latex]
-  #   year: 2024
-  #   name: IEEE International Conference on Data Engineering (ICDE)
-  #   location: Utrecht
-  #   lat: 52.09
-  #   lon: 5.12
-  #   date: 05/2024
-  #   url: https://ieee-icde.org/2024/
-  # - targets: [latex]
-  #   year: 2023
-  #   name: AI Summit ODSC Europe
-  #   location: London
-  #   lat: 51.51
-  #   lon: -0.13
-  #   date: 06/2023
-  #   url: https://odsc.com/europe/
-  # - targets: [latex]
-  #   year: 2022
-  #   name: Data+AI Summit 2022
-  #   location: San Francisco
-  #   lat: 37.77
-  #   lon: -122.42
-  #   date: 06/2022
-  #   url: https://www.databricks.com/dataaisummit
-  # - targets: [latex]
-  #   year: 2019
-  #   name: Scala Days 2019
-  #   location: Lausanne
-  #   lat: 46.52
-  #   lon: 6.63
-  #   date: 05/2019
-  #   url: https://www.scaladays.org/
-  # - targets: [latex]
-  #   year: 2019
-  #   name: Spark + AI Summit 2019
-  #   location: San Francisco
-  #   lat: 37.77
-  #   lon: -122.42
-  #   date: 04/2019
-  #   url: https://databricks.com/sparkaisummit/north-america
-  # - targets: [latex]
-  #   year: 2018
-  #   name: Scala eXchange 2018
-  #   location: London
-  #   lat: 51.51
-  #   lon: -0.13
-  #   date: 12/2018
-  #   url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
-  # - targets: [latex]
-  #   year: 2018
-  #   name: Spark + AI Summit 2018
-  #   location: San Francisco
-  #   lat: 37.77
-  #   lon: -122.42
-  #   date: 06/2018
-  #   url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
-  # - targets: [latex]
-  #   year: 2018
-  #   name: IEEE International Conference on Data Engineering (ICDE)
-  #   location: Paris
-  #   lat: 48.86
-  #   lon: 2.35
-  #   date: 04/2018
-  #   url: https://icde2018.org
-  # - targets: [latex]
-  #   year: 2017
-  #   name: Spark Summit Europe 2017
-  #   location: Dublin
-  #   lat: 53.35
-  #   lon: -6.26
-  #   date: 10/2017
-  #   url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
-  # - targets: [latex]
-  #   year: 2017
-  #   name: PyData
-  #   location: Berlin
-  #   lat: 52.52
-  #   lon: 13.40
-  #   date: 06/2017
-  #   url: https://pydata.org/berlin2017
-  # - targets: [latex]
-  #   year: 2016
-  #   name: The R User Conference (UseR! 2016)
-  #   location: Stanford University
-  #   lat: 37.43
-  #   lon: -122.17
-  #   date: 06/2016
-  #   url: https://user2016.r-project.org
-  # - targets: [latex]
-  #   year: 2016
-  #   name: Conference on Uncertainty in Artificial Intelligence (UAI)
-  #   location: New York
-  #   lat: 40.71
-  #   lon: -74.01
-  #   date: 06/2016
-  #   url: http://www.auai.org/uai2016
-  # - targets: [latex]
-  #   year: 2016
-  #   name: Conference on Learning Theory (COLT)
-  #   location: Columbia University, NYC
-  #   lat: 40.81
-  #   lon: -73.96
-  #   date: 06/2016
-  #   url: http://proceedings.mlr.press/v49/
-  # - targets: [latex]
-  #   year: 2016
-  #   name: International Conference on Machine Learning (ICML)
-  #   location: New York
-  #   lat: 40.71
-  #   lon: -74.01
-  #   date: 06/2016
-  #   url: https://icml.cc/Conferences/2016/
+# - targets: [latex]
+#   year: 2026
+#   name: Data+AI Summit 2026
+#   location: San Francisco
+#   lat: 37.77
+#   lon: -122.42
+#   date: 06/2026
+#   url: https://www.databricks.com/dataaisummit
+# - targets: [latex]
+#   year: 2026
+#   name: Scalar
+#   location: Warsaw
+#   lat: 52.23
+#   lon: 21.01
+#   date: 03/2026
+#   url: https://scalar-conf.com/
+# - targets: [latex]
+#   year: 2025
+#   name: IEEE International Conference on Cloud Engineering (I2CE)
+#   location: Rennes
+#   lat: 48.11
+#   lon: -1.68
+#   date: 09/2025
+#   url: https://conferences.computer.org/IC2E/2025/
+# - targets: [latex]
+#   year: 2024
+#   name: IEEE International Conference on Data Engineering (ICDE)
+#   location: Utrecht
+#   lat: 52.09
+#   lon: 5.12
+#   date: 05/2024
+#   url: https://ieee-icde.org/2024/
+# - targets: [latex]
+#   year: 2023
+#   name: AI Summit ODSC Europe
+#   location: London
+#   lat: 51.51
+#   lon: -0.13
+#   date: 06/2023
+#   url: https://odsc.com/europe/
+# - targets: [latex]
+#   year: 2022
+#   name: Data+AI Summit 2022
+#   location: San Francisco
+#   lat: 37.77
+#   lon: -122.42
+#   date: 06/2022
+#   url: https://www.databricks.com/dataaisummit
+# - targets: [latex]
+#   year: 2019
+#   name: Scala Days 2019
+#   location: Lausanne
+#   lat: 46.52
+#   lon: 6.63
+#   date: 05/2019
+#   url: https://www.scaladays.org/
+# - targets: [latex]
+#   year: 2019
+#   name: Spark + AI Summit 2019
+#   location: San Francisco
+#   lat: 37.77
+#   lon: -122.42
+#   date: 04/2019
+#   url: https://databricks.com/sparkaisummit/north-america
+# - targets: [latex]
+#   year: 2018
+#   name: Scala eXchange 2018
+#   location: London
+#   lat: 51.51
+#   lon: -0.13
+#   date: 12/2018
+#   url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
+# - targets: [latex]
+#   year: 2018
+#   name: Spark + AI Summit 2018
+#   location: San Francisco
+#   lat: 37.77
+#   lon: -122.42
+#   date: 06/2018
+#   url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
+# - targets: [latex]
+#   year: 2018
+#   name: IEEE International Conference on Data Engineering (ICDE)
+#   location: Paris
+#   lat: 48.86
+#   lon: 2.35
+#   date: 04/2018
+#   url: https://icde2018.org
+# - targets: [latex]
+#   year: 2017
+#   name: Spark Summit Europe 2017
+#   location: Dublin
+#   lat: 53.35
+#   lon: -6.26
+#   date: 10/2017
+#   url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
+# - targets: [latex]
+#   year: 2017
+#   name: PyData
+#   location: Berlin
+#   lat: 52.52
+#   lon: 13.40
+#   date: 06/2017
+#   url: https://pydata.org/berlin2017
+# - targets: [latex]
+#   year: 2016
+#   name: The R User Conference (UseR! 2016)
+#   location: Stanford University
+#   lat: 37.43
+#   lon: -122.17
+#   date: 06/2016
+#   url: https://user2016.r-project.org
+# - targets: [latex]
+#   year: 2016
+#   name: Conference on Uncertainty in Artificial Intelligence (UAI)
+#   location: New York
+#   lat: 40.71
+#   lon: -74.01
+#   date: 06/2016
+#   url: http://www.auai.org/uai2016
+# - targets: [latex]
+#   year: 2016
+#   name: Conference on Learning Theory (COLT)
+#   location: Columbia University, NYC
+#   lat: 40.81
+#   lon: -73.96
+#   date: 06/2016
+#   url: http://proceedings.mlr.press/v49/
+# - targets: [latex]
+#   year: 2016
+#   name: International Conference on Machine Learning (ICML)
+#   location: New York
+#   lat: 40.71
+#   lon: -74.01
+#   date: 06/2016
+#   url: https://icml.cc/Conferences/2016/
 
 
 # concepts[] feeds the tagged style's \cvskillbubbles macro, where each
@@ -747,46 +747,46 @@ languages:
 
 
 certifications: []
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Microsoft Azure Administrator (AZ-104)"
-  #     en: "Microsoft Azure Administrator (AZ-104)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Developing Solutions for Microsoft Azure (AZ-204)"
-  #     en: "Developing Solutions for Microsoft Azure (AZ-204)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
-  #     en: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
-  #     en: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Microsoft Azure Security Technologies (AZ-500)"
-  #     en: "Microsoft Azure Security Technologies (AZ-500)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Microsoft Azure AI Fundamentals (AI-900)"
-  #     en: "Microsoft Azure AI Fundamentals (AI-900)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Microsoft Azure Data Fundamentals (DP-900)"
-  #     en: "Microsoft Azure Data Fundamentals (DP-900)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Microsoft Azure Fundamentals (AZ-900)"
-  #     en: "Microsoft Azure Fundamentals (AZ-900)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
-  #     en: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
-  # - targets: [latex, web]
-  #   text:
-  #     de: "Data Engineering on Microsoft Azure (DP-203)"
-  #     en: "Data Engineering on Microsoft Azure (DP-203)"
+# - targets: [latex, web]
+#   text:
+#     de: "Microsoft Azure Administrator (AZ-104)"
+#     en: "Microsoft Azure Administrator (AZ-104)"
+# - targets: [latex, web]
+#   text:
+#     de: "Developing Solutions for Microsoft Azure (AZ-204)"
+#     en: "Developing Solutions for Microsoft Azure (AZ-204)"
+# - targets: [latex, web]
+#   text:
+#     de: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
+#     en: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
+# - targets: [latex, web]
+#   text:
+#     de: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
+#     en: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
+# - targets: [latex, web]
+#   text:
+#     de: "Microsoft Azure Security Technologies (AZ-500)"
+#     en: "Microsoft Azure Security Technologies (AZ-500)"
+# - targets: [latex, web]
+#   text:
+#     de: "Microsoft Azure AI Fundamentals (AI-900)"
+#     en: "Microsoft Azure AI Fundamentals (AI-900)"
+# - targets: [latex, web]
+#   text:
+#     de: "Microsoft Azure Data Fundamentals (DP-900)"
+#     en: "Microsoft Azure Data Fundamentals (DP-900)"
+# - targets: [latex, web]
+#   text:
+#     de: "Microsoft Azure Fundamentals (AZ-900)"
+#     en: "Microsoft Azure Fundamentals (AZ-900)"
+# - targets: [latex, web]
+#   text:
+#     de: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
+#     en: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
+# - targets: [latex, web]
+#   text:
+#     de: "Data Engineering on Microsoft Azure (DP-203)"
+#     en: "Data Engineering on Microsoft Azure (DP-203)"
 
 
 # interests[].icon is an optional FontAwesome control-sequence name (without
