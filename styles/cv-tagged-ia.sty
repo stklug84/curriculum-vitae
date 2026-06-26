@@ -204,13 +204,13 @@
 % --- \cvsection{TITLE} -----------------------------------------------
 % SIGNATURE: solid black rectangle "tag" with white uppercase bold text.
 \newcommand{\cvsection}[1]{%
-  \vspace{0.8em}\par\noindent
+  \vspace{0.6em}\par\noindent
   \colorbox{cvBlack}{%
     \hspace{0.15em}\rule{0pt}{1.15em}%
     \textcolor{white}{\bfseries\MakeUppercase{#1}}%
     \hspace{0.15em}%
   }%
-  \par\vspace{0.5em}%
+  \par\vspace{0.4em}%
 }
 
 % --- \cvsidesection{TITLE} -- alias ----------------------------------
@@ -261,7 +261,7 @@
     {\noindent\strut\textbf{#1}\hfill{\bfseries\small #3}\par}%
     \ifblank{#4}{}{\vspace{0.15em}{\small #4\par}}%
   \end{minipage}%
-  \par\vspace{1.1em}%
+  \par\vspace{0.8em}%
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
@@ -404,11 +404,11 @@
 }
 \newcommand{\cvtechstack}[1]{%
   % Pull the Tech Stack line UP toward the entry it belongs to: the
-  % preceding \cventry ends with \vspace{1.1em}, which is too large a gap
+  % preceding \cventry ends with \vspace{0.8em}, which is too large a gap
   % between an entry and its own tech-stack footer. The negative space
-  % collapses that to a tight ~0.35em so the tech stack reads as part of the
+  % collapses that to a tight ~0.3em so the tech stack reads as part of the
   % entry above rather than floating midway to the next one.
-  \par\vspace{-0.75em}\noindent
+  \par\vspace{-0.5em}\noindent
   \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
@@ -421,7 +421,7 @@
   \end{minipage}%
   % Push the FOLLOWING entry further down so the tech-stack footer is
   % visually grouped with the entry above it, not the one below.
-  \par\vspace{0.9em}%
+  \par\vspace{0.7em}%
 }
 
 % --- \cvskillbar{label}{frac} ----------------------------------------
