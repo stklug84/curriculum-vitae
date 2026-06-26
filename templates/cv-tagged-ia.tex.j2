@@ -184,10 +184,10 @@
   \long\def\cventry#1#2#3#4{\global\cv@hasconftrue}%
   \input{cv-conferences}%
 \endgroup
-\makeatother
+% NB: keep \makeatletter ACTIVE here — the \ifcv@hasconf test below and the
+% \cv@* control sequences in the scaffold need '@' to be a letter.
 {% endraw %}
-{% raw %}\ifcv@hasconf
-\makeatletter{% endraw %}
+{% raw %}\ifcv@hasconf{% endraw %}
 \cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
 {% raw %}\begingroup
   % Map occupies the left ~0.46; the list the right ~0.5. A flag tracks
