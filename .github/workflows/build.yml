@@ -73,11 +73,14 @@ jobs:
     permissions:
       contents: write
       actions: read
-    # SHA-pinned to github-workflows v1.12.0: bundles stklug84/actions
-    # v2.9.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
-    # driving cv-tagged-ia skill bars / concept bubbles / tech stacks,
-    # emitting meta.location/title/summary plus experience bullets, and now
-    # the two-line name split and the conference location heatmap
+    # SHA-pinned to github-workflows v1.13.0: bundles stklug84/actions
+    # v2.10.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
+    # driving cv-tagged-ia per-item skill proficiency bars
+    # (\cvskillgroupheading + \cvskillitembar from skills[].items
+    # {name,size}), per-interest FontAwesome icons (\cvinterest{icon}{text}
+    # from interests[].icon), concept bubbles and tech stacks, emitting
+    # meta.location/title/summary plus experience bullets, the two-line name
+    # split and the conference location heatmap
     # (lat/lon -> \cvheatmap)) and gives every released PDF a
     # unique asset name (stklug-<yaml>-<lang>-<style>.pdf) so all built
     # variants appear in the release instead of colliding on the shared
@@ -86,7 +89,7 @@ jobs:
     # variant releases correctly instead of failing the flatten step with
     # "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@532bc66f920ca9d6c77882ef14a1f7804baa989e  # v1.12.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@09dad3477ff0f649fcd663561858af782a0401fa  # v1.13.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).

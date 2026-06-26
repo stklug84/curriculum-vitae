@@ -470,143 +470,143 @@ education:
           Towards the Realization of Ferro-Electric Liquids.
 
 
-conferences:
-  - targets: [latex]
-    year: 2026
-    name: Data+AI Summit 2026
-    location: San Francisco
-    lat: 37.77
-    lon: -122.42
-    date: 06/2026
-    url: https://www.databricks.com/dataaisummit
-  - targets: [latex]
-    year: 2026
-    name: Scalar
-    location: Warsaw
-    lat: 52.23
-    lon: 21.01
-    date: 03/2026
-    url: https://scalar-conf.com/
-  - targets: [latex]
-    year: 2025
-    name: IEEE International Conference on Cloud Engineering (I2CE)
-    location: Rennes
-    lat: 48.11
-    lon: -1.68
-    date: 09/2025
-    url: https://conferences.computer.org/IC2E/2025/
-  - targets: [latex]
-    year: 2024
-    name: IEEE International Conference on Data Engineering (ICDE)
-    location: Utrecht
-    lat: 52.09
-    lon: 5.12
-    date: 05/2024
-    url: https://ieee-icde.org/2024/
-  - targets: [latex]
-    year: 2023
-    name: AI Summit ODSC Europe
-    location: London
-    lat: 51.51
-    lon: -0.13
-    date: 06/2023
-    url: https://odsc.com/europe/
-  - targets: [latex]
-    year: 2022
-    name: Data+AI Summit 2022
-    location: San Francisco
-    lat: 37.77
-    lon: -122.42
-    date: 06/2022
-    url: https://www.databricks.com/dataaisummit
-  - targets: [latex]
-    year: 2019
-    name: Scala Days 2019
-    location: Lausanne
-    lat: 46.52
-    lon: 6.63
-    date: 05/2019
-    url: https://www.scaladays.org/
-  - targets: [latex]
-    year: 2019
-    name: Spark + AI Summit 2019
-    location: San Francisco
-    lat: 37.77
-    lon: -122.42
-    date: 04/2019
-    url: https://databricks.com/sparkaisummit/north-america
-  - targets: [latex]
-    year: 2018
-    name: Scala eXchange 2018
-    location: London
-    lat: 51.51
-    lon: -0.13
-    date: 12/2018
-    url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
-  - targets: [latex]
-    year: 2018
-    name: Spark + AI Summit 2018
-    location: San Francisco
-    lat: 37.77
-    lon: -122.42
-    date: 06/2018
-    url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
-  - targets: [latex]
-    year: 2018
-    name: IEEE International Conference on Data Engineering (ICDE)
-    location: Paris
-    lat: 48.86
-    lon: 2.35
-    date: 04/2018
-    url: https://icde2018.org
-  - targets: [latex]
-    year: 2017
-    name: Spark Summit Europe 2017
-    location: Dublin
-    lat: 53.35
-    lon: -6.26
-    date: 10/2017
-    url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
-  - targets: [latex]
-    year: 2017
-    name: PyData
-    location: Berlin
-    lat: 52.52
-    lon: 13.40
-    date: 06/2017
-    url: https://pydata.org/berlin2017
-  - targets: [latex]
-    year: 2016
-    name: The R User Conference (UseR! 2016)
-    location: Stanford University
-    lat: 37.43
-    lon: -122.17
-    date: 06/2016
-    url: https://user2016.r-project.org
-  - targets: [latex]
-    year: 2016
-    name: Conference on Uncertainty in Artificial Intelligence (UAI)
-    location: New York
-    lat: 40.71
-    lon: -74.01
-    date: 06/2016
-    url: http://www.auai.org/uai2016
-  - targets: [latex]
-    year: 2016
-    name: Conference on Learning Theory (COLT)
-    location: Columbia University, NYC
-    lat: 40.81
-    lon: -73.96
-    date: 06/2016
-    url: http://proceedings.mlr.press/v49/
-  - targets: [latex]
-    year: 2016
-    name: International Conference on Machine Learning (ICML)
-    location: New York
-    lat: 40.71
-    lon: -74.01
-    date: 06/2016
-    url: https://icml.cc/Conferences/2016/
+conferences: []
+  # - targets: [latex]
+  #   year: 2026
+  #   name: Data+AI Summit 2026
+  #   location: San Francisco
+  #   lat: 37.77
+  #   lon: -122.42
+  #   date: 06/2026
+  #   url: https://www.databricks.com/dataaisummit
+  # - targets: [latex]
+  #   year: 2026
+  #   name: Scalar
+  #   location: Warsaw
+  #   lat: 52.23
+  #   lon: 21.01
+  #   date: 03/2026
+  #   url: https://scalar-conf.com/
+  # - targets: [latex]
+  #   year: 2025
+  #   name: IEEE International Conference on Cloud Engineering (I2CE)
+  #   location: Rennes
+  #   lat: 48.11
+  #   lon: -1.68
+  #   date: 09/2025
+  #   url: https://conferences.computer.org/IC2E/2025/
+  # - targets: [latex]
+  #   year: 2024
+  #   name: IEEE International Conference on Data Engineering (ICDE)
+  #   location: Utrecht
+  #   lat: 52.09
+  #   lon: 5.12
+  #   date: 05/2024
+  #   url: https://ieee-icde.org/2024/
+  # - targets: [latex]
+  #   year: 2023
+  #   name: AI Summit ODSC Europe
+  #   location: London
+  #   lat: 51.51
+  #   lon: -0.13
+  #   date: 06/2023
+  #   url: https://odsc.com/europe/
+  # - targets: [latex]
+  #   year: 2022
+  #   name: Data+AI Summit 2022
+  #   location: San Francisco
+  #   lat: 37.77
+  #   lon: -122.42
+  #   date: 06/2022
+  #   url: https://www.databricks.com/dataaisummit
+  # - targets: [latex]
+  #   year: 2019
+  #   name: Scala Days 2019
+  #   location: Lausanne
+  #   lat: 46.52
+  #   lon: 6.63
+  #   date: 05/2019
+  #   url: https://www.scaladays.org/
+  # - targets: [latex]
+  #   year: 2019
+  #   name: Spark + AI Summit 2019
+  #   location: San Francisco
+  #   lat: 37.77
+  #   lon: -122.42
+  #   date: 04/2019
+  #   url: https://databricks.com/sparkaisummit/north-america
+  # - targets: [latex]
+  #   year: 2018
+  #   name: Scala eXchange 2018
+  #   location: London
+  #   lat: 51.51
+  #   lon: -0.13
+  #   date: 12/2018
+  #   url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
+  # - targets: [latex]
+  #   year: 2018
+  #   name: Spark + AI Summit 2018
+  #   location: San Francisco
+  #   lat: 37.77
+  #   lon: -122.42
+  #   date: 06/2018
+  #   url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
+  # - targets: [latex]
+  #   year: 2018
+  #   name: IEEE International Conference on Data Engineering (ICDE)
+  #   location: Paris
+  #   lat: 48.86
+  #   lon: 2.35
+  #   date: 04/2018
+  #   url: https://icde2018.org
+  # - targets: [latex]
+  #   year: 2017
+  #   name: Spark Summit Europe 2017
+  #   location: Dublin
+  #   lat: 53.35
+  #   lon: -6.26
+  #   date: 10/2017
+  #   url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
+  # - targets: [latex]
+  #   year: 2017
+  #   name: PyData
+  #   location: Berlin
+  #   lat: 52.52
+  #   lon: 13.40
+  #   date: 06/2017
+  #   url: https://pydata.org/berlin2017
+  # - targets: [latex]
+  #   year: 2016
+  #   name: The R User Conference (UseR! 2016)
+  #   location: Stanford University
+  #   lat: 37.43
+  #   lon: -122.17
+  #   date: 06/2016
+  #   url: https://user2016.r-project.org
+  # - targets: [latex]
+  #   year: 2016
+  #   name: Conference on Uncertainty in Artificial Intelligence (UAI)
+  #   location: New York
+  #   lat: 40.71
+  #   lon: -74.01
+  #   date: 06/2016
+  #   url: http://www.auai.org/uai2016
+  # - targets: [latex]
+  #   year: 2016
+  #   name: Conference on Learning Theory (COLT)
+  #   location: Columbia University, NYC
+  #   lat: 40.81
+  #   lon: -73.96
+  #   date: 06/2016
+  #   url: http://proceedings.mlr.press/v49/
+  # - targets: [latex]
+  #   year: 2016
+  #   name: International Conference on Machine Learning (ICML)
+  #   location: New York
+  #   lat: 40.71
+  #   lon: -74.01
+  #   date: 06/2016
+  #   url: https://icml.cc/Conferences/2016/
 
 
 # concepts[] feeds the tagged style's \cvskillbubbles macro, where each
@@ -640,43 +640,84 @@ concepts:
     size: 3
 
 
+# skills[].items are {name, size} mappings: `size` (0..1) is the per-item
+# proficiency-bar fraction rendered next to each item by the tagged style's
+# \cvskillitembar. The non-tagged styles and the web target use only the
+# item name.
 skills:
   - targets: [latex, web]
     group:
       de: Programmiersprachen
       en: Programming Languages
-    items: [Scala, Python, Rust, C, FORTRAN]
-    size: .5
-  - targets: [latex, web]
-    group:
-      de: AI Frameworks
-      en: AI Frameworks
-    items: [mlflow, langchain, LangGraph, Google ADK, Keras, Tensorflow]
-    size: .5
-  - targets: [latex, web]
-    group:
-      de: Data Engineering & Modeling
-      en: Data Engineering
-    items: [Kafka, Flink, Spark, PySpark, Delta Lake, SQL, SPARQL, RDF, OWL]
-    size: .5
+    items:
+      - name: Scala
+        size: .5
+      - name: Python
+        size: .5
+      - name: Rust
+        size: .5
+      - name: C
+        size: .5
+      - name: FORTRAN
+        size: .5
+  # - targets: [latex, web]
+  #   group:
+  #     de: AI Frameworks
+  #     en: AI Frameworks
+  #   items:
+  #     - {name: mlflow, size: .5}
+  #     - {name: langchain, size: .5}
+  #     - {name: LangGraph, size: .5}
+  #     - {name: Google ADK, size: .5}
+  #     - {name: Keras, size: .5}
+  #     - {name: Tensorflow, size: .5}
+  # - targets: [latex, web]
+  #   group:
+  #     de: Data Engineering & Modeling
+  #     en: Data Engineering
+  #   items:
+  #     - {name: Kafka, size: .5}
+  #     - {name: Flink, size: .5}
+  #     - {name: Spark, size: .5}
+  #     - {name: PySpark, size: .5}
+  #     - {name: Delta Lake, size: .5}
+  #     - {name: SQL, size: .5}
+  #     - {name: SPARQL, size: .5}
+  #     - {name: RDF, size: .5}
+  #     - {name: OWL, size: .5}
   - targets: [latex, web]
     group:
       de: Infrastruktur und Systeme
       en: Infrastructure & Systems
-    items: [AWS, Azure, GCP, Unix/Linux, macOS]
-    size: .5
-  - targets: [latex, web]
-    group:
-      de: Cloud-natives Tooling
-      en: Cloud-Native Tooling
-    items: [ArgoCD, Kubernetes, OpenLineage/Marquez]
-    size: .5
+    items:
+      - name: AWS
+        size: .5
+      - name: Azure
+        size: .5
+      - name: GCP
+        size: .5
+      - name: Unix/Linux
+        size: .5
+      - name: macOS
+        size: .5
+  # - targets: [latex, web]
+  #   group:
+  #     de: Cloud-natives Tooling
+  #     en: Cloud-Native Tooling
+  #   items:
+  #     - {name: ArgoCD, size: .5}
+  #     - {name: Kubernetes, size: .5}
+  #     - {name: OpenLineage/Marquez, size: .5}
   - targets: [latex, web]
     group:
       de: Plattformen
       en: Platforms
-    items: [Confluent Cloud, Databricks]
-    size: .5
+    items:
+      - name: Confluent Cloud
+        size: .5
+      - name: Databricks
+        size: .5
+
 
 languages:
   - targets: [latex, web]
@@ -705,27 +746,27 @@ languages:
     level: 2
 
 
-certifications:
-  - targets: [latex, web]
-    text:
-      de: "Microsoft Azure Administrator (AZ-104)"
-      en: "Microsoft Azure Administrator (AZ-104)"
-  - targets: [latex, web]
-    text:
-      de: "Developing Solutions for Microsoft Azure (AZ-204)"
-      en: "Developing Solutions for Microsoft Azure (AZ-204)"
-  - targets: [latex, web]
-    text:
-      de: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
-      en: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
-  - targets: [latex, web]
-    text:
-      de: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
-      en: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
-  - targets: [latex, web]
-    text:
-      de: "Microsoft Azure Security Technologies (AZ-500)"
-      en: "Microsoft Azure Security Technologies (AZ-500)"
+certifications: []
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Microsoft Azure Administrator (AZ-104)"
+  #     en: "Microsoft Azure Administrator (AZ-104)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Developing Solutions for Microsoft Azure (AZ-204)"
+  #     en: "Developing Solutions for Microsoft Azure (AZ-204)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
+  #     en: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
+  #     en: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Microsoft Azure Security Technologies (AZ-500)"
+  #     en: "Microsoft Azure Security Technologies (AZ-500)"
   # - targets: [latex, web]
   #   text:
   #     de: "Microsoft Azure AI Fundamentals (AI-900)"
@@ -738,26 +779,38 @@ certifications:
   #   text:
   #     de: "Microsoft Azure Fundamentals (AZ-900)"
   #     en: "Microsoft Azure Fundamentals (AZ-900)"
-  - targets: [latex, web]
-    text:
-      de: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
-      en: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
-  - targets: [latex, web]
-    text:
-      de: "Data Engineering on Microsoft Azure (DP-203)"
-      en: "Data Engineering on Microsoft Azure (DP-203)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
+  #     en: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
+  # - targets: [latex, web]
+  #   text:
+  #     de: "Data Engineering on Microsoft Azure (DP-203)"
+  #     en: "Data Engineering on Microsoft Azure (DP-203)"
 
 
+# interests[].icon is an optional FontAwesome control-sequence name (without
+# the leading backslash) used by the tagged style as the list bullet via
+# \cvinterest; a small representative glyph per interest. fontawesome5 has no
+# Magic: The Gathering mana symbol, so the TCG/RPG entry uses a d20 die.
 interests:
   - targets: [latex]
     de: Radfahren
     en: Cycling
+    icon: faBicycle
   - targets: [latex]
     de: Brettspiel Design
     en: Designing Boardgames
+    icon: faChessKnight
+  - targets: [latex]
+    de: Laufen
+    en: Running
+    icon: faRunning
   - targets: [latex]
     de: "Pen&Paper RPG und TCG Spiele"
-    en: "Playing Pen&Paper RPG and TCG"
+    en: "Playing Pen&Paper RPGs and TCGs"
+    icon: faDiceD20
   - targets: [latex]
     de: Computer Musikprogrammierung
-    en: Listening to and programming computer music
+    en: Programming computer music
+    icon: faMusic

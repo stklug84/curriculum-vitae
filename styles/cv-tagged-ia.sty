@@ -48,6 +48,7 @@
 \RequirePackage{calc}
 \RequirePackage{array}
 \RequirePackage{tabularx}
+\RequirePackage{multicol}
 \RequirePackage{etoolbox}
 \RequirePackage[hidelinks]{hyperref}
 
@@ -225,7 +226,7 @@
     {\noindent\strut\textbf{#1}\hfill{\bfseries\small #3}\par}%
     \ifblank{#4}{}{\vspace{0.15em}{\small #4\par}}%
   \end{minipage}%
-  \par\vspace{0.5em}%
+  \par\vspace{1.1em}%
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
@@ -287,6 +288,29 @@
   \vspace{0.25em}%
 }
 
+% --- \cvskillgroupheading{group} / \cvskillitembar{name}{frac} -------
+% Per-item skills layout used by the tagged style: the cv/parse emitter
+% writes one \cvskillgroupheading per group followed by one
+% \cvskillitembar per item. The heading is a bold group label; each item
+% is a name (left, in a fixed label box) with an inline proficiency bar
+% (right) whose fill is frac (0..1) of the \cv@barmax track. The bar track
+% is right-aligned to the column edge so all bars share a common axis
+% regardless of label width.
+\newcommand{\cvskillgroupheading}[1]{%
+  \par\vspace{0.45em}\noindent
+  {\bfseries\small #1}\par
+  \vspace{0.2em}%
+}
+\newcommand{\cvskillitembar}[2]{%
+  \par\noindent
+  \makebox[\cv@barlabel][l]{\small #1}\hfill
+  \begin{tikzpicture}[baseline=-0.55ex]
+    \draw[cvMuted,line width=0.3pt] (0,0) rectangle (\cv@barmax,0.5em);
+    \fill[cvBlack] (0,0) rectangle ({#2*\cv@barmax},0.5em);
+  \end{tikzpicture}%
+  \par\vspace{0.2em}%
+}
+
 % --- \cvlanguage{name}{sublabel}{level} ------------------------------
 % Plain text "name -- sublabel" (no widget). #3 (level) ignored.
 \newcommand{\cvlanguage}[3]{%
@@ -304,6 +328,18 @@
     \end{itemize}
     \endgroup
   }%
+}
+
+% --- \cvinterest{icon}{text} -----------------------------------------
+% A single interest row inside a \cvsidelist itemize: an \item whose bullet
+% is the FontAwesome glyph named by #1 (the bare control-sequence name, e.g.
+% "faBicycle", which we turn into \faBicycle via \csname). When #1 is empty
+% we fall back to the default square bullet. The icon is tinted with the
+% accent-muted colour so it reads as a bullet, not body text.
+\newcommand{\cvinterest}[2]{%
+  \item[{\ifblank{#1}{\cv@sqbullet}{%
+    \color{cvMuted}\csname #1\endcsname}}]%
+  {\small #2}%
 }
 
 % --- \cvruled --------------------------------------------------------
@@ -338,7 +374,10 @@
     \raggedright
     {\footnotesize\bfseries\color{cvMuted}\MakeUppercase{Tech Stack}}%
     \hspace{1.5em}%
-    {\small\cvscfont\cv@dotjoin#1 / \cv@dotstop\@nil}%
+    % Lowercase the tags before the small-caps family renders them: true
+    % small caps need lowercase input (uppercase letters stay full caps),
+    % so \MakeLowercase turns "Azure" into "azure" -> small-caps "azure".
+    {\small\cvscfont\MakeLowercase{\cv@dotjoin#1 / \cv@dotstop\@nil}}%
   \end{minipage}%
   \par\vspace{0.3em}%
 }
