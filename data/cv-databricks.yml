@@ -77,7 +77,7 @@ experience:
       - Databricks
       - Delta Lake
       - Flink
-      - Google ADK
+      - Google-ADK
       - Kafka
       - Kubernetes
       - LakeFS
@@ -615,23 +615,17 @@ conferences: []
 # clearly differentiated, visible circles. Tune these to taste.
 concepts:
   - targets: [latex, web]
-    text: MLOps
-    size: 8
+    text: Cloud Computing
+    size: 6
   - targets: [latex, web]
     text: Everything as Code CI/CD
     size: 9
   - targets: [latex, web]
-    text: Cloud Computing
-    size: 6
-  - targets: [latex, web]
-    text: Agentic Code Development
-    size: 4
+    text: MLOps
+    size: 8
   - targets: [latex, web]
     text: Data Engineering
     size: 8
-  - targets: [latex, web]
-    text: Differential Programming
-    size: 5
   - targets: [latex, web]
     text: Ontologies & Knowledge Graphs
     size: 7
@@ -696,10 +690,10 @@ skills:
         size: .7
       - name: GCP
         size: .3
-      - name: Unix/Linux
-        size: .8
       - name: Docker Swarm/Kubernetes
         size: .6
+      - name: Unix/Linux
+        size: .8
   # - targets: [latex, web]
   #   group:
   #     de: Cloud-natives Tooling

@@ -229,9 +229,13 @@
 % bodies are pure \cventry/\cvsidelist/\cvheatmap content and are safe.
 \newsavebox{\cv@optbox}
 \newcommand{\cvoptionalsection}[2]{%
+  % Measure BODY into a scratch box. The size probe must be GLOBAL: a plain
+  % \dimen0 assignment inside the \begingroup...\endgroup would be rolled
+  % back at \endgroup, leaving \dimen0 with stale data and the heading
+  % always showing. \global keeps the measured height past the group.
   \begingroup
     \setbox\cv@optbox=\vbox{#2}%
-    \dimen0=\dimexpr\ht\cv@optbox+\dp\cv@optbox\relax
+    \global\dimen0=\dimexpr\ht\cv@optbox+\dp\cv@optbox\relax
   \endgroup
   \ifdim\dimen0>\z@
     \cvsection{#1}%
