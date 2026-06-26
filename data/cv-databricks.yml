@@ -792,7 +792,9 @@ certifications: []
 # interests[].icon is an optional FontAwesome control-sequence name (without
 # the leading backslash) used by the tagged style as the list bullet via
 # \cvinterest; a small representative glyph per interest. fontawesome5 has no
-# Magic: The Gathering mana symbol, so the TCG/RPG entry uses a d20 die.
+# Magic: The Gathering mana symbol, so the TCG/RPG entry uses a pair of dice
+# (faDice). faDiceD20 was tried first but renders as a blank glyph in the
+# bundled FA5 font, so the earlier-vintage faDice is used instead.
 interests:
   - targets: [latex]
     de: Radfahren
@@ -809,7 +811,7 @@ interests:
   - targets: [latex]
     de: "Pen&Paper RPG und TCG Spiele"
     en: "Playing Pen&Paper RPGs and TCGs"
-    icon: faDiceD20
+    icon: faDice
   - targets: [latex]
     de: Computer Musikprogrammierung
     en: Programming computer music
