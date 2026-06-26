@@ -126,24 +126,25 @@
 % =====================================================================
 % Certifications — standalone full-width lower section. Comes from the
 % already-emitted cv-certifications.tex (\cvsidelist). Hardcoded en
-% heading: this variant is en-only.
+% heading: this variant is en-only. \cvoptionalsection suppresses the
+% heading entirely when the list is empty (the emitter still writes an
+% empty \cvsidelist{} when there are no certifications).
 % =====================================================================
-\cvsection{Certifications}
-\input{cv-certifications}
-
-\vspace{0.4em}
+\cvoptionalsection{Certifications}{\input{cv-certifications}}
 
 % =====================================================================
-% {{ label_languages }} (left)  +  {{ label_interests }} (right)
-% Two sections facing each other in a single full-width row.
+% {{ label_languages }} (left ~30%)  +  {{ label_interests }} (right ~70%)
+% Two sections facing each other in a single full-width row. Languages is a
+% short three-line list, so it takes the narrow 0.28 column; Interests gets
+% the wide 0.68 column so its two inner sub-columns have room to breathe.
 % =====================================================================
 \noindent
-\begin{minipage}[t]{0.48\linewidth}
+\begin{minipage}[t]{0.28\linewidth}
   \cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
   \input{cv-languages}
 \end{minipage}%
 \hfill
-\begin{minipage}[t]{0.48\linewidth}
+\begin{minipage}[t]{0.68\linewidth}
   \cvsection{{ '{' }}{{ label_interests }}{{ '}' }}
   % Interests flow across two inner columns within this half-width column.
   % cv-interests.tex emits a single \cvsidelist{...} (one itemize whose
@@ -167,17 +168,42 @@
 %     the right minipage so the following entries flow beside the map;
 %   * \cventry is \let to the compact \cvconfentry for tight list rows;
 %   * the template closes the right minipage after \input.
+%
+% The whole section (heading included) is suppressed when there are no
+% conferences: the emitter writes a WHOLLY EMPTY cv-conferences.tex in that
+% case. We first probe the file with a no-op \input (redefining \cvheatmap
+% and \cventry to gobble their args and merely raise \ifcv@hasconf); only
+% if content was found do we emit the heading and run the real scaffold.
 % =====================================================================
-\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
 {% raw %}\makeatletter
+% Both \newif declarations live OUTSIDE the \ifcv@hasconf guard below: a
+% \newif inside a conditional branch that is SKIPPED leaves the flag
+% undefined, and TeX's conditional-skipping then fails to pair the inner
+% \ifcv@mapopened...\fi correctly, prematurely closing the outer guard
+% (manifesting as "Extra \endgroup"). Declaring them up front keeps the
+% \if.../\fi nesting balanced whether or not the branch is taken.
+\newif\ifcv@hasconf
+\newif\ifcv@mapopened
 \begingroup
+  % Probe pass: detect whether the file carries any map or entries without
+  % typesetting anything. \cvheatmap takes one braced arg; \cventry four.
+  \long\def\cvheatmap#1{\global\cv@hasconftrue}%
+  \long\def\cventry#1#2#3#4{\global\cv@hasconftrue}%
+  \input{cv-conferences}%
+\endgroup
+% NB: keep \makeatletter ACTIVE here — the \ifcv@hasconf test below and the
+% \cv@* control sequences in the scaffold need '@' to be a letter.
+{% endraw %}
+{% raw %}\ifcv@hasconf{% endraw %}
+\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
+{% raw %}\begingroup
   % Map occupies the left ~0.46; the list the right ~0.5. A flag tracks
   % whether the map (and thus the right column) was actually opened, so the
   % closing \end{minipage} is only emitted when there were geolocated
   % conferences (the emitter omits \cvheatmap when none carry lat/lon).
   % @-using control sequences (\cv@mapw, ...) need \makeatletter in the
-  % document body.
-  \newif\ifcv@mapopened
+  % document body. (\ifcv@mapopened is declared above, outside the guard.)
+  \cv@mapopenedfalse
   \setlength{\cv@mapw}{0.46\linewidth}
   \let\cv@realheatmap\cvheatmap
   % Wrap the emitter's single \cvheatmap{...} call: render the real map in a
@@ -198,6 +224,7 @@
   \ifcv@mapopened\end{minipage}\fi% close the right (list) column
 \endgroup
 \makeatother
+\fi
 {% endraw %}
 
 \end{document}

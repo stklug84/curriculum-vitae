@@ -77,7 +77,7 @@ experience:
       - Databricks
       - Delta Lake
       - Flink
-      - Google ADK
+      - Google-ADK
       - Kafka
       - Kubernetes
       - LakeFS
@@ -615,23 +615,17 @@ conferences: []
 # clearly differentiated, visible circles. Tune these to taste.
 concepts:
   - targets: [latex, web]
-    text: MLOps
-    size: 8
+    text: Cloud Computing
+    size: 6
   - targets: [latex, web]
     text: Everything as Code CI/CD
     size: 9
   - targets: [latex, web]
-    text: Cloud Computing
-    size: 6
-  - targets: [latex, web]
-    text: Agentic Code Development
-    size: 4
+    text: MLOps
+    size: 8
   - targets: [latex, web]
     text: Data Engineering
     size: 8
-  - targets: [latex, web]
-    text: Differential Programming
-    size: 5
   - targets: [latex, web]
     text: Ontologies & Knowledge Graphs
     size: 7
@@ -651,63 +645,63 @@ skills:
       en: Programming Languages
     items:
       - name: Scala
-        size: .5
+        size: .7
       - name: Python
-        size: .5
+        size: .7
       - name: Rust
-        size: .5
+        size: .3
       - name: C
-        size: .5
+        size: .2
       - name: FORTRAN
-        size: .5
+        size: .8
   # - targets: [latex, web]
   #   group:
   #     de: AI Frameworks
   #     en: AI Frameworks
   #   items:
-  #     - {name: mlflow, size: .5}
+  #     - {name: mlflow, size: .7}
   #     - {name: langchain, size: .5}
-  #     - {name: LangGraph, size: .5}
-  #     - {name: Google ADK, size: .5}
+  #     - {name: LangGraph, size: .4}
+  #     - {name: Google ADK, size: .8}
   #     - {name: Keras, size: .5}
-  #     - {name: Tensorflow, size: .5}
+  #     - {name: Tensorflow, size: .7}
   # - targets: [latex, web]
   #   group:
   #     de: Data Engineering & Modeling
   #     en: Data Engineering
   #   items:
-  #     - {name: Kafka, size: .5}
+  #     - {name: Kafka, size: .6}
   #     - {name: Flink, size: .5}
-  #     - {name: Spark, size: .5}
-  #     - {name: PySpark, size: .5}
-  #     - {name: Delta Lake, size: .5}
-  #     - {name: SQL, size: .5}
+  #     - {name: Spark, size: .8}
+  #     - {name: PySpark, size: .7}
+  #     - {name: Delta Lake, size: .7}
+  #     - {name: SQL, size: .8}
   #     - {name: SPARQL, size: .5}
-  #     - {name: RDF, size: .5}
-  #     - {name: OWL, size: .5}
+  #     - {name: RDF, size: .6}
+  #     - {name: OWL, size: .7}
   - targets: [latex, web]
     group:
       de: Infrastruktur und Systeme
       en: Infrastructure & Systems
     items:
       - name: AWS
-        size: .5
+        size: .2
       - name: Azure
-        size: .5
+        size: .7
       - name: GCP
-        size: .5
+        size: .3
+      - name: Docker Swarm/Kubernetes
+        size: .6
       - name: Unix/Linux
-        size: .5
-      - name: macOS
-        size: .5
+        size: .8
   # - targets: [latex, web]
   #   group:
   #     de: Cloud-natives Tooling
   #     en: Cloud-Native Tooling
   #   items:
-  #     - {name: ArgoCD, size: .5}
-  #     - {name: Kubernetes, size: .5}
-  #     - {name: OpenLineage/Marquez, size: .5}
+  #     - {name: ArgoCD, size: .6}
+  #     - {name: Kubernetes, size: .6}
+  #     - {name: OpenLineage/Marquez, size: .7}
   - targets: [latex, web]
     group:
       de: Plattformen
@@ -716,7 +710,7 @@ skills:
       - name: Confluent Cloud
         size: .5
       - name: Databricks
-        size: .5
+        size: .7
 
 
 languages:
