@@ -126,12 +126,11 @@
 % =====================================================================
 % Certifications — standalone full-width lower section. Comes from the
 % already-emitted cv-certifications.tex (\cvsidelist). Hardcoded en
-% heading: this variant is en-only.
+% heading: this variant is en-only. \cvoptionalsection suppresses the
+% heading entirely when the list is empty (the emitter still writes an
+% empty \cvsidelist{} when there are no certifications).
 % =====================================================================
-\cvsection{Certifications}
-\input{cv-certifications}
-
-\vspace{0.4em}
+\cvoptionalsection{Certifications}{\input{cv-certifications}}
 
 % =====================================================================
 % {{ label_languages }} (left ~30%)  +  {{ label_interests }} (right ~70%)
@@ -169,10 +168,28 @@
 %     the right minipage so the following entries flow beside the map;
 %   * \cventry is \let to the compact \cvconfentry for tight list rows;
 %   * the template closes the right minipage after \input.
+%
+% The whole section (heading included) is suppressed when there are no
+% conferences: the emitter writes a WHOLLY EMPTY cv-conferences.tex in that
+% case. We first probe the file with a no-op \input (redefining \cvheatmap
+% and \cventry to gobble their args and merely raise \ifcv@hasconf); only
+% if content was found do we emit the heading and run the real scaffold.
 % =====================================================================
-\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
 {% raw %}\makeatletter
+\newif\ifcv@hasconf
 \begingroup
+  % Probe pass: detect whether the file carries any map or entries without
+  % typesetting anything. \cvheatmap takes one braced arg; \cventry four.
+  \long\def\cvheatmap#1{\global\cv@hasconftrue}%
+  \long\def\cventry#1#2#3#4{\global\cv@hasconftrue}%
+  \input{cv-conferences}%
+\endgroup
+\makeatother
+{% endraw %}
+{% raw %}\ifcv@hasconf
+\makeatletter{% endraw %}
+\cvsection{{ '{' }}{{ label_conferences }}{{ '}' }}
+{% raw %}\begingroup
   % Map occupies the left ~0.46; the list the right ~0.5. A flag tracks
   % whether the map (and thus the right column) was actually opened, so the
   % closing \end{minipage} is only emitted when there were geolocated
@@ -200,6 +217,7 @@
   \ifcv@mapopened\end{minipage}\fi% close the right (list) column
 \endgroup
 \makeatother
+\fi
 {% endraw %}
 
 \end{document}

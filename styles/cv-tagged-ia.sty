@@ -216,6 +216,30 @@
 % --- \cvsidesection{TITLE} -- alias ----------------------------------
 \newcommand{\cvsidesection}[1]{\cvsection{#1}}
 
+% --- \cvoptionalsection{TITLE}{BODY} ---------------------------------
+% Render a \cvsection heading followed by BODY, but ONLY when BODY
+% actually produces visible content. The cv/parse emitter still writes a
+% file for empty sections (e.g. an empty \cvsidelist{} for certifications,
+% or a wholly empty conferences file), which would otherwise leave a bare
+% black section tag with nothing under it. We typeset BODY into a scratch
+% vertical box and, if that box has zero height+depth, emit nothing at all
+% (no heading, no whitespace). BODY is executed twice: once into the
+% measuring box (discarded) and once for real, so it MUST be free of global
+% side effects that would double-fire — the conferences/certifications
+% bodies are pure \cventry/\cvsidelist/\cvheatmap content and are safe.
+\newsavebox{\cv@optbox}
+\newcommand{\cvoptionalsection}[2]{%
+  \begingroup
+    \setbox\cv@optbox=\vbox{#2}%
+    \dimen0=\dimexpr\ht\cv@optbox+\dp\cv@optbox\relax
+  \endgroup
+  \ifdim\dimen0>\z@
+    \cvsection{#1}%
+    #2%
+    \par\vspace{0.4em}%
+  \fi
+}
+
 % --- \cventry{title}{date}{employer}{desc} ---------------------------
 % Left column (~18%) = date at top; main column = title (left) +
 % employer (right, smaller bold); then justified description.
@@ -375,7 +399,12 @@
   \ifx\cv@dotstop#2\else\cv@dotsep\cv@dotjoin#2\@nil\fi
 }
 \newcommand{\cvtechstack}[1]{%
-  \par\noindent
+  % Pull the Tech Stack line UP toward the entry it belongs to: the
+  % preceding \cventry ends with \vspace{1.1em}, which is too large a gap
+  % between an entry and its own tech-stack footer. The negative space
+  % collapses that to a tight ~0.35em so the tech stack reads as part of the
+  % entry above rather than floating midway to the next one.
+  \par\vspace{-0.75em}\noindent
   \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
@@ -386,7 +415,9 @@
     % so \MakeLowercase turns "Azure" into "azure" -> small-caps "azure".
     {\small\cvscfont\MakeLowercase{\cv@dotjoin#1 / \cv@dotstop\@nil}}%
   \end{minipage}%
-  \par\vspace{0.3em}%
+  % Push the FOLLOWING entry further down so the tech-stack footer is
+  % visually grouped with the entry above it, not the one below.
+  \par\vspace{0.9em}%
 }
 
 % --- \cvskillbar{label}{frac} ----------------------------------------
