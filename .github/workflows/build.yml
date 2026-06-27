@@ -73,15 +73,17 @@ jobs:
     permissions:
       contents: write
       actions: read
-    # SHA-pinned to github-workflows v1.14.0: bundles stklug84/actions
-    # v2.11.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
+    # SHA-pinned to github-workflows v1.15.0: bundles stklug84/actions
+    # v2.12.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
     # driving cv-tagged-ia per-item skill proficiency bars
     # (\cvskillgroupheading + \cvskillitembar from skills[].items
     # {name,size}), per-interest FontAwesome icons (\cvinterest{icon}{text}
     # from interests[].icon), concept bubbles and tech stacks, structured
-    # certifications (code/name/issuer -> \cvcert{code}{name} code chips),
-    # an optional meta.pdf_title backing the PDF metadata title (absent ->
-    # "Lebenslauf"), emitting meta.location/title/summary plus experience
+    # certifications (code/name/issuer -> \cvcertlist/\cvcert code chips
+    # aligned to the section heading), an optional meta.pdf_title backing the
+    # PDF metadata title (absent -> "Lebenslauf"), \@-spacing auto-injected
+    # into meta.author (no hand-written LaTeX in the YAML; pdf_author literal),
+    # emitting meta.location/title/summary plus experience
     # bullets, the two-line name split and the conference location heatmap
     # (lat/lon -> \cvheatmap)) and gives every released PDF a
     # unique asset name (stklug-<yaml>-<lang>-<style>.pdf) so all built
@@ -91,7 +93,7 @@ jobs:
     # variant releases correctly instead of failing the flatten step with
     # "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@82accf8f41acaae90c9cf234d7c9c7ef6256d170  # v1.14.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@4359bdd3c2109a2949f837361fd9a9c5a3cb3101  # v1.15.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).

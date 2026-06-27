@@ -139,11 +139,12 @@ jobs:
 
       # Validate the source of truth against the cv/parse schema
       # contract; --check writes nothing and fails the PR on the first
-      # violation with a clear message. Pinned to actions v2.11.0 so the
-      # check enforces the structured certifications schema (code/name/issuer)
-      # and accepts the optional meta.pdf_title.
+      # violation with a clear message. Pinned to actions v2.12.0 so the
+      # check enforces the structured certifications schema (code/name/issuer),
+      # accepts the optional meta.pdf_title and applies the same author
+      # \@-spacing normalization (so clean meta.author validates).
       - name: Validate ${{ matrix.source }}
-        uses: stklug84/actions/cv/parse@65656caff28ec2a4d66b5bb98151cc8f55e51414  # v2.11.0
+        uses: stklug84/actions/cv/parse@e2d73053a6694442b3310fea817c509d65c1a632  # v2.12.0
         with:
           source: ${{ matrix.source }}
           check: "true"

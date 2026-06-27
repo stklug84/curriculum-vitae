@@ -13,7 +13,7 @@
 
 meta:
   display_name: Steffen Klug
-  author: Dr.\@ rer.\@ nat.\@ Steffen Klug
+  author: Dr. rer. nat. Steffen Klug
   pdf_author: Dr. rer. nat. Steffen Klug
   lang_default: de
   title:
@@ -427,7 +427,7 @@ experience:
         Differentialgleichungen.
       en: >-
         Modelling and computation of non-linear partial differential
-        equations on HPC supercomputing clusters
+        equations on HPC supercomputing clusters.
     tags: [C, FORTRAN, HPC, OpenMP, MPI]
     # bullets:
     #   - de: >-
@@ -655,7 +655,7 @@ skills:
       - name: Python
         size: .7
       - name: Rust
-        size: .3
+        size: .4
   #    - name: C
   #      size: .2
   #    - name: FORTRAN
