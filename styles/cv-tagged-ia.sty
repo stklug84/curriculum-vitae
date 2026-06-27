@@ -412,6 +412,32 @@
   {\small\color{cvMuted}#2}%
 }
 
+% --- \cvcertlist{rows} -----------------------------------------------
+% Certification list. Unlike the generic \cvsidelist (whose narrow
+% leftmargin lets a wide code chip hang out into the left margin, pushing
+% the chip left of the section heading), this list reserves a fixed
+% left-hand column (\cv@certchip) wide enough for the widest code chip and
+% left-aligns the chip label at the list's left edge (labelindent=0pt). The
+% result: every chip's LEFT edge lines up with the CERTIFICATIONS heading,
+% and the muted titles share a common hanging indent. Empty-safe.
+%
+% \cv@certchip sizes the chip column. It must clear the widest rendered chip
+% (e.g. "AZ-305"/"DP-203" at \footnotesize\bfseries plus 2*4pt inner xsep);
+% a longer future code would need this widened.
+\newlength{\cv@certchip}\setlength{\cv@certchip}{3.8em}
+\newcommand{\cvcertlist}[1]{%
+  \ifblank{#1}{}{%
+    \begingroup
+    \small
+    \begin{itemize}[leftmargin=\cv@certchip,labelwidth=\cv@certchip,%
+        labelindent=0pt,labelsep=0.6em,align=left,%
+        topsep=0.45em,itemsep=0.6em,parsep=0.1em]
+      #1
+    \end{itemize}
+    \endgroup
+  }%
+}
+
 % --- \cvruled --------------------------------------------------------
 \newcommand{\cvruled}{%
   \par\vspace{0.4em}{\color{cvRule}\hrule height 0.3pt}\par\vspace{0.4em}%
