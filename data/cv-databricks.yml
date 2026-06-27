@@ -752,7 +752,6 @@ languages:
     level: 2
 
 
-certifications:
 # Structured schema (cv/parse >= v2.11.0): each cert carries an explicit
 #   code:   short exam code, rendered as a monochrome chip by the tagged style
 #   issuer: certifying body (currently unrendered; reserved for future styles)
@@ -760,18 +759,19 @@ certifications:
 # The tagged style emits \cvcert{code}{name} (code chip + muted title); the
 # plain/sidebar/fs/web targets render a reconstructed "<name> (<code>)" string,
 # byte-identical to the previous "text" output.
-# - targets: [latex, web]
-#   code: AZ-104
-#   issuer: Microsoft
-#   name:
-#     de: "Microsoft Azure Administrator"
-#     en: "Microsoft Azure Administrator"
-# - targets: [latex, web]
-#   code: AZ-204
-#   issuer: Microsoft
-#   name:
-#     de: "Developing Solutions for Microsoft Azure"
-#     en: "Developing Solutions for Microsoft Azure"
+certifications:
+  # - targets: [latex, web]
+  #   code: AZ-104
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Administrator"
+  #     en: "Microsoft Azure Administrator"
+  # - targets: [latex, web]
+  #   code: AZ-204
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Developing Solutions for Microsoft Azure"
+  #     en: "Developing Solutions for Microsoft Azure"
   - targets: [latex, web]
     code: AZ-305
     issuer: Microsoft
@@ -784,30 +784,30 @@ certifications:
     name:
       de: "Designing and Implementing Microsoft DevOps Solutions"
       en: "Designing and Implementing Microsoft DevOps Solutions"
-# - targets: [latex, web]
-#   code: AZ-500
-#   issuer: Microsoft
-#   name:
-#     de: "Microsoft Azure Security Technologies"
-#     en: "Microsoft Azure Security Technologies"
-# - targets: [latex, web]
-#   code: AI-900
-#   issuer: Microsoft
-#   name:
-#     de: "Microsoft Azure AI Fundamentals"
-#     en: "Microsoft Azure AI Fundamentals"
-# - targets: [latex, web]
-#   code: DP-900
-#   issuer: Microsoft
-#   name:
-#     de: "Microsoft Azure Data Fundamentals"
-#     en: "Microsoft Azure Data Fundamentals"
-# - targets: [latex, web]
-#   code: AZ-900
-#   issuer: Microsoft
-#   name:
-#     de: "Microsoft Azure Fundamentals"
-#     en: "Microsoft Azure Fundamentals"
+  # - targets: [latex, web]
+  #   code: AZ-500
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Security Technologies"
+  #     en: "Microsoft Azure Security Technologies"
+  # - targets: [latex, web]
+  #   code: AI-900
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure AI Fundamentals"
+  #     en: "Microsoft Azure AI Fundamentals"
+  # - targets: [latex, web]
+  #   code: DP-900
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Data Fundamentals"
+  #     en: "Microsoft Azure Data Fundamentals"
+  # - targets: [latex, web]
+  #   code: AZ-900
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Fundamentals"
+  #     en: "Microsoft Azure Fundamentals"
   - targets: [latex, web]
     code: DP-100
     issuer: Microsoft
