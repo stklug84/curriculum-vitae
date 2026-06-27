@@ -377,6 +377,7 @@
 \newcommand{\cvsidelist}[1]{%
   \ifblank{#1}{}{%
     \begingroup
+    \small
     \begin{itemize}
       #1
     \end{itemize}
@@ -394,6 +395,21 @@
   \item[{\ifblank{#1}{\cv@sqbullet}{%
     \color{cvMuted}\csname #1\endcsname}}]%
   {\small #2}%
+}
+
+% --- \cvcert{code}{title} --------------------------------------------
+% A single certification row inside a \cvsidelist itemize. The bullet slot
+% holds a monochrome rounded code chip (white bold code on a cvBlack fill,
+% e.g. "AZ-305"), sized to its content like the section/contact chips; the
+% title follows in muted secondary text. When #1 (code) is empty we fall
+% back to the default square bullet and render the title alone.
+\newcommand{\cvcert}[2]{%
+  \item[{\ifblank{#1}{\cv@sqbullet}{%
+    \tikz[baseline=-0.55ex]{%
+      \node[rounded corners=2pt,fill=cvBlack,inner xsep=4pt,inner ysep=1.5pt,
+            text=white,font=\footnotesize\bfseries] {#1};%
+    }}}]%
+  {\small\color{cvMuted}#2}%
 }
 
 % --- \cvruled --------------------------------------------------------
