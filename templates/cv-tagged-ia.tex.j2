@@ -85,8 +85,11 @@
   % Concepts section restores \cvskillbubbles and replays it.
   \renewcommand{\cvskillbubbles}[1]{\xdef\cv@savedbubbles{\unexpanded{#1}}}%
   \makeatother{% endraw %}
-  \cvsection{{ '{' }}{{ label_skills }}{{ '}' }}
-  \input{cv-skills}
+  % \cvoptionalsection suppresses the SKILLS heading when there are no skill
+  % groups (empty cv-skills.tex). The body's bubble-capture \xdef is
+  % idempotent, so the measure pass + real pass produce the same
+  % \cv@savedbubbles.
+  \cvoptionalsection{{ '{' }}{{ label_skills }}{{ '}' }}{\input{cv-skills}}
 \end{minipage}
 
 \vspace{0.4em}
@@ -97,31 +100,34 @@
 % \cv@savedbubbles in the header (so it does not crowd the narrow Skills
 % column); restore the real \cvskillbubbles here and replay it across the
 % full text width. Hardcoded en heading: this variant is en-only.
+%
+% The HEADING is only emitted when there actually are concepts: when
+% `concepts: []` the emitter writes no \cvskillbubbles line, so
+% \cv@savedbubbles stays \@empty and the whole section (tag + bubbles +
+% trailing space) is suppressed — matching the empty-array handling of the
+% Certifications and Conferences sections.
 % =====================================================================
 {% raw %}\makeatletter
-\cvsection{Concepts}
 \let\cvskillbubbles\cv@realskillbubbles
-% Expand \cv@savedbubbles into the braced argument so \cvskillbubbles'
-% internal \foreach sees the raw comma-list and splits it into pairs
-% (passing the bare macro leaves it as a single unsplit token).
 \ifx\cv@savedbubbles\@empty\else
+  \cvsection{Concepts}%
+  % Expand \cv@savedbubbles into the braced argument so \cvskillbubbles'
+  % internal \foreach sees the raw comma-list and splits it into pairs
+  % (passing the bare macro leaves it as a single unsplit token).
   \expandafter\cvskillbubbles\expandafter{\cv@savedbubbles}%
+  \vspace{0.4em}%
 \fi
 \makeatother{% endraw %}
 
-\vspace{0.4em}
+% =====================================================================
+% {{ label_experience }} — heading suppressed when cv-experience.tex is empty.
+% =====================================================================
+\cvoptionalsection{{ '{' }}{{ label_experience }}{{ '}' }}{\input{cv-experience}}
 
 % =====================================================================
-% {{ label_experience }}
+% {{ label_education }} — heading suppressed when cv-education.tex is empty.
 % =====================================================================
-\cvsection{{ '{' }}{{ label_experience }}{{ '}' }}
-\input{cv-experience}
-
-% =====================================================================
-% {{ label_education }}
-% =====================================================================
-\cvsection{{ '{' }}{{ label_education }}{{ '}' }}
-\input{cv-education}
+\cvoptionalsection{{ '{' }}{{ label_education }}{{ '}' }}{\input{cv-education}}
 
 % =====================================================================
 % Certifications — standalone full-width lower section. Comes from the
@@ -138,23 +144,33 @@
 % short three-line list, so it takes the narrow 0.28 column; Interests gets
 % the wide 0.68 column so its two inner sub-columns have room to breathe.
 % =====================================================================
+% Each side's heading is suppressed when its list is empty (\cvoptionalsection
+% measures the \input body and emits nothing when it is blank).
 \noindent
 \begin{minipage}[t]{0.28\linewidth}
-  \cvsection{{ '{' }}{{ label_languages }}{{ '}' }}
-  \input{cv-languages}
+  \cvoptionalsection{{ '{' }}{{ label_languages }}{{ '}' }}{\input{cv-languages}}
 \end{minipage}%
 \hfill
 \begin{minipage}[t]{0.68\linewidth}
-  \cvsection{{ '{' }}{{ label_interests }}{{ '}' }}
   % Interests flow across two inner columns within this half-width column.
   % cv-interests.tex emits a single \cvsidelist{...} (one itemize whose
   % rows are \cvinterest{icon}{text}); multicol balances those rows across
   % the two columns. \setlength{\multicolsep}{0pt} trims the leading gap so
   % the list aligns with the Languages list to its left.
-  \setlength{\multicolsep}{0pt}%
-  \begin{multicols}{2}
-    \input{cv-interests}
-  \end{multicols}
+  %
+  % Empty-list suppression: \cvoptionalsection can't MEASURE a multicols
+  % body (multicol refuses to run inside the scratch \vbox), so we probe the
+  % raw \input separately (\cvsidelist is empty-safe and renders nothing
+  % when there are no items) and only emit the heading + multicols when that
+  % probe produced visible content. \cvifnonempty {body}{then} is provided
+  % by the style.
+  \cvifnonempty{\input{cv-interests}}{\relax
+    \cvsection{{ '{' }}{{ label_interests }}{{ '}' }}%
+    \setlength{\multicolsep}{0pt}%
+    \begin{multicols}{2}
+      \input{cv-interests}
+    \end{multicols}%
+  }%
 \end{minipage}
 
 % =====================================================================

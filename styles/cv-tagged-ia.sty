@@ -132,7 +132,7 @@
 \newcommand{\cv@sqbullet}{\raisebox{0.18ex}{\rule{0.5em}{0.5em}}}
 \setlist{leftmargin=1.4em}
 \setlist[itemize,1]{label=\cv@sqbullet,labelsep=.6em,
-  topsep=0.35em,itemsep=0.45em,parsep=0.1em}
+  topsep=0.45em,itemsep=0.6em,parsep=0.1em}
 \setlist[itemize,2]{label=\cv@sqbullet,labelsep=.5em,leftmargin=1.3em,
   topsep=0.3em,itemsep=0.35em,parsep=0.1em}
 
@@ -204,13 +204,13 @@
 % --- \cvsection{TITLE} -----------------------------------------------
 % SIGNATURE: solid black rectangle "tag" with white uppercase bold text.
 \newcommand{\cvsection}[1]{%
-  \vspace{0.6em}\par\noindent
+  \vspace{0.9em}\par\noindent
   \colorbox{cvBlack}{%
     \hspace{0.15em}\rule{0pt}{1.15em}%
     \textcolor{white}{\bfseries\MakeUppercase{#1}}%
     \hspace{0.15em}%
   }%
-  \par\vspace{0.4em}%
+  \par\vspace{0.55em}%
 }
 
 % --- \cvsidesection{TITLE} -- alias ----------------------------------
@@ -244,6 +244,25 @@
   \fi
 }
 
+% --- \cvifnonempty{body}{then} ---------------------------------------
+% Like \cvoptionalsection but with NO heading and NO trailing space of its
+% own: measure BODY into a scratch box and execute THEN only when BODY
+% produced visible content. Used by callers (e.g. Interests) that must NOT
+% measure their real body directly — multicol refuses to typeset inside the
+% scratch \vbox, so the caller probes the raw \input here (which is
+% empty-safe) and renders the multicols version itself inside THEN. BODY is
+% executed once for the probe; THEN re-renders it for real, so BODY must be
+% free of double-firing global side effects (\cvsidelist is safe).
+\newcommand{\cvifnonempty}[2]{%
+  \begingroup
+    \setbox\cv@optbox=\vbox{#1}%
+    \global\dimen0=\dimexpr\ht\cv@optbox+\dp\cv@optbox\relax
+  \endgroup
+  \ifdim\dimen0>\z@
+    #2%
+  \fi
+}
+
 % --- \cventry{title}{date}{employer}{desc} ---------------------------
 % Left column (~18%) = date at top; main column = title (left) +
 % employer (right, smaller bold); then justified description.
@@ -252,7 +271,7 @@
 % baseline so the date (e.g. "09/2013 --- 08/2010") lines up exactly with
 % the entry's title headline rather than floating a hair above it.
 \newcommand{\cventry}[4]{%
-  \vspace{0.3em}\par\noindent
+  \vspace{0.4em}\par\noindent
   \begin{minipage}[t]{\cv@datecol}%
     \raggedright{\strut\small\color{cvMuted}#2}%
   \end{minipage}%
@@ -261,7 +280,7 @@
     {\noindent\strut\textbf{#1}\hfill{\bfseries\small #3}\par}%
     \ifblank{#4}{}{\vspace{0.15em}{\small #4\par}}%
   \end{minipage}%
-  \par\vspace{0.8em}%
+  \par\vspace{1.1em}%
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
@@ -404,11 +423,11 @@
 }
 \newcommand{\cvtechstack}[1]{%
   % Pull the Tech Stack line UP toward the entry it belongs to: the
-  % preceding \cventry ends with \vspace{0.8em}, which is too large a gap
+  % preceding \cventry ends with \vspace{1.1em}, which is too large a gap
   % between an entry and its own tech-stack footer. The negative space
-  % collapses that to a tight ~0.3em so the tech stack reads as part of the
-  % entry above rather than floating midway to the next one.
-  \par\vspace{-0.5em}\noindent
+  % collapses that so the tech stack reads as part of the entry above
+  % rather than floating midway to the next one.
+  \par\vspace{-0.4em}\noindent
   \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
@@ -421,7 +440,7 @@
   \end{minipage}%
   % Push the FOLLOWING entry further down so the tech-stack footer is
   % visually grouped with the entry above it, not the one below.
-  \par\vspace{0.7em}%
+  \par\vspace{1.0em}%
 }
 
 % --- \cvskillbar{label}{frac} ----------------------------------------

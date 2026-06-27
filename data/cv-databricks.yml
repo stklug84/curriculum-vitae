@@ -613,25 +613,25 @@ conferences: []
 # bubble's radius is 0.06 + 0.045*size (cm). `size` here is therefore the
 # bubble WEIGHT (not a 0..1 fraction like skills[].size): values ~3..9 give
 # clearly differentiated, visible circles. Tune these to taste.
-concepts:
-  - targets: [latex, web]
-    text: Cloud Computing
-    size: 6
-  - targets: [latex, web]
-    text: Everything as Code CI/CD
-    size: 9
-  - targets: [latex, web]
-    text: MLOps
-    size: 8
-  - targets: [latex, web]
-    text: Data Engineering
-    size: 8
-  - targets: [latex, web]
-    text: Ontologies & Knowledge Graphs
-    size: 7
-  - targets: [latex, web]
-    text: Parallel/Scientific Computing
-    size: 3
+concepts: []
+#   - targets: [latex, web]
+#     text: Cloud Computing
+#     size: 6
+#   - targets: [latex, web]
+#     text: Everything as Code CI/CD
+#     size: 9
+#   - targets: [latex, web]
+#     text: MLOps
+#     size: 8
+#   - targets: [latex, web]
+#     text: Data Engineering
+#     size: 8
+#   - targets: [latex, web]
+#     text: Ontologies & Knowledge Graphs
+#     size: 7
+#   - targets: [latex, web]
+#     text: Parallel/Scientific Computing
+#     size: 3
 
 
 # skills[].items are {name, size} mappings: `size` (0..1) is the per-item
@@ -645,15 +645,15 @@ skills:
       en: Programming Languages
     items:
       - name: Scala
-        size: .7
+        size: .8
       - name: Python
         size: .7
       - name: Rust
         size: .3
-      - name: C
-        size: .2
-      - name: FORTRAN
-        size: .8
+  #    - name: C
+  #      size: .2
+  #    - name: FORTRAN
+  #      size: .8
   # - targets: [latex, web]
   #   group:
   #     de: AI Frameworks
@@ -684,16 +684,20 @@ skills:
       de: Infrastruktur und Systeme
       en: Infrastructure & Systems
     items:
-      - name: AWS
-        size: .2
+      # - name: AWS
+      #   size: .2
       - name: Azure
         size: .7
-      - name: GCP
-        size: .3
-      - name: Docker Swarm/Kubernetes
-        size: .6
-      - name: Unix/Linux
+      - name: Confluent Cloud
+        size: .5
+      - name: Databricks
         size: .8
+      - name: Docker Swarm/Kubernetes
+        size: .7
+      # - name: GCP
+      #   size: .3
+      - name: Unix/Linux
+        size: .9
   # - targets: [latex, web]
   #   group:
   #     de: Cloud-natives Tooling
@@ -704,13 +708,15 @@ skills:
   #     - {name: OpenLineage/Marquez, size: .7}
   - targets: [latex, web]
     group:
-      de: Plattformen
-      en: Platforms
+      de: Konzepte
+      en: Concepts
     items:
-      - name: Confluent Cloud
-        size: .5
-      - name: Databricks
-        size: .7
+      - name: Data Engineering
+        size: .8
+      - name: Everything as Code CI/CD
+        size: .9
+      - name: MLOps
+        size: .8
 
 
 languages:
@@ -795,18 +801,22 @@ interests:
     en: Cycling
     icon: faBicycle
   - targets: [latex]
-    de: Brettspiel Design
-    en: Designing Boardgames
-    icon: faChessKnight
-  - targets: [latex]
     de: Laufen
     en: Running
     icon: faRunning
+  - targets: [latex]
+    de: "Sci-Fi- & Geschichtsbücher lesen"
+    en: "Reading Sci-Fi & History Books"
+    icon: faBookReader
+  - targets: [latex]
+    de: Brettspiel Design
+    en: Designing Boardgames
+    icon: faChessKnight
   - targets: [latex]
     de: "Pen&Paper RPG und TCG Spiele"
     en: "Playing Pen&Paper RPGs and TCGs"
     icon: faDice
   - targets: [latex]
     de: Computer Musikprogrammierung
-    en: Programming computer music
+    en: Programming Computer Music
     icon: faMusic
