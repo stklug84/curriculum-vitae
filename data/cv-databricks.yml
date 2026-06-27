@@ -19,6 +19,12 @@ meta:
   title:
     de: IT-Systemarchitekt
     en: Data & AI Solutions Architect
+  # PDF metadata document title (\cvtitle -> pdftitle). Bilingual so the
+  # German variant keeps "Lebenslauf" while English variants read
+  # "Curriculum Vitae". Absent, cv/parse defaults to "Lebenslauf".
+  pdf_title:
+    de: Lebenslauf
+    en: Curriculum Vitae
   location:
     de: Stuttgart, Deutschland
     en: Stuttgart, Germany
@@ -140,7 +146,7 @@ experience:
           Simulationsdurchsatzes um den Faktor 5x für kleinere Jobs bei
           gleichzeitiger Kontrolle der Compute-Kosten.
         en: >-
-          Architecting and prototyping a hybrid-cloud infrastructure framework
+          Architected and prototyped a hybrid-cloud infrastructure framework
           running virtual load simulations of ECU designs on on-site HPC systems,
           with an AI-optimised runtime that seamlessly bursts demand spikes to
           cloud HPC nodes — increasing simulation throughput by a factor of 5x for
@@ -234,7 +240,7 @@ experience:
           ontology to run rapid feasibility checks on new designs by referencing
           existing product digital CVs and built an explicit show case for the
           ability of Databricks Delta combined with LakeFS to provide full data
-          traceability and baselining cutting feasibility-check turnaround by
+          traceability and baselining, cutting feasibility-check turnaround by
           40%.
 
   - id: bosch-mfg-data
@@ -338,7 +344,7 @@ experience:
         Built and evolved an early data and AI platform architecture on hybrid
         and public cloud, laying the foundation for data-driven analytics across
         industrial and manufacturing operations.
-    tags: [Hadoop Ecosystem, Impala, Oracle, SAP/CDC, SQL]
+    tags: [Hadoop Ecosystem, Impala, Oracle, SAP/CDC, Spark, SQL]
     bullets:
       # SMT Process Monitor
       - de: >-
@@ -361,7 +367,7 @@ experience:
           at the solder-paste stage, letting engineers scrap the bare panel before
           expensive components are placed and soldered onto it — reducing material
           scrap cost by 12%.
-      # Logistics Forecastingk
+      # Logistics Forecasting
       - de: >-
           Aufbau eines Bedarfsprognosesystems zur Vorhersage von
           Kundenbestellmengen über mehrere Zeithorizonte (1-, 3- und
@@ -746,47 +752,74 @@ languages:
     level: 2
 
 
-certifications: []
-# - targets: [latex, web]
-#   text:
-#     de: "Microsoft Azure Administrator (AZ-104)"
-#     en: "Microsoft Azure Administrator (AZ-104)"
-# - targets: [latex, web]
-#   text:
-#     de: "Developing Solutions for Microsoft Azure (AZ-204)"
-#     en: "Developing Solutions for Microsoft Azure (AZ-204)"
-# - targets: [latex, web]
-#   text:
-#     de: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
-#     en: "Designing Microsoft Azure Infrastructure Solutions (AZ-305)"
-# - targets: [latex, web]
-#   text:
-#     de: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
-#     en: "Designing and Implementing Microsoft DevOps Solutions (AZ-400)"
-# - targets: [latex, web]
-#   text:
-#     de: "Microsoft Azure Security Technologies (AZ-500)"
-#     en: "Microsoft Azure Security Technologies (AZ-500)"
-# - targets: [latex, web]
-#   text:
-#     de: "Microsoft Azure AI Fundamentals (AI-900)"
-#     en: "Microsoft Azure AI Fundamentals (AI-900)"
-# - targets: [latex, web]
-#   text:
-#     de: "Microsoft Azure Data Fundamentals (DP-900)"
-#     en: "Microsoft Azure Data Fundamentals (DP-900)"
-# - targets: [latex, web]
-#   text:
-#     de: "Microsoft Azure Fundamentals (AZ-900)"
-#     en: "Microsoft Azure Fundamentals (AZ-900)"
-# - targets: [latex, web]
-#   text:
-#     de: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
-#     en: "Designing and Implementing a Data Science Solution on Azure (DP-100)"
-# - targets: [latex, web]
-#   text:
-#     de: "Data Engineering on Microsoft Azure (DP-203)"
-#     en: "Data Engineering on Microsoft Azure (DP-203)"
+# Structured schema (cv/parse >= v2.11.0): each cert carries an explicit
+#   code:   short exam code, rendered as a monochrome chip by the tagged style
+#   issuer: certifying body (currently unrendered; reserved for future styles)
+#   name:   bilingual title WITHOUT the code suffix
+# The tagged style emits \cvcert{code}{name} (code chip + muted title); the
+# plain/sidebar/fs/web targets render a reconstructed "<name> (<code>)" string,
+# byte-identical to the previous "text" output.
+certifications:
+  # - targets: [latex, web]
+  #   code: AZ-104
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Administrator"
+  #     en: "Microsoft Azure Administrator"
+  # - targets: [latex, web]
+  #   code: AZ-204
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Developing Solutions for Microsoft Azure"
+  #     en: "Developing Solutions for Microsoft Azure"
+  - targets: [latex, web]
+    code: AZ-305
+    issuer: Microsoft
+    name:
+      de: "Designing Microsoft Azure Infrastructure Solutions"
+      en: "Designing Microsoft Azure Infrastructure Solutions"
+  - targets: [latex, web]
+    code: AZ-400
+    issuer: Microsoft
+    name:
+      de: "Designing and Implementing Microsoft DevOps Solutions"
+      en: "Designing and Implementing Microsoft DevOps Solutions"
+  # - targets: [latex, web]
+  #   code: AZ-500
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Security Technologies"
+  #     en: "Microsoft Azure Security Technologies"
+  # - targets: [latex, web]
+  #   code: AI-900
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure AI Fundamentals"
+  #     en: "Microsoft Azure AI Fundamentals"
+  # - targets: [latex, web]
+  #   code: DP-900
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Data Fundamentals"
+  #     en: "Microsoft Azure Data Fundamentals"
+  # - targets: [latex, web]
+  #   code: AZ-900
+  #   issuer: Microsoft
+  #   name:
+  #     de: "Microsoft Azure Fundamentals"
+  #     en: "Microsoft Azure Fundamentals"
+  - targets: [latex, web]
+    code: DP-100
+    issuer: Microsoft
+    name:
+      de: "Designing and Implementing a Data Science Solution on Azure"
+      en: "Designing and Implementing a Data Science Solution on Azure"
+  - targets: [latex, web]
+    code: DP-203
+    issuer: Microsoft
+    name:
+      de: "Data Engineering on Microsoft Azure"
+      en: "Data Engineering on Microsoft Azure"
 
 
 # interests[].icon is an optional FontAwesome control-sequence name (without
