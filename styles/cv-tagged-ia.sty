@@ -398,42 +398,55 @@
 }
 
 % --- \cvcert{code}{title} --------------------------------------------
-% A single certification row inside a \cvsidelist itemize. The bullet slot
-% holds a monochrome rounded code chip (white bold code on a cvBlack fill,
-% e.g. "AZ-305"), sized to its content like the section/contact chips; the
-% title follows in muted secondary text. When #1 (code) is empty we fall
-% back to the default square bullet and render the title alone.
+% A single certification row. The row starts flush at the section's left
+% margin (\noindent, no list indentation), so the code chip's LEFT edge
+% lines up exactly with the CERTIFICATIONS heading tag above it. The chip is
+% a left-anchored monochrome rounded box (white bold code on a cvBlack fill,
+% e.g. "AZ-305") pinned into a fixed-width \cv@certchip column; the muted
+% title follows after the column, giving every row a common hanging indent.
+% When #1 (code) is empty we fall back to a square bullet in the same column.
+%
+% Implementation note: a TikZ node defaults to being CENTERED on its
+% coordinate, so its bounding box would spill left of the row origin. We pin
+% the node with anchor=west at (0,0) and wrap the whole chip in a
+% zero-natural-width \makebox[\cv@certchip][l]{...} so the chip column has a
+% fixed width and the chip itself begins exactly at x=0 (the margin).
+\newcommand{\cv@certchipbox}[1]{%
+  \makebox[\cv@certchip][l]{%
+    \ifblank{#1}{\cv@sqbullet}{%
+      \tikz[baseline=-0.55ex]{%
+        \node[anchor=west,rounded corners=2pt,fill=cvBlack,%
+              inner xsep=4pt,inner ysep=1.5pt,outer sep=0pt,%
+              text=white,font=\footnotesize\bfseries] at (0,0) {#1};%
+      }%
+    }%
+  }%
+}
 \newcommand{\cvcert}[2]{%
-  \item[{\ifblank{#1}{\cv@sqbullet}{%
-    \tikz[baseline=-0.55ex]{%
-      \node[rounded corners=2pt,fill=cvBlack,inner xsep=4pt,inner ysep=1.5pt,
-            text=white,font=\footnotesize\bfseries] {#1};%
-    }}}]%
+  \par\noindent
+  % Hanging indent so a wrapped title aligns under the first title line
+  % (i.e. past the chip column) rather than back at the margin.
+  \hangindent=\cv@certchip \hangafter=1
+  \cv@certchipbox{#1}%
   {\small\color{cvMuted}#2}%
+  \par
 }
 
 % --- \cvcertlist{rows} -----------------------------------------------
-% Certification list. Unlike the generic \cvsidelist (whose narrow
-% leftmargin lets a wide code chip hang out into the left margin, pushing
-% the chip left of the section heading), this list reserves a fixed
-% left-hand column (\cv@certchip) wide enough for the widest code chip and
-% left-aligns the chip label at the list's left edge (labelindent=0pt). The
-% result: every chip's LEFT edge lines up with the CERTIFICATIONS heading,
-% and the muted titles share a common hanging indent. Empty-safe.
-%
-% \cv@certchip sizes the chip column. It must clear the widest rendered chip
-% (e.g. "AZ-305"/"DP-203" at \footnotesize\bfseries plus 2*4pt inner xsep);
-% a longer future code would need this widened.
-\newlength{\cv@certchip}\setlength{\cv@certchip}{3.8em}
+% Certification block. Replaces the generic \cvsidelist (whose narrow
+% itemize leftmargin let a wide code chip hang out into the left margin,
+% misaligned with the section heading). Here each \cvcert row is a flush-left
+% \noindent paragraph, so the chips' left edges line up with the heading tag.
+% \cv@certchip is the fixed chip-column width; it must clear the widest
+% rendered chip (e.g. "AZ-305"/"DP-203" at \footnotesize\bfseries + 2*4pt
+% inner xsep). Empty-safe: \ifblank renders nothing for an empty body.
+\newlength{\cv@certchip}\setlength{\cv@certchip}{4.2em}
 \newcommand{\cvcertlist}[1]{%
   \ifblank{#1}{}{%
     \begingroup
-    \small
-    \begin{itemize}[leftmargin=\cv@certchip,labelwidth=\cv@certchip,%
-        labelindent=0pt,labelsep=0.6em,align=left,%
-        topsep=0.45em,itemsep=0.6em,parsep=0.1em]
-      #1
-    \end{itemize}
+    \setlength{\parskip}{0.5em}%
+    #1%
+    \par
     \endgroup
   }%
 }
