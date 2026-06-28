@@ -73,7 +73,7 @@ jobs:
     permissions:
       contents: write
       actions: read
-    # SHA-pinned to github-workflows v1.16.0: bundles stklug84/actions
+    # SHA-pinned to github-workflows v1.17.0: bundles stklug84/actions
     # v2.13.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
     # driving cv-tagged-ia per-item skill proficiency bars
     # (\cvskillgroupheading + \cvskillitembar from skills[].items
@@ -97,9 +97,12 @@ jobs:
     # fields), so each source validates against the exact shape it consumes.
     # The release/package jobs download artifacts per-name (one subdir each)
     # so a build producing a single PDF variant releases correctly instead of
-    # failing the flatten step with "No PDFs found to release."
+    # failing the flatten step with "No PDFs found to release." v1.17.0
+    # makes the release prune step also sweep orphan release tags
+    # (v<YYYY.MM.DD>-r<N> tags with no matching release), so pruned releases
+    # no longer leave their tags behind.
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@f94904422d92390adc98b897697bd16bc430f03b  # v1.16.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@986b646115be694c7b7e5fffe3a28ae98be920fa  # v1.17.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).
