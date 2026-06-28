@@ -73,8 +73,8 @@ jobs:
     permissions:
       contents: write
       actions: read
-    # SHA-pinned to github-workflows v1.15.0: bundles stklug84/actions
-    # v2.12.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
+    # SHA-pinned to github-workflows v1.16.0: bundles stklug84/actions
+    # v2.13.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
     # driving cv-tagged-ia per-item skill proficiency bars
     # (\cvskillgroupheading + \cvskillitembar from skills[].items
     # {name,size}), per-interest FontAwesome icons (\cvinterest{icon}{text}
@@ -88,12 +88,18 @@ jobs:
     # (lat/lon -> \cvheatmap)) and gives every released PDF a
     # unique asset name (stklug-<yaml>-<lang>-<style>.pdf) so all built
     # variants appear in the release instead of colliding on the shared
-    # sklug-cv.pdf leaf-main basename. The release/package jobs download
-    # artifacts per-name (one subdir each) so a build producing a single PDF
-    # variant releases correctly instead of failing the flatten step with
-    # "No PDFs found to release."
+    # sklug-cv.pdf leaf-main basename. v2.13.0 adds style-dependent schema
+    # profiles: each source is validated and emitted against the profile of
+    # the style it is built with -- this repo's cv-academics (cv-plain-style)
+    # uses the plain profile (plain-string skills + certifications[].text)
+    # and cv-databricks (cv-tagged-ia) uses the tagged profile ({name,size}
+    # skills + structured certs + the tagged-only concepts/icon/lat-lon
+    # fields), so each source validates against the exact shape it consumes.
+    # The release/package jobs download artifacts per-name (one subdir each)
+    # so a build producing a single PDF variant releases correctly instead of
+    # failing the flatten step with "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@4359bdd3c2109a2949f837361fd9a9c5a3cb3101  # v1.15.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@f94904422d92390adc98b897697bd16bc430f03b  # v1.16.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).
