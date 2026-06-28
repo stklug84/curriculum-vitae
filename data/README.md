@@ -8,9 +8,24 @@ This directory holds everything that drives CV generation:
 | [`cv-databricks.yml`](cv-databricks.yml) | Canonical, bilingual (`de`/`en`) CV source — Databricks/industry-leaning content. In the committed matrix. |
 | `cv-academics.yml` | Canonical, bilingual (`de`/`en`) CV source — academic-leaning content. **Gitignored (carries PII); local-only**, built via `task cv:academics`. |
 
-Both `cv-*.yml` files follow the **same schema** (below). Each is a
-self-contained source of truth; the per-section LaTeX files under
-`cvs/<yaml>-<lang>/<style>/` are *generated* from them by the
+Both `cv-*.yml` files share most of the schema (below) but validate
+against **two style-dependent profiles** for the handful of fields where
+the layouts genuinely diverge. The `parse_style` a source is built with
+(via `variants.yml`) selects the profile:
+
+- **`plain` profile** (`cv-academics.yml` → `cv-plain-style`, and the
+  sidebar-family styles): plain-string `skills[].items`, bilingual
+  `certifications[].text`, and **no** tagged-only fields.
+- **`tagged` profile** (`cv-databricks.yml` → `cv-tagged-ia`):
+  `{name, size}` skill items, structured `certifications[]`, plus the
+  optional `concepts[]`, `interests[].icon` and `conferences[].lat`/`lon`.
+
+The profiles are **strict** — a plain source carrying a tagged-only field
+(or vice-versa) fails `check` with a pinpointed message — so each source
+matches exactly the shape its emitter consumes. `meta.pdf_title` is
+accepted by **both**. Each file is a self-contained source of truth; the
+per-section LaTeX files under `cvs/<yaml>-<lang>/<style>/` are *generated*
+from them by the
 [`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions)
 emitter (major alias `v2`). Edit the YAML, regenerate (CI does this
 automatically), commit.
@@ -69,7 +84,10 @@ before discovery and the TeX Live build. The matrix is read only from
 
 Validate the sources against the `cv/parse` schema with the action's
 `check` mode (`check: 'true'`); it writes nothing and exits non-zero on
-the first violation.
+the first violation. The check is **style-dependent** — each source is
+validated under the profile of every `parse_style` it is built with in
+the matrix — so a source is only accepted if it matches the exact shape
+its style consumes.
 
 ## Generated tree is not committed
 
@@ -136,15 +154,16 @@ and signature `\includegraphics` calls so an empty `photo_path` /
 
 | Key | Shape (✱ = bilingual `{de,en}`) |
 | --- | --- |
-| `meta` | `display_name`, `author`, `pdf_author`, `lang_default`, `title`✱, `location`✱, `summary`✱ |
+| `meta` | `display_name`, `author`, `pdf_author`, `lang_default`, `title`✱, `location`✱, `summary`✱, `pdf_title` (optional; scalar or `{de,en}` — the PDF metadata `\cvtitle`, accepted by both profiles) |
 | `contact` | required: `phone`, `email` (neutral). Optional (neutral, emitted empty when omitted): `birthdate`, `birthplace`, `address` (list 1–3 when present), `location_signature`, `photo_path`, `signature_path`. Optional `linkedin`/`github`/`website` link mappings `{url, label}` (label optional/derived from the URL) |
 | `experience[]` | `id` (unique), `targets`, `period`✱, `year` (int), `role`✱, `org`, `location`✱, `kind`, `monogram`, `bg`, `logo` (optional/null), `summary`✱, `tags` (list), `bullets[{de,en}]`, `subentries[{date, title✱, bullets[{de,en}]}]` (optional) |
 | `education[]` | `id` (unique), `targets`, `period`, `degree`✱, `institution`✱, `grade` (optional), `details[{de,en}]` |
-| `conferences[]` | `targets`, `year` (int), `name`, `location`, `date`, `url` (optional), `lat`/`lon` (optional, decimal degrees, supplied together) |
-| `skills[]` | `targets`, `group`✱, `items` (list) |
+| `conferences[]` | `targets`, `year` (int), `name`, `location`, `date`, `url` (optional); **tagged-only:** `lat`/`lon` (decimal degrees, supplied together) |
+| `skills[]` | `targets`, `group`✱, `items` — **plain:** list of strings; **tagged:** list of `{name, size}` (size a 0..1 fraction) |
 | `languages[]` | `targets`, `name`✱, `level_label`✱, `level` (1–5) |
-| `certifications[]` | `targets`, `text`✱ — empty list `[]` when none |
-| `interests[]` | `targets`, `de`, `en` |
+| `certifications[]` | `targets` — empty list `[]` when none; **plain:** `text`✱; **tagged:** `code`, `name`✱, `issuer` (optional) |
+| `interests[]` | `targets`, `de`, `en`; **tagged-only:** `icon` (optional FontAwesome name) |
+| `concepts[]` | **tagged-only**, optional top-level section: `targets`, `text`, `size` (bubble weight) |
 
 ### `targets` used in this repo
 

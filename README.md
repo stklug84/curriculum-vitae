@@ -66,9 +66,15 @@ matrix currently activates a single one (`cv-tagged-ia`) against the
 their `styles` registry entries and adding matrix lines.
 
 Styles are declared in `data/variants.yml`'s `styles` registry. Each maps
-to a TeX engine and a `cv/parse` body emitter (`plain` or the
-style-agnostic `sidebar`). Per US-CV conventions **none of these styles
-define a photo box** except the classic plain style.
+to a TeX engine and a `cv/parse` body emitter (`parse_style`): `plain`,
+the style-agnostic `sidebar` (shared by the sidebar family), or `tagged`.
+The `parse_style` also selects the **schema profile** the source is
+validated against — `tagged` requires structured certifications,
+`{name, size}` skill items and the tagged-only `concepts`/`icon`/`lat-lon`
+fields, while every other style uses the leaner `plain` profile
+(bilingual `certifications[].text`, plain-string skills, none of the
+tagged-only fields). Per US-CV conventions **none of these styles define a
+photo box** except the classic plain style.
 
 | Style file | Engine | Layout |
 | --- | --- | --- |
@@ -79,8 +85,15 @@ define a photo box** except the classic plain style.
 | `styles/cv-sidebar-dh.sty` | xelatex | Left sidebar (35/65), green section banners, slate titles |
 | `styles/cv-sidebar-vs.sty` | xelatex | Right sidebar (≈57/37), Letter, accent blue + teal rules, donut chart |
 
-The styles all consume the same generated per-section bodies, so a
-single source YAML renders into every style unchanged.
+The generated per-section bodies (`\cventry` / longtable rows) are
+style-agnostic, so the presentation styles within a profile share one
+emitter. The two profiles, however, are **not** interchangeable: the
+`plain`-family sources (`cv-academics`) and the `tagged` source
+(`cv-databricks`) carry different cert and skill shapes (plain-string
+skills + `certifications[].text` vs. `{name, size}` skills + structured
+certifications), and `cv/parse`'s `check` mode validates each source under
+the profile of the style it is built with. A source authored for one
+profile is rejected by the other.
 
 ## The build matrix
 
