@@ -144,7 +144,7 @@ jobs:
       # accepts the optional meta.pdf_title and applies the same author
       # \@-spacing normalization (so clean meta.author validates).
       - name: Validate ${{ matrix.source }}
-        uses: stklug84/actions/cv/parse@e2d73053a6694442b3310fea817c509d65c1a632  # v2.12.0
+        uses: stklug84/actions/cv/parse@4d1bec336eee9263f26cece444f81be343061d67  # v2.13.0
         with:
           source: ${{ matrix.source }}
           check: "true"
