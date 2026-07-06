@@ -71,7 +71,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Run markdownlint
-        uses: DavidAnson/markdownlint-cli2-action@ded1f9488f68a970bc66ea5619e13e9b52e601cd  # v23.2.0
+        uses: DavidAnson/markdownlint-cli2-action@8de2aa07cae85fd17c0b35642db70cf5495f1d25  # v24.0.0
         with:
           config: .markdownlint.yml
           globs: '**/*.md'
@@ -144,7 +144,7 @@ jobs:
       # accepts the optional meta.pdf_title and applies the same author
       # \@-spacing normalization (so clean meta.author validates).
       - name: Validate ${{ matrix.source }}
-        uses: stklug84/actions/cv/parse@e2d73053a6694442b3310fea817c509d65c1a632  # v2.12.0
+        uses: stklug84/actions/cv/parse@4d1bec336eee9263f26cece444f81be343061d67  # v2.13.0
         with:
           source: ${{ matrix.source }}
           check: "true"
