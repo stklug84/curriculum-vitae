@@ -17,8 +17,8 @@ meta:
   pdf_author: Dr. rer. nat. Steffen Klug
   lang_default: de
   title:
-    de: IT-Systemarchitekt
-    en: Data & AI Solutions Architect
+    de: Data & AI Engineer und Lösungsarchitekt
+    en: Data & AI Engineer & Solutions Architect
   # PDF metadata document title (\cvtitle -> pdftitle). Bilingual so the
   # German variant keeps "Lebenslauf" while English variants read
   # "Curriculum Vitae". Absent, cv/parse defaults to "Lebenslauf".
@@ -31,25 +31,27 @@ meta:
   summary:
     de: >-
       Promovierter Physiker, der mit Begeisterung produktionsreife verteilte
-      Daten- und Analyseplattformen auf Basis von Apache Spark/Kafka/Flink
-      (PySpark, Scala, Python) sowie cloud-native AI/ML-Systeme (primär Azure,
-      AWS/GCP vertraut) konzipiert, aufbaut und liefert. Agiert als
-      vertrauenswürdiger technischer Berater für funktionsübergreifende Teams in
-      Europa, Nordamerika und Asien und bringt MLOps- und CI/CD-Disziplin ein,
-      um Analytics-Lösungen im großen Maßstab zu industrialisieren. Praktische
-      Stärken in GenAI — RAG, Multi-Agenten-Systeme und Evaluation — ergänzt
-      durch semantische Daten, erklärbare KI und Knowledge Graphs, um agentische
-      Lösungen mit messbarem geschäftlichem Mehrwert auszuliefern.
+      Data-Engineering- und Analyseplattformen auf Basis von Apache
+      Spark/Kafka/Flink und dem Databricks Lakehouse (PySpark, Scala, Python)
+      sowie cloud-native AI/ML-Systeme (primär Azure, AWS/GCP vertraut)
+      konzipiert, aufbaut und liefert. Agiert als vertrauenswürdiger
+      technischer Berater für funktionsübergreifende Teams in Europa,
+      Nordamerika und Asien und bringt Data-Engineering-, MLOps- und
+      CI/CD-Disziplin ein, um Datenpipelines und Analytics-Lösungen im großen
+      Maßstab zu industrialisieren. Praktische Stärken in GenAI — RAG,
+      Multi-Agenten-Systeme und Evaluation — ergänzt durch semantische Daten,
+      erklärbare KI und Knowledge Graphs, um agentische Lösungen mit
+      messbarem geschäftlichem Mehrwert auszuliefern.
     en: >-
       PhD physicist who loves to design, build and deliver production-grade
-      distributed data and analytics platforms on Apache Spark/Kafka/Flink
-      (PySpark, Scala, Python) and cloud-native AI/ML systems (Azure primary,
+      distributed data engineering and analytics platforms on the Databricks
+      Lakehouse (PySpark, Scala) and cloud-native AI/ML systems (Azure primary,
       AWS/GCP aware). Acts as a trusted technical advisor to cross-functional
-      teams across Europe, North America and Asia, bringing MLOps and CI/CD
-      discipline to productionise analytics at scale. Hands-on strengths in
-      GenAI — RAG, multi-agent systems and evaluation — alongside semantic data,
-      explainable AI and knowledge graphs, to ship agentic solutions that
-      deliver measurable business value.
+      teams across Europe, North America and Asia, bringing data engineering,
+      MLOps and CI/CD discipline to productionise data pipelines and analytics
+      at scale. Hands-on strengths in GenAI — RAG, multi-agent systems and
+      evaluation — alongside semantic data, explainable AI and knowledge
+      graphs, to ship agentic solutions that deliver measurable business value.
 
 contact:
   phone: +49 173 6734906
@@ -126,17 +128,19 @@ experience:
           tasks.
       # NOVA Platform
       - de: >-
-          Lieferung eines modernen AI- und datengetriebenen Systems, das
-          semantische Daten (erklärbare/interpretierbare KI und Knowledge
-          Graphs) über durchgängige Engineering-Prozesse nutzt; eine
-          Self-Service-Schnittstelle demokratisierte den Wissensaustausch für
-          10+ Produkt- und Domänenteams durch beschleunigte Prozessverbesserung.
+          Lieferung eines durchgängigen AI- und datengetriebenen Systems — von
+          Datenpipelines über eine semantische Wissensschicht
+          (erklärbare/interpretierbare KI und Knowledge Graphs) bis zu einer
+          Self-Service-Schnittstelle — das den Wissensaustausch über
+          Engineering-Prozesse hinweg für 10+ Produkt- und Domänenteams
+          demokratisierte und Prozessverbesserungen beschleunigte.
         en: >-
-          Delivered a modern AI- and data-driven system leveraging semantic
-          data (explainable/interpretable AI and knowledge graphs) across
-          end-to-end engineering processes, with a self-service interface that
-          democratised knowledge sharing for 10+ product and domain teams via
-          accelerated process improvement.
+          Delivered an end-to-end AI- and data-driven system — from data
+          pipelines through a semantic knowledge layer
+          (explainable/interpretable AI and knowledge graphs) to a
+          self-service interface — democratising knowledge sharing across
+          engineering processes for 10+ product and domain teams and
+          accelerating process improvement.
       # Virtual Load Platform
       - de: >-
           Architektur und Prototyping eines Hybrid-Cloud-Infrastruktur-Frameworks
@@ -149,13 +153,13 @@ experience:
           Architected and prototyped a hybrid-cloud infrastructure framework
           running virtual load simulations of ECU designs on on-site HPC systems,
           with an AI-optimised runtime that seamlessly bursts demand spikes to
-          cloud HPC nodes — increasing simulation throughput by a factor of 5x for
+          cloud HPC nodes — increasing simulation throughput by a factor of 5 for
           smaller jobs while controlling compute cost.
       # Endurance Test Cloud (Testing Alliance Infrastructure)
       - de: >-
-          Entwurf einer ereignisbasierten Streaming-Datenpipeline nahezu in
-          Echtzeit (Kafka, Flink, Delta Lake), die Testingenieuren nahezu in
-          Echtzeit Zugriff auf langlaufende Umwelt-Testdaten verschafft und
+          Entwurf einer ereignisbasierten Streaming-Datenpipeline (Kafka,
+          Flink, Delta Lake), die Testingenieuren nahezu in Echtzeit Zugriff
+          auf langlaufende Umwelt-Testdaten verschafft und
           Frühwarn- sowie Anomalieerkennungssysteme speist, welche die Zeit bis
           zur Erkennung um bis zu 2+ Wochen verkürzten und potenziell über
           1 Mio. € pro Labor einsparen.
@@ -164,7 +168,7 @@ experience:
           (Kafka, Flink, Delta Lake) giving test engineers near real-time access
           to long-running environmental test data, powering early-warning and
           anomaly-detection systems that reduced time-to-detection by up to 2+
-          weeks, potentially saving over €1M per lab.
+          weeks, potentially saving over €1M per year and lab.
 
   - id: bosch-eng-data
     targets: [latex, web]
@@ -223,25 +227,26 @@ experience:
           a federated data layer spanning the full chain from requirements
           through design to manufacturing capabilities, enabling
           design-to-shop-floor matching for cost optimisation across the ECU
-          product portfolio. Lowered the barrier between engineering,
-          manufacturing and logistics — reducing lead and development time for
+          product portfolio. Lowered barriers between engineering,
+          manufacturing & logistics — reducing lead & development time for
           new design improvements by a factor of 2.
       # Architect
       - de: >-
-          Unterstützung der Einführung eines zentralen Werkzeugs, das eine
-          einheitliche Ontologie nutzt, um schnelle Machbarkeitsprüfungen neuer
-          Designs durch Referenzierung bestehender digitaler Produkt-CVs
-          durchzuführen, sowie Aufbau eines expliziten Show Cases für die
-          Fähigkeit von Databricks Delta in Kombination mit LakeFS, vollständige
-          Daten-Nachverfolgbarkeit und Baselining bereitzustellen — Verkürzung der
-          Durchlaufzeit der Machbarkeitsprüfung um 40%.
+          Aufbau eines Showcases, der Databricks Delta in Kombination mit
+          LakeFS für vollständige Daten-Nachverfolgbarkeit und Baselining
+          demonstrierte und die Evaluierung sowie Einführung der Plattform im
+          Geschäftsbereich vorantrieb; Unterstützung der Einführung eines
+          zentralen Werkzeugs, das eine einheitliche Ontologie für schnelle
+          Machbarkeitsprüfungen neuer Designs anhand bestehender digitaler
+          Produkt-CVs nutzt — Verkürzung der Durchlaufzeit der
+          Machbarkeitsprüfung um 40%.
         en: >-
-          Supported the introduction of a central tool that applies a unified
-          ontology to run rapid feasibility checks on new designs by referencing
-          existing product digital CVs and built an explicit show case for the
-          ability of Databricks Delta combined with LakeFS to provide full data
-          traceability and baselining, cutting feasibility-check turnaround by
-          40%.
+          Built a showcase demonstrating Databricks Delta combined with LakeFS
+          for full data traceability and baselining, driving evaluation and
+          adoption of the platform across the division, and supported the
+          introduction of a central tool applying a unified ontology for rapid
+          feasibility checks of new designs against existing product digital
+          CVs — cutting feasibility-check turnaround by 40%.
 
   - id: bosch-mfg-data
     targets: [latex, web]
@@ -280,21 +285,17 @@ experience:
       - Spark
       - Tensorflow
     bullets:
-      - de: >-
-          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
-          Daten (explainable/interpretable AI und Knowledge Graphs).
-        en: >-
-          Designed and delivered modern AI systems incorporating semantic
-          data (explainable/interpretable AI and knowledge graphs).
       # RCAS
       - de: >-
-          Entwicklung von RCAS, einem Root-Cause-Recommender, der Fehler im Pin-
+          Entwicklung von RCAS, einem Spark-basierten Root-Cause-Recommender,
+          der Fehler im Pin-
           und Steckverbinder-Einpressprozess vorhersagt, indem er
           charakteristische Muster in Messdaten erkennt und mit bekannten
           8D-Reports abgleicht — Identifikation von Grundursachen über 50%
           schneller bei 2x höherer Genauigkeit.
         en: >-
-          Developed RCAS, a root-cause recommender that predicts failures in the
+          Developed RCAS, a Spark-based root-cause recommender that predicts
+          failures in the
           pin-and-connector press-in process by detecting distinctive patterns in
           measurement data and cross-checking against known 8D reports —
           surfacing root causes over 50% faster with 2x higher accuracy.
@@ -352,7 +353,8 @@ experience:
           Surface-Mount-Wertstrom integriert und harmonisiert — Lotpastenauftrag,
           Pick-and-Place, Reflow-Löten, automatisierte optische Inspektion (AOI)
           und In-Circuit-Test (ICT) — und Zykluszeitdaten jeder Maschine in einem
-          einheitlichen Modell konsolidiert. Durch die Korrelation der Daten über
+          einheitlichen, auf Apache Spark aufgebauten Modell konsolidiert.
+          Durch die Korrelation der Daten über
           den gesamten Wertstrom erkennt das System Fehler, die sonst erst bei der
           AOI auffallen würden, bereits beim Lotpastenauftrag, sodass Ingenieure
           das nackte Panel ausschleusen können, bevor teure Bauteile bestückt und
@@ -362,7 +364,8 @@ experience:
           the full surface-mount value stream — solder-paste application,
           pick-and-place, reflow soldering, automated optical inspection (AOI) and
           in-circuit test (ICT) — consolidating cycle-time data from every machine
-          into a single unified model. By correlating data along the whole value
+          into a single unified model on Apache Spark. By correlating data
+          along the whole value
           stream, the system flags defects that would only surface at AOI already
           at the solder-paste stage, letting engineers scrap the bare panel before
           expensive components are placed and soldered onto it — reducing material
@@ -655,7 +658,7 @@ skills:
       - name: Python
         size: .7
       - name: Rust
-        size: .4
+        size: .5
   #    - name: C
   #      size: .2
   #    - name: FORTRAN

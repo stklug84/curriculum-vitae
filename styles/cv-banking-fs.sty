@@ -55,6 +55,7 @@
 \RequirePackage{tabularx}
 \RequirePackage{etoolbox}
 \RequirePackage{fancyhdr}
+\RequirePackage{needspace}   % \Needspace*: keep entry headers off page bottoms
 \RequirePackage[hidelinks]{hyperref}
 
 % --- Color palette ---------------------------------------------------
@@ -230,7 +231,12 @@
 %   then  desc body / bullets.
 % To keep it clean: title(role) bold left, org on the right of line1 in
 % accent italic; line2 holds the date right-aligned in italic gray.
+% Page-break behaviour: breaks are permitted only BETWEEN
+% paragraphs/bullets of the description (\interlinepenalty=10000 forbids
+% breaking inside one); \nopagebreak pins the body to its header row and
+% \Needspace* keeps a header from stranding at a page bottom.
 \newcommand{\cventry}[4]{%
+  \Needspace*{4\baselineskip}%
   \vspace{0.45em}%
   \noindent
   \begin{tabularx}{\linewidth}{@{}X r@{}}
@@ -238,18 +244,22 @@
       {\itshape\color{cvAccent}#3}\\[0.15em]
     {\cv@labelfont\footnotesize\scshape\color{cvGrayMid}\strut} &
       {\itshape\footnotesize\color{cvGrayMid}#2}
-  \end{tabularx}\par
-  \ifblank{#4}{}{\vspace{0.2em}{\small\color{cvBody}#4}\par}%
+  \end{tabularx}\par\nopagebreak
+  \ifblank{#4}{}{\vspace{0.2em}\nopagebreak
+    \begingroup\interlinepenalty=10000
+    {\small\color{cvBody}#4}\par\endgroup}%
   \vspace{0.45em}%
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
 \newcommand{\cvsubentry}[3]{%
+  \Needspace*{3\baselineskip}%
   \vspace{0.2em}%
   \noindent
   {\footnotesize\itshape\color{cvGrayMid}#1}\quad
-  {\small\bfseries\color{cvGray33}#2}\par
+  {\small\bfseries\color{cvGray33}#2}\par\nopagebreak
   \begingroup
+    \interlinepenalty=10000
     \setlist[itemize,1]{label={\color{cvAccent}\textbullet},leftmargin=1.4em,labelsep=.4em}
     #3
   \endgroup

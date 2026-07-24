@@ -88,42 +88,74 @@ jobs:
         with:
           dockerfile: .github/docker/texlive/Dockerfile
 
-  # Discover every CV data source present in the checkout. The matrix is
-  # built at runtime from data/cv-*.yml rather than hardcoded, so:
+  # Discover every CV data source present in the checkout and pair it
+  # with the cv/parse schema profile(s) it is actually built with. The
+  # matrix is built at runtime from data/cv-*.yml plus the
+  # data/variants.yml registry rather than hardcoded, so:
   #   - the remote (which may carry no committed CV data) lints just what
-  #     exists and never fails on a missing source, and
+  #     exists and never fails on a missing source,
   #   - a local checkout that also has gitignored sources (e.g.
-  #     data/cv-academics.yml) lints them too, with no workflow edit.
+  #     data/cv-academics.yml) lints them too, with no workflow edit, and
+  #   - validation is STYLE-AWARE: cv/parse >= v2.13.0 rejects
+  #     tagged-only fields (concepts, structured certifications,
+  #     skills[].size, ...) under the 'plain' profile, so each source
+  #     must be checked against the parse_style of the styles it builds
+  #     (from variants.yml); sources absent from variants.yml (local-only
+  #     ones) fall back to the 'plain' profile.
   discover-sources:
     name: discover cv sources
     runs-on: ubuntu-latest
     outputs:
-      sources: ${{ steps.find.outputs.sources }}
+      matrix: ${{ steps.find.outputs.matrix }}
       has_sources: ${{ steps.find.outputs.has_sources }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Find data/cv-*.yml
+      - name: Pair data/cv-*.yml with schema profiles
         id: find
         run: |
           set -euo pipefail
-          # Emit a JSON array of every CV source feeding the variant
-          # matrix. Sorted for deterministic matrix ordering. When none
-          # exist (e.g. all sources are gitignored/local-only), skip the
-          # schema matrix instead of failing.
-          sources="$(find data -maxdepth 1 -type f -name 'cv-*.yml' \
-            | sort | jq -R . | jq -cs .)"
-          echo "Discovered CV sources: ${sources}"
-          if [ "${sources}" = "[]" ]; then
+          # PyYAML ships on hosted runners; local `gh act` images may
+          # lack it (mirrors the cv/generate action's on-demand install).
+          python3 -c 'import yaml' 2>/dev/null \
+            || pip install --user --quiet PyYAML
+          matrix="$(python3 <<'PY'
+          import glob
+          import json
+          import os
+          import yaml
+
+          registry = {}
+          builds = {}
+          if os.path.exists("data/variants.yml"):
+              with open("data/variants.yml", encoding="utf-8") as fh:
+                  variants = yaml.safe_load(fh) or {}
+              registry = variants.get("styles") or {}
+              builds = variants.get("cvs") or {}
+
+          pairs = []
+          for source in sorted(glob.glob("data/cv-*.yml")):
+              name = os.path.basename(source)[: -len(".yml")]
+              profiles = sorted({
+                  (registry.get(leaf.get("style"), {}) or {})
+                  .get("parse_style", "plain")
+                  for leaf in (builds.get(name) or [])
+              }) or ["plain"]
+              pairs += [{"source": source, "style": p} for p in profiles]
+          print(json.dumps(pairs, separators=(",", ":")))
+          PY
+          )"
+          echo "Discovered schema checks: ${matrix}"
+          if [ "${matrix}" = "[]" ]; then
             echo "has_sources=false" >> "${GITHUB_OUTPUT}"
           else
             echo "has_sources=true" >> "${GITHUB_OUTPUT}"
           fi
-          echo "sources=${sources}" >> "${GITHUB_OUTPUT}"
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
 
   cv-schema:
-    name: cv-schema (${{ matrix.source }})
+    name: cv-schema (${{ matrix.source }}, ${{ matrix.style }})
     needs: discover-sources
     if: needs.discover-sources.outputs.has_sources == 'true'
     runs-on: ubuntu-latest
@@ -131,22 +163,24 @@ jobs:
       fail-fast: false
       matrix:
         # Discovered at runtime by discover-sources; every data/cv-*.yml
-        # source must satisfy the cv/parse schema contract.
-        source: ${{ fromJSON(needs.discover-sources.outputs.sources) }}
+        # source must satisfy the cv/parse schema contract of each
+        # parse_style it is built with (from data/variants.yml).
+        include: ${{ fromJSON(needs.discover-sources.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
       # Validate the source of truth against the cv/parse schema
       # contract; --check writes nothing and fails the PR on the first
-      # violation with a clear message. Pinned to actions v2.12.0 so the
-      # check enforces the structured certifications schema (code/name/issuer),
-      # accepts the optional meta.pdf_title and applies the same author
-      # \@-spacing normalization (so clean meta.author validates).
-      - name: Validate ${{ matrix.source }}
-        uses: stklug84/actions/cv/parse@e2d73053a6694442b3310fea817c509d65c1a632  # v2.12.0
+      # violation with a clear message. Pinned to actions v2.13.0 so the
+      # check applies the style-dependent schema profiles: 'plain'
+      # rejects tagged-only fields, 'tagged' accepts structured
+      # certifications, {name, size} skill items, concepts and tags.
+      - name: Validate ${{ matrix.source }} (${{ matrix.style }})
+        uses: stklug84/actions/cv/parse@4d1bec336eee9263f26cece444f81be343061d67  # v2.13.0
         with:
           source: ${{ matrix.source }}
+          style: ${{ matrix.style }}
           check: "true"
           # out-dir is required by the action but unused in --check mode.
           out-dir: .

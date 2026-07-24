@@ -68,6 +68,8 @@
 \RequirePackage{tabularx}
 \RequirePackage{etoolbox}
 \RequirePackage{eso-pic}
+\RequirePackage{changepage}  % adjustwidth: breakable indented entry bodies
+\RequirePackage{needspace}   % \Needspace*: keep entry headers off page bottoms
 \RequirePackage[hidelinks]{hyperref}
 
 \usetikzlibrary{calc}
@@ -223,39 +225,67 @@
 % / employer (green) / description (body) in the right sub-column.
 \newlength{\cv@datecol}
 \setlength{\cv@datecol}{34mm}
+% Page-break behaviour: only the header row (date | title / employer) is
+% boxed in minipages; the description body sits in a breakable
+% adjustwidth block (same left offset, \cv@datecol + 0.4em). Breaks are
+% permitted only BETWEEN paragraphs/bullets (\interlinepenalty=10000
+% forbids breaking inside one); \nopagebreak pins the body to its header
+% and \Needspace* keeps a header from stranding at a page bottom.
 \newcommand{\cventry}[4]{%
+  \Needspace*{4\baselineskip}%
   \par\vspace{0.4em}%
   \noindent
-  \begin{minipage}[t]{\cv@datecol}%
-    \raggedright\small\bfseries\color{titleslate}#2%
-  \end{minipage}%
+  % Zero-DEPTH box around the date column: a date range wrapping onto two
+  % lines must not make the header row taller and push the body down (the
+  % header-to-body gap has to be identical for one- and two-line dates).
+  % The overhang drops into the left column, which the indented body
+  % (adjustwidth at \cv@datecol + 0.4em) leaves empty.
+  \raisebox{0pt}[\height][0pt]{%
+    \begin{minipage}[t]{\cv@datecol}%
+      \raggedright\small\bfseries\color{titleslate}#2%
+    \end{minipage}}%
   \hspace{0.4em}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
     {\bfseries\small\color{titleslate}#1}\par
     {\small\color{accentgreen}#3}\par
-    \ifblank{#4}{}{\vspace{0.2em}{\small\color{cvBody}#4}\par}%
   \end{minipage}%
+  \par\nopagebreak
+  \ifblank{#4}{}{%
+    \vspace{0.2em}\nopagebreak
+    \begin{adjustwidth}{\dimexpr\cv@datecol+0.4em\relax}{0pt}%
+      \interlinepenalty=10000
+      \raggedright\small\color{cvBody}#4\par
+    \end{adjustwidth}%
+  }%
   \par\vspace{0.5em}
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
-% Nested sub-project under a job entry.
+% Nested sub-project under a job entry. Same page-break behaviour as
+% \cventry: header row boxed, body breakable only between bullets.
 \newcommand{\cvsubentry}[3]{%
+  \Needspace*{3\baselineskip}%
   \par\vspace{0.2em}%
   \noindent
-  \begin{minipage}[t]{\cv@datecol}%
-    \raggedright\small\color{titleslate}#1%
-  \end{minipage}%
+  % Zero-depth date box: see \cventry.
+  \raisebox{0pt}[\height][0pt]{%
+    \begin{minipage}[t]{\cv@datecol}%
+      \raggedright\small\color{titleslate}#1%
+    \end{minipage}}%
   \hspace{0.4em}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
     {\small\bfseries\color{titleslate}#2}\par
+  \end{minipage}%
+  \par\nopagebreak
+  \begin{adjustwidth}{\dimexpr\cv@datecol+0.4em\relax}{0pt}%
+    \interlinepenalty=10000
     \begingroup
       \setlist[itemize,1]{label=\textopenbullet,leftmargin=1.4em,labelsep=.4em}
-      {\small\color{cvBody}#3}%
+      \raggedright{\small\color{cvBody}#3}%
     \endgroup
-  \end{minipage}%
+  \end{adjustwidth}%
   \par\vspace{0.4em}
 }
 

@@ -66,6 +66,7 @@
 \RequirePackage{array}
 \RequirePackage{tabularx}
 \RequirePackage{etoolbox}
+\RequirePackage{needspace}   % \Needspace*: keep entry headers off page bottoms
 \RequirePackage[hidelinks]{hyperref}
 
 \usetikzlibrary{calc}
@@ -202,14 +203,21 @@
 % Employer bold accent-blue; a rounded chip holding the role/title inline
 % followed by the date range in plain dark text; description paragraph.
 % Entries separated by a dotted gray divider.
+% Page-break behaviour: breaks are permitted only BETWEEN
+% paragraphs/bullets of the description (\interlinepenalty=10000 forbids
+% breaking inside one); \nopagebreak pins the body to its header lines
+% and the trailing dotted rule to its entry; \Needspace* keeps a header
+% from stranding at a page bottom.
 \newcommand{\cventry}[4]{%
+  \Needspace*{4\baselineskip}%
   \vspace{0.35em}%
-  \noindent{\bfseries\color{cvAccent}#3}\par
-  \vspace{0.25em}
-  \noindent\cv@chip{#1}\hspace{0.6em}{\small\color{cvText}#2}\par
-  \vspace{0.3em}
-  \ifblank{#4}{}{{\small #4}\par}%
-  \vspace{0.4em}
+  \noindent{\bfseries\color{cvAccent}#3}\par\nopagebreak
+  \vspace{0.25em}\nopagebreak
+  \noindent\cv@chip{#1}\hspace{0.6em}{\small\color{cvText}#2}\par\nopagebreak
+  \vspace{0.3em}\nopagebreak
+  \ifblank{#4}{}{\begingroup\interlinepenalty=10000
+    {\small #4}\par\endgroup}%
+  \nopagebreak\vspace{0.4em}\nopagebreak
   \cv@dottedrule
   \vspace{0.35em}
 }
@@ -217,10 +225,12 @@
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
 % Nested sub-project under a job entry; round-bullet list inside desc.
 \newcommand{\cvsubentry}[3]{%
+  \Needspace*{3\baselineskip}%
   \vspace{0.15em}%
-  {\small\color{cvText}#1 \textbar{} \textit{#2}}\par
-  \vspace{0.1em}
+  {\small\color{cvText}#1 \textbar{} \textit{#2}}\par\nopagebreak
+  \vspace{0.1em}\nopagebreak
   \begingroup
+    \interlinepenalty=10000
     \setlist[itemize,1]{label=\textbullet,leftmargin=1.4em,labelsep=.4em}
     #3
   \endgroup

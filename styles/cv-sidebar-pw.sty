@@ -71,6 +71,7 @@
 \RequirePackage{tabularx}
 \RequirePackage{etoolbox}
 \RequirePackage{eso-pic}
+\RequirePackage{needspace}   % \Needspace*: keep entry headers off page bottoms
 \RequirePackage[hidelinks]{hyperref}
 
 \usetikzlibrary{calc}
@@ -233,25 +234,33 @@
 % --- \cventry{title}{date}{employer}{desc} ---------------------------
 % Job/education entry. Title bold uppercase; date true-black right-flush;
 % employer italic muted; desc body gray.
+% Page-break behaviour: breaks are permitted only BETWEEN
+% paragraphs/bullets of the description (\interlinepenalty=10000 forbids
+% breaking inside one); \nopagebreak pins the body to its header lines
+% and \Needspace* keeps a header from stranding at a page bottom.
 \newcommand{\cventry}[4]{%
+  \Needspace*{4\baselineskip}%
   \vspace{0.4em}%
   \noindent
   \begin{tabularx}{\linewidth}{@{}X r@{}}
     {\bfseries\small\color{cvAccent}\MakeUppercase{#1}} & {\small\color{cvDate} #2}
-  \end{tabularx}\par
-  {\small\itshape\color{cvMuted} #3}\par
-  \vspace{0.2em}
-  {\small\color{cvText} #4}\par
+  \end{tabularx}\par\nopagebreak
+  {\small\itshape\color{cvMuted} #3}\par\nopagebreak
+  \vspace{0.2em}\nopagebreak
+  \begingroup\interlinepenalty=10000
+  {\small\color{cvText} #4}\par\endgroup
   \vspace{0.4em}
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
 % Nested sub-project under a job entry.
 \newcommand{\cvsubentry}[3]{%
+  \Needspace*{3\baselineskip}%
   \vspace{0.2em}%
-  {\small\color{cvDate} #1} {\small\color{cvText}\textbar{}} {\small\itshape\color{cvText} #2}\par
-  \vspace{0.1em}
+  {\small\color{cvDate} #1} {\small\color{cvText}\textbar{}} {\small\itshape\color{cvText} #2}\par\nopagebreak
+  \vspace{0.1em}\nopagebreak
   \begingroup
+    \interlinepenalty=10000
     \color{cvText}%
     \setlist[itemize,1]{label=\textopenbullet,leftmargin=1.4em,labelsep=.4em}
     #3
