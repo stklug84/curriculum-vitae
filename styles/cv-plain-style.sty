@@ -48,6 +48,16 @@
 \newlength\parwidth{}
 \setlength\parwidth{.75\textwidth}
 
+% KNOWN LIMITATION — page breaks inside experience entries:
+% The cv/parse plain emitter renders each experience entry as ONE
+% longtable row whose body cell is a minipage (see the generated
+% cv-experience.tex and the H/M columntypes below). Minipages are
+% unbreakable boxes, so longtable can only break BETWEEN entries, never
+% between the bullets of a single entry. The other styles (tagged,
+% sidebar-*, banking) fixed this at the style level by typesetting entry
+% bodies in open vertical mode; here the row/minipage structure is baked
+% into the emitted .tex, so the fix requires a cv/parse emitter change in
+% stklug84/actions (tracked there as a follow-up issue).
 \newcolumntype{L}{>{\raggedleft}p{.19\textwidth}@{\hspace{\separation}}}
 \newcolumntype{A}{>{\raggedleft}p{.175\textwidth}@{\hspace{\separation}}}
 \newcolumntype{R}{@{\hspace{\separation}}p{\parwidth}}

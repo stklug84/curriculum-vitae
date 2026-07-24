@@ -52,6 +52,8 @@
 \RequirePackage{tabularx}
 \RequirePackage{multicol}
 \RequirePackage{etoolbox}
+\RequirePackage{changepage}  % adjustwidth: breakable indented entry bodies
+\RequirePackage{needspace}   % \Needspace*: keep entry headers off page bottoms
 \RequirePackage[hidelinks]{hyperref}
 
 \usetikzlibrary{calc}
@@ -270,34 +272,66 @@
 % \strut on the first line of each minipage pins them to a common first
 % baseline so the date (e.g. "09/2013 --- 08/2010") lines up exactly with
 % the entry's title headline rather than floating a hair above it.
+%
+% Page-break behaviour: only the HEADER row (date | title + employer) is
+% boxed in minipages; the description body is typeset in open vertical
+% mode inside an adjustwidth block (same left offset as the main column,
+% \cv@datecol + 0.4em) so long entries can break across pages. Breaks are
+% permitted ONLY between paragraphs/bullets: \interlinepenalty=10000
+% forbids breaking inside a bullet, \nopagebreak pins the body to its
+% header, and \Needspace* keeps a header from stranding at a page bottom.
 \newcommand{\cventry}[4]{%
+  \Needspace*{4\baselineskip}%
   \vspace{0.4em}\par\noindent
-  \begin{minipage}[t]{\cv@datecol}%
-    \raggedright{\strut\small\color{cvMuted}#2}%
-  \end{minipage}%
+  % Zero-DEPTH box around the date column: a date range that wraps onto
+  % two lines ("03/2022 ---" / "12/2023") must not make the header row
+  % taller and push the body down (the header-to-body gap has to be
+  % identical for one- and two-line dates). The second date line
+  % overprints downward into the left column, which stays empty because
+  % the body is indented at \cv@datecol + 0.4em.
+  \raisebox{0pt}[\height][0pt]{%
+    \begin{minipage}[t]{\cv@datecol}%
+      \raggedright{\strut\small\color{cvMuted}#2}%
+    \end{minipage}}%
   \hfill
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     {\noindent\strut\textbf{#1}\hfill{\bfseries\small #3}\par}%
-    \ifblank{#4}{}{\vspace{0.15em}{\small #4\par}}%
   \end{minipage}%
+  \par\nopagebreak
+  \ifblank{#4}{}{%
+    \vspace{0.15em}\nopagebreak
+    \begin{adjustwidth}{\dimexpr\cv@datecol+0.4em\relax}{0pt}%
+      \interlinepenalty=10000
+      \small #4\par
+    \end{adjustwidth}%
+  }%
   \par\vspace{1.1em}%
 }
 
 % --- \cvsubentry{date}{title}{desc} ----------------------------------
+% Same page-break behaviour as \cventry: header row boxed, body in a
+% breakable adjustwidth block, breaks only between bullets.
 \newcommand{\cvsubentry}[3]{%
+  \Needspace*{3\baselineskip}%
   \vspace{0.15em}\par\noindent
-  \begin{minipage}[t]{\cv@datecol}%
-    \raggedright{\small\color{cvMuted}\strut #1}%
-  \end{minipage}%
+  % Zero-depth date box: see \cventry.
+  \raisebox{0pt}[\height][0pt]{%
+    \begin{minipage}[t]{\cv@datecol}%
+      \raggedright{\small\color{cvMuted}\strut #1}%
+    \end{minipage}}%
   \hfill
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     {\small\strut\textit{#2}\par}%
+  \end{minipage}%
+  \par\nopagebreak
+  \begin{adjustwidth}{\dimexpr\cv@datecol+0.4em\relax}{0pt}%
+    \interlinepenalty=10000
     \begingroup
       \setlist[itemize,1]{label=\cv@sqbullet,leftmargin=1.4em,labelsep=.5em,%
         topsep=0.25em,itemsep=0.35em,parsep=0.1em}%
       {\small #3}%
     \endgroup
-  \end{minipage}%
+  \end{adjustwidth}%
   \par\vspace{0.35em}%
 }
 
@@ -478,11 +512,13 @@
 }
 \newcommand{\cvtechstack}[1]{%
   % Pull the Tech Stack line UP toward the entry it belongs to: the
-  % preceding \cventry ends with \vspace{1.1em}, which is too large a gap
-  % between an entry and its own tech-stack footer. The negative space
-  % collapses that so the tech stack reads as part of the entry above
-  % rather than floating midway to the next one.
-  \par\vspace{-0.4em}\noindent
+  % preceding \cventry ends with \vspace{1.1em} AND its adjustwidth body
+  % block contributes list-end glue (\partopsep), which together leave too
+  % large a gap between an entry and its own tech-stack footer (~20pt vs
+  % ~13pt to the NEXT entry). Pulling back 1.6em nets a ~8pt gap above so
+  % the tech stack visually groups with the entry it belongs to.
+  % \nopagebreak keeps the footer from being orphaned onto the next page.
+  \par\nopagebreak\vspace{-1.6em}\noindent
   \hspace*{\dimexpr\cv@datecol+0.4em\relax}%
   \begin{minipage}[t]{\dimexpr\linewidth-\cv@datecol-0.4em\relax}%
     \raggedright
