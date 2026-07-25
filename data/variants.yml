@@ -79,11 +79,13 @@ langs:
 # is valid; the entries below are the current selection.
 # ---------------------------------------------------------------------
 cvs:
-  # cv-academics is built locally only (via `task cv:academics`), not in
-  # the committed matrix. Example entry:
-  # cv-academics:
+  # Single merged source (data/cv.yml): entries select their presentation
+  # style via per-entry `targets` (cv-plain-style | cv-tagged-ia | web).
+  # The academic cv-plain-style + de leaf is built locally only (via
+  # `task cv:academics`, which needs the gitignored data/cv.local.yml PII
+  # overlay), not in the committed matrix. Example entry:
   #   - {style: cv-plain-style, lang: de}
-  cv-databricks:
+  cv:
     # - {style: cv-banking-fs, lang: en}
     - {style: cv-tagged-ia, lang: en}
     # - {style: cv-sidebar-pw, lang: en}

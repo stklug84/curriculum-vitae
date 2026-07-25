@@ -2,14 +2,25 @@
 # data/cv.yml — canonical, bilingual single source of truth for the CV.
 #
 # Consumed by stklug84/actions cv/parse (v2), which emits per-section
-# .tex files for each LaTeX variant (plain | sidebar, de | en) and a
+# .tex files for each LaTeX variant declared in data/variants.yml and a
 # skcloud-schema cv.yml for the web. See data/README.md for the schema
 # and the `targets` contract.
 #
 # Conventions:
 #   * Bilingual text fields are {de, en} (both required).
 #   * Neutral fields (org, year, monogram, paths, ...) are scalars.
-#   * `targets` selects consumers; absent => [latex, web].
+#   * `targets` selects consumers PER ENTRY. This is a merged,
+#     multi-style source: instead of the generic `latex` token, every
+#     LaTeX-bound entry names the presentation style(s) it feeds —
+#     `cv-tagged-ia` (Databricks/industry variant, tagged profile) or
+#     `cv-plain-style` (academic variant, plain profile) — plus `web`
+#     for the skcloud emitter. Absent => [latex, web].
+#   * The top-level `overrides.<style>` block carries per-style
+#     meta/contact deltas, deep-merged over the base for that style.
+#   * The gitignored sibling data/cv.local.yml overlay carries the
+#     local-only PII contact fields (birthdate, address, ...) consumed
+#     by the cv-plain-style variant; it is deep-merged over this file
+#     when present (local builds only, never committed).
 
 meta:
   display_name: Steffen Klug
@@ -62,9 +73,39 @@ contact:
   github:
     url: https://github.com/stklug84
 
+# Per-style meta/contact deltas, deep-merged over the base above when the
+# named style is generated. The academic cv-plain-style variant carries its
+# own role line, header location and profile summary; its PII contact
+# fields (birthdate, birthplace, address, phone, location_signature,
+# photo/signature paths) live in the gitignored data/cv.local.yml overlay.
+overrides:
+  cv-plain-style:
+    meta:
+      title:
+        de: IT-Systemarchitekt
+        en: Data & AI Solutions Architect
+      location:
+        de: Deutschland
+        en: Germany
+      summary:
+        de: >-
+          Promovierter Physiker mit langjähriger Erfahrung im Aufbau
+          hybrider AI-Plattform-Architekturen im industriellen Umfeld.
+          Schwerpunkte: Cloud-native Daten- und ML-Systeme, semantische
+          Datenanalyse, Industrialisierung produktiver Analytics-Lösungen.
+        en: >-
+          PhD physicist who designs, builds and delivers distributed data and
+          analytics platforms on Apache Spark (Scala/Python) and cloud-native
+          data and ML systems (Azure primary, AWS/GCP aware). Brings MLOps and
+          CI/CD discipline to productionise analytics at scale, and partners
+          directly with cross-functional teams across Europe, North America and
+          Asia to deliver and advise. Adjacent strengths in GenAI, semantic data,
+          explainable AI and knowledge graphs.
+
 experience:
+  # -- cv-tagged-ia (Databricks/industry) entries ------------------------
   - id: bosch-eng-ai
-    targets: [latex, web]
+    targets: [cv-tagged-ia, web]
     period:
       de: seit 01/2024
       en: since 01/2024
@@ -171,7 +212,7 @@ experience:
           weeks, potentially saving over €1M per year and lab.
 
   - id: bosch-eng-data
-    targets: [latex, web]
+    targets: [cv-tagged-ia, web]
     period:
       de: 03/2022 --- 12/2023
       en: 03/2022 --- 12/2023
@@ -249,7 +290,7 @@ experience:
           CVs — cutting feasibility-check turnaround by 40%.
 
   - id: bosch-mfg-data
-    targets: [latex, web]
+    targets: [cv-tagged-ia, web]
     period:
       de: 01/2018 --- 01/2022
       en: 01/2018 --- 01/2022
@@ -320,7 +361,7 @@ experience:
           types.
 
   - id: bosch-i40
-    targets: [latex, web]
+    targets: [cv-tagged-ia, web]
     period:
       de: 09/2015 --- 12/2017
       en: 09/2015 --- 12/2017
@@ -388,28 +429,9 @@ experience:
           volumes more accurately and optimise supplier material orders, keeping
           inventories low while improving demand-forecast accuracy by
           60% and reducing inventory costs by 15%.
-    # subentries:
-    #   - date: 2018 -- heute
-    #     title:
-    #       de: Semantic Data Access & Traceability
-    #       en: Semantic Data Access & Traceability
-    #     bullets:
-    #       - de: >-
-    #           Bereichsübergreifende Koordination zur Zusammenführung
-    #           heterogener Datenquellen.
-    #         en: >-
-    #           Coordinated across domains to unify heterogeneous data sources.
-    #       - de: Entwicklung domänenspezifischer Ontologien.
-    #         en: Developed domain-specific ontologies.
-    #       - de: >-
-    #           Semantische Nachverfolgung einzelner Komponenten in komplexen
-    #           elektronischen Produkten.
-    #         en: >-
-    #           Semantic traceability of individual components in complex
-    #           electronic products.
 
   - id: leiden
-    targets: [latex, web]
+    targets: [cv-tagged-ia, web]
     period:
       de: 09/2013 --- 08/2015
       en: 09/2013 --- 08/2015
@@ -440,10 +462,155 @@ experience:
     #       Simulated transport and thermodynamic properties of strongly
     #       correlated electronic materials.
 
+  # -- cv-plain-style (academic) entries ---------------------------------
+  - id: bosch
+    targets: [cv-plain-style]
+    period:
+      de: seit 09/2015
+      en: Since 09/2015
+    year: 2015
+    role:
+      de: IT-Systemarchitekt
+      en: IT Systems Architect
+    org: Robert Bosch GmbH, Automotive Electronics
+    location:
+      de: Reutlingen
+      en: Reutlingen, Germany
+    kind: work
+    monogram: RB
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        Aufbau und Entwicklung einer AI-Plattform-Architektur basierend auf
+        hybrid/public Cloud-Lösungen im industriellen und fertigungsnahen
+        Umfeld.
+      en: >-
+        Designed, built and deployed an end-to-end AI platform architecture
+        on hybrid/public cloud, providing trusted technical guidance to
+        cross-functional teams and delivering data engineering and analytics
+        at scale in an industrial and manufacturing context.
+    tags: [Azure, Kubernetes, Knowledge Graphs, Analytics]
+    bullets:
+      - de: >-
+          Entwicklung moderner KI-Systeme unter Einbeziehung semantischer
+          Daten (explainable/interpretable AI und Knowledge Graphs).
+        en: >-
+          Designed and delivered modern AI systems incorporating semantic
+          data (explainable/interpretable AI and knowledge graphs).
+      - de: >-
+          Optimierung von Fertigungsprozessen zur Kostenreduzierung und
+          Qualitätsverbesserung mittels datengetriebener Analytics-Lösungen.
+        en: >-
+          Optimised manufacturing processes for cost reduction and quality
+          improvement by delivering data-driven analytics solutions at scale.
+      - de: >-
+          Digitalisierung, Standardisierung und Harmonisierung
+          wertstromübergreifender Daten zur Erstellung und Verbesserung von
+          KI-Modellen.
+        en: >-
+          Engineered, standardised and harmonised cross-value-stream data
+          pipelines to build and continuously improve production AI models.
+      - de: >-
+          Industrialisierung und Automatisierung produktiver
+          Analytics-Lösungen inklusive Konzeptionierung, Implementierung und
+          Deployment.
+        en: >-
+          Industrialised and productionised analytics solutions end-to-end,
+          owning design, implementation, deployment and MLOps automation.
+      - de: >-
+          Funktionsübergreifende Teamarbeit zur Entwicklung von AI- und
+          I4.0-Lösungen mit Entwicklungsstandorten und Werken in Europa,
+          Nordamerika und Asien.
+        en: >-
+          Partnered with cross-functional teams to deliver AI and Industry 4.0
+          solutions across development sites and plants in Europe, North
+          America and Asia.
+    subentries:
+      - date: 2018 -- heute
+        title:
+          de: Semantic Data Access & Traceability
+          en: Semantic Data Access & Traceability
+        bullets:
+          - de: >-
+              Bereichsübergreifende Koordination zur Zusammenführung
+              heterogener Datenquellen.
+            en: >-
+              Coordinated across domains to unify heterogeneous data sources.
+          - de: Entwicklung domänenspezifischer Ontologien.
+            en: Developed domain-specific ontologies.
+          - de: >-
+              Semantische Nachverfolgung einzelner Komponenten in komplexen
+              elektronischen Produkten.
+            en: >-
+              Semantic traceability of individual components in complex
+              electronic products.
+
+  - id: leiden
+    targets: [cv-plain-style]
+    period:
+      de: 09/2013 --- 08/2015
+      en: 09/2013 --- 08/2015
+    year: 2013
+    role:
+      de: Postdoc
+      en: Postdoc
+    org: Universität Leiden
+    location:
+      de: Niederlande
+      en: Netherlands
+    kind: study
+    monogram: UL
+    bg: /assets/img/cv/bg/grid.svg
+    summary:
+      de: >-
+        Modellierung und Berechnung nicht-linearer partieller
+        Differentialgleichungen.
+      en: >-
+        Modelling and computation of non-linear partial differential
+        equations.
+    tags: [Physics, Simulation, HPC]
+    bullets:
+      - de: >-
+          Simulation von Transport- und thermodynamischen Eigenschaften
+          stark korrelierter elektronischer Materialien.
+        en: >-
+          Simulated transport and thermodynamic properties of strongly
+          correlated electronic materials.
+
+  - id: mpi-munich
+    targets: [cv-plain-style]
+    period:
+      de: 05/2010 --- 08/2013
+      en: 05/2010 --- 08/2013
+    year: 2010
+    role:
+      de: Wissenschaftlicher Angestellter
+      en: Research Associate
+    org: Max-Planck-Institut für Physik
+    location:
+      de: München
+      en: Munich, Germany
+    kind: study
+    monogram: MP
+    bg: /assets/img/cv/bg/topology.svg
+    summary:
+      de: >-
+        Grundlagenforschung im Bereich neuer Quanten-Materialien sowie
+        Entwicklung numerischer und geometrischer Optimierer.
+      en: >-
+        Fundamental research on novel quantum materials and development of
+        numerical and geometric optimisers.
+    tags: [Research, Numerics, Optimisation]
+    bullets:
+      - de: Grundlagenforschung im Bereich neuer Quanten-Materialien.
+        en: Fundamental research on novel quantum materials.
+      - de: Entwicklung numerischer und geometrischer Optimierer.
+        en: Developed numerical and geometric optimisers.
 
 education:
+  # -- cv-tagged-ia (Databricks/industry) entries ------------------------
   - id: phd
-    targets: [latex]
+    targets: [cv-tagged-ia]
     period: 05/2010 --- 07/2013
     degree:
       de: Promotion in Theoretischer Physik
@@ -461,7 +628,7 @@ education:
           in Quantum Matter.
 
   - id: diploma
-    targets: [latex]
+    targets: [cv-tagged-ia]
     period: 09/2006 --- 02/2010
     degree:
       de: Physikstudium (Diplom)
@@ -478,9 +645,179 @@ education:
           Thesis: Quantum Phase Transitions with Polar Molecules:
           Towards the Realization of Ferro-Electric Liquids.
 
+  # -- cv-plain-style (academic) entries ---------------------------------
+  - id: phd
+    targets: [cv-plain-style]
+    period: 05/2010 --- 07/2013
+    degree:
+      de: Promotion in Theoretischer Physik
+      en: PhD in Theoretical Physics
+    institution:
+      de: Max-Planck-Institut für Physik und LMU München
+      en: Max Planck Institute for Physics and LMU Munich
+    grade: sehr gut, Note 0,9
+    details:
+      - de: >-
+          Dissertation: Gauge/Gravity Duality: Exploring Universal Features
+          in Quantum Matter.
+        en: >-
+          Dissertation: Gauge/Gravity Duality: Exploring Universal Features
+          in Quantum Matter.
+      - de: >-
+          Analytische und numerische Verfahren zur Lösung nicht-linearer
+          dynamischer Differentialgleichungen.
+        en: >-
+          Analytical and numerical methods for solving non-linear dynamical
+          differential equations.
+      - de: >-
+          Entwicklung und Implementierung von Algorithmen zur symbolischen
+          Manipulation mathematischer Modelle mittels Computeralgebrasysteme.
+        en: >-
+          Designed and implemented algorithms for the symbolic manipulation
+          of mathematical models using computer algebra systems.
+      - de: >-
+          Optimierung und Automatisierung paralleler numerischer
+          Lösungsverfahren.
+        en: Optimised and automated parallel numerical solution methods.
 
-conferences: []
-# - targets: [latex]
+  - id: diploma
+    targets: [cv-plain-style]
+    period: 09/2006 --- 02/2010
+    degree:
+      de: Physikstudium (Diplom)
+      en: Physics (Diploma)
+    institution:
+      de: Universität Stuttgart
+      en: University of Stuttgart
+    grade: mit Auszeichnung, Note 0,7
+    details:
+      - de: >-
+          Diplomarbeit: Quantum Phase Transitions with Polar Molecules:
+          Towards the Realization of Ferro-Electric Liquids.
+        en: >-
+          Diploma thesis: Quantum Phase Transitions with Polar Molecules:
+          Towards the Realization of Ferro-Electric Liquids.
+
+  - id: bachelor
+    targets: [cv-plain-style]
+    period: 09/2004 --- 08/2006
+    degree:
+      de: Bachelorstudium in Computational Physics
+      en: Bachelor in Computational Physics
+    institution:
+      de: Universität Stuttgart
+      en: University of Stuttgart
+    details: []
+
+  - id: abitur
+    targets: [cv-plain-style]
+    period: 09/1995 --- 07/2004
+    degree:
+      de: Allgemeine Hochschulreife
+      en: University-Entrance Diploma (Abitur)
+    institution:
+      de: Königin-Charlotte-Gymnasium, Stuttgart
+      en: Königin-Charlotte-Gymnasium, Stuttgart
+    grade: sehr gut, Note 1,3
+    details:
+      - de: Buchpreis der Deutschen Physikalischen Gesellschaft.
+        en: Book prize of the German Physical Society.
+      - de: >-
+          KIWANIS-Preis für hervorragende Leistungen in Geschichte und
+          Gemeinschaftskunde.
+        en: >-
+          KIWANIS prize for outstanding achievement in history and civics.
+
+# The tagged variant currently lists no conferences; its candidates stay
+# commented below (they carry lat/lon for the tagged style's heatmap).
+conferences:
+  # -- cv-plain-style (academic) entries ---------------------------------
+  - targets: [cv-plain-style]
+    year: 2021
+    name: Subsurface LIVE Winter 2021
+    location: Online
+    date: 01/2021
+    url: http://subsurfaceconf.com/winter/2021
+  - targets: [cv-plain-style]
+    year: 2020
+    name: Scale By The Bay
+    location: Online
+    date: 11/2020
+    url: https://www.scale.bythebay.io
+  - targets: [cv-plain-style]
+    year: 2020
+    name: ODSC Europe 2020 Virtual Conference
+    location: Online
+    date: 09/2020
+    url: https://odsc.com/dublin/schedule-overview
+  - targets: [cv-plain-style]
+    year: 2019
+    name: Scala Days 2019
+    location: Lausanne
+    date: 05/2019
+    url: https://www.scaladays.org/
+  - targets: [cv-plain-style]
+    year: 2019
+    name: Spark + AI Summit 2019
+    location: San Francisco
+    date: 04/2019
+    url: https://databricks.com/sparkaisummit/north-america
+  - targets: [cv-plain-style]
+    year: 2018
+    name: Scala eXchange 2018
+    location: London
+    date: 12/2018
+    url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
+  - targets: [cv-plain-style]
+    year: 2018
+    name: Spark + AI Summit 2018
+    location: San Francisco
+    date: 06/2018
+    url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
+  - targets: [cv-plain-style]
+    year: 2018
+    name: IEEE International Conference on Data Engineering (ICDE)
+    location: Paris
+    date: 04/2018
+    url: https://icde2018.org
+  - targets: [cv-plain-style]
+    year: 2017
+    name: Spark Summit Europe 2017
+    location: Dublin
+    date: 10/2017
+    url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
+  - targets: [cv-plain-style]
+    year: 2017
+    name: PyData
+    location: Berlin
+    date: 06--07/2017
+    url: https://pydata.org/berlin2017
+  - targets: [cv-plain-style]
+    year: 2016
+    name: The R User Conference (UseR! 2016)
+    location: Stanford University
+    date: 06/2016
+    url: https://user2016.r-project.org
+  - targets: [cv-plain-style]
+    year: 2016
+    name: Conference on Uncertainty in Artificial Intelligence (UAI)
+    location: New York
+    date: 06/2016
+    url: http://www.auai.org/uai2016
+  - targets: [cv-plain-style]
+    year: 2016
+    name: Conference on Learning Theory (COLT)
+    location: Columbia University, NYC
+    date: 06/2016
+    url: http://proceedings.mlr.press/v49/
+  - targets: [cv-plain-style]
+    year: 2016
+    name: International Conference on Machine Learning (ICML)
+    location: New York
+    date: 06/2016
+    url: https://icml.cc/Conferences/2016/
+# -- cv-tagged-ia candidates (commented; lat/lon feed \cvheatmap):
+# - targets: [cv-tagged-ia]
 #   year: 2026
 #   name: Data+AI Summit 2026
 #   location: San Francisco
@@ -488,7 +825,7 @@ conferences: []
 #   lon: -122.42
 #   date: 06/2026
 #   url: https://www.databricks.com/dataaisummit
-# - targets: [latex]
+# - targets: [cv-tagged-ia]
 #   year: 2026
 #   name: Scalar
 #   location: Warsaw
@@ -496,7 +833,7 @@ conferences: []
 #   lon: 21.01
 #   date: 03/2026
 #   url: https://scalar-conf.com/
-# - targets: [latex]
+# - targets: [cv-tagged-ia]
 #   year: 2025
 #   name: IEEE International Conference on Cloud Engineering (I2CE)
 #   location: Rennes
@@ -504,7 +841,7 @@ conferences: []
 #   lon: -1.68
 #   date: 09/2025
 #   url: https://conferences.computer.org/IC2E/2025/
-# - targets: [latex]
+# - targets: [cv-tagged-ia]
 #   year: 2024
 #   name: IEEE International Conference on Data Engineering (ICDE)
 #   location: Utrecht
@@ -512,7 +849,7 @@ conferences: []
 #   lon: 5.12
 #   date: 05/2024
 #   url: https://ieee-icde.org/2024/
-# - targets: [latex]
+# - targets: [cv-tagged-ia]
 #   year: 2023
 #   name: AI Summit ODSC Europe
 #   location: London
@@ -520,7 +857,7 @@ conferences: []
 #   lon: -0.13
 #   date: 06/2023
 #   url: https://odsc.com/europe/
-# - targets: [latex]
+# - targets: [cv-tagged-ia]
 #   year: 2022
 #   name: Data+AI Summit 2022
 #   location: San Francisco
@@ -528,127 +865,38 @@ conferences: []
 #   lon: -122.42
 #   date: 06/2022
 #   url: https://www.databricks.com/dataaisummit
-# - targets: [latex]
-#   year: 2019
-#   name: Scala Days 2019
-#   location: Lausanne
-#   lat: 46.52
-#   lon: 6.63
-#   date: 05/2019
-#   url: https://www.scaladays.org/
-# - targets: [latex]
-#   year: 2019
-#   name: Spark + AI Summit 2019
-#   location: San Francisco
-#   lat: 37.77
-#   lon: -122.42
-#   date: 04/2019
-#   url: https://databricks.com/sparkaisummit/north-america
-# - targets: [latex]
-#   year: 2018
-#   name: Scala eXchange 2018
-#   location: London
-#   lat: 51.51
-#   lon: -0.13
-#   date: 12/2018
-#   url: https://skillsmatter.com/conferences/10488-scala-exchange-2018
-# - targets: [latex]
-#   year: 2018
-#   name: Spark + AI Summit 2018
-#   location: San Francisco
-#   lat: 37.77
-#   lon: -122.42
-#   date: 06/2018
-#   url: https://databricks.com/sparkaisummit/north-america/spark-summit-2018-keynotes
-# - targets: [latex]
-#   year: 2018
-#   name: IEEE International Conference on Data Engineering (ICDE)
-#   location: Paris
-#   lat: 48.86
-#   lon: 2.35
-#   date: 04/2018
-#   url: https://icde2018.org
-# - targets: [latex]
-#   year: 2017
-#   name: Spark Summit Europe 2017
-#   location: Dublin
-#   lat: 53.35
-#   lon: -6.26
-#   date: 10/2017
-#   url: https://databricks.com/blog/2017/11/06/spark-summit-eu-2017-recap-and-reflections.html
-# - targets: [latex]
-#   year: 2017
-#   name: PyData
-#   location: Berlin
-#   lat: 52.52
-#   lon: 13.40
-#   date: 06/2017
-#   url: https://pydata.org/berlin2017
-# - targets: [latex]
-#   year: 2016
-#   name: The R User Conference (UseR! 2016)
-#   location: Stanford University
-#   lat: 37.43
-#   lon: -122.17
-#   date: 06/2016
-#   url: https://user2016.r-project.org
-# - targets: [latex]
-#   year: 2016
-#   name: Conference on Uncertainty in Artificial Intelligence (UAI)
-#   location: New York
-#   lat: 40.71
-#   lon: -74.01
-#   date: 06/2016
-#   url: http://www.auai.org/uai2016
-# - targets: [latex]
-#   year: 2016
-#   name: Conference on Learning Theory (COLT)
-#   location: Columbia University, NYC
-#   lat: 40.81
-#   lon: -73.96
-#   date: 06/2016
-#   url: http://proceedings.mlr.press/v49/
-# - targets: [latex]
-#   year: 2016
-#   name: International Conference on Machine Learning (ICML)
-#   location: New York
-#   lat: 40.71
-#   lon: -74.01
-#   date: 06/2016
-#   url: https://icml.cc/Conferences/2016/
-
-
 # concepts[] feeds the tagged style's \cvskillbubbles macro, where each
 # bubble's radius is 0.06 + 0.045*size (cm). `size` here is therefore the
 # bubble WEIGHT (not a 0..1 fraction like skills[].size): values ~3..9 give
-# clearly differentiated, visible circles. Tune these to taste.
-concepts: []
-#   - targets: [latex, web]
+# clearly differentiated, visible circles. Tune these to taste. The section
+# is optional and currently unused; candidates stay commented below.
+# concepts:
+#   - targets: [cv-tagged-ia, web]
 #     text: Cloud Computing
 #     size: 6
-#   - targets: [latex, web]
+#   - targets: [cv-tagged-ia, web]
 #     text: Everything as Code CI/CD
 #     size: 9
-#   - targets: [latex, web]
+#   - targets: [cv-tagged-ia, web]
 #     text: MLOps
 #     size: 8
-#   - targets: [latex, web]
+#   - targets: [cv-tagged-ia, web]
 #     text: Data Engineering
 #     size: 8
-#   - targets: [latex, web]
+#   - targets: [cv-tagged-ia, web]
 #     text: Ontologies & Knowledge Graphs
 #     size: 7
-#   - targets: [latex, web]
+#   - targets: [cv-tagged-ia, web]
 #     text: Parallel/Scientific Computing
 #     size: 3
 
-
-# skills[].items are {name, size} mappings: `size` (0..1) is the per-item
-# proficiency-bar fraction rendered next to each item by the tagged style's
-# \cvskillitembar. The non-tagged styles and the web target use only the
-# item name.
+# skills[] item SHAPE is per style: entries targeting cv-tagged-ia carry
+# {name, size} mappings (`size` is the 0..1 per-item proficiency-bar
+# fraction rendered by the tagged style's \cvskillitembar); entries
+# targeting cv-plain-style (and the web target) carry plain name strings.
 skills:
-  - targets: [latex, web]
+  # -- cv-tagged-ia (Databricks/industry) groups --------------------------
+  - targets: [cv-tagged-ia, web]
     group:
       de: Programmiersprachen
       en: Programming Languages
@@ -663,7 +911,7 @@ skills:
   #      size: .2
   #    - name: FORTRAN
   #      size: .8
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   group:
   #     de: AI Frameworks
   #     en: AI Frameworks
@@ -674,7 +922,7 @@ skills:
   #     - {name: Google ADK, size: .8}
   #     - {name: Keras, size: .5}
   #     - {name: Tensorflow, size: .7}
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   group:
   #     de: Data Engineering & Modeling
   #     en: Data Engineering
@@ -688,7 +936,7 @@ skills:
   #     - {name: SPARQL, size: .5}
   #     - {name: RDF, size: .6}
   #     - {name: OWL, size: .7}
-  - targets: [latex, web]
+  - targets: [cv-tagged-ia, web]
     group:
       de: Infrastruktur und Systeme
       en: Infrastructure & Systems
@@ -707,7 +955,7 @@ skills:
       #   size: .3
       - name: Unix/Linux
         size: .9
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   group:
   #     de: Cloud-natives Tooling
   #     en: Cloud-Native Tooling
@@ -715,7 +963,7 @@ skills:
   #     - {name: ArgoCD, size: .6}
   #     - {name: Kubernetes, size: .6}
   #     - {name: OpenLineage/Marquez, size: .7}
-  - targets: [latex, web]
+  - targets: [cv-tagged-ia, web]
     group:
       de: Konzepte
       en: Concepts
@@ -726,10 +974,53 @@ skills:
         size: .9
       - name: MLOps
         size: .8
+  # -- cv-plain-style (academic) groups ------------------------------------
+  - targets: [cv-plain-style]
+    group:
+      de: Programmiersprachen
+      en: Programming languages
+    items: [Scala, Python, Julia, Rust, LISP/Clojure, C, FORTRAN]
+  - targets: [cv-plain-style]
+    group:
+      de: Frameworks
+      en: Frameworks
+    items: [Spark, Delta Lake, MLflow, Microsoft Azure, Kubernetes, Hadoop Ecosystem, Keras, Tensorflow]
+  - targets: [cv-plain-style]
+    group:
+      de: Skriptsprachen
+      en: Scripting languages
+    items: [SQL, bash/zsh, SPARQL, RDF, OWL, LaTeX]
+  - targets: [cv-plain-style]
+    group:
+      de: Konzepte
+      en: Concepts
+    items:
+      - MLOps
+      - CI/CD
+      - Cloud Computing
+      - Agile Code Development
+      - Differential Programming
+      - Ontologies & Knowledge Graphs
+      - Parallel/Scientific Computing
+  - targets: [cv-plain-style]
+    group:
+      de: Systeme
+      en: Systems
+    items: [Unix/Linux, macOS]
+  - targets: [cv-plain-style]
+    group:
+      de: Tools
+      en: Tools
+    items: [sbt, git, (auto)make, docker, tmux]
+  - targets: [cv-plain-style]
+    group:
+      de: Anwendungen
+      en: Applications
+    items: [Mathematica, Emacs, VSCode, Gnuplot, Inkscape, Microsoft Office]
 
-
+# Identical across both variants, so a single set feeds every style.
 languages:
-  - targets: [latex, web]
+  - targets: [cv-plain-style, cv-tagged-ia, web]
     name:
       de: Deutsch
       en: German
@@ -737,7 +1028,7 @@ languages:
       de: Muttersprache
       en: Native
     level: 5
-  - targets: [latex, web]
+  - targets: [cv-plain-style, cv-tagged-ia, web]
     name:
       de: Englisch
       en: English
@@ -745,7 +1036,7 @@ languages:
       de: Verhandlungssicher
       en: Fluent
     level: 5
-  - targets: [latex, web]
+  - targets: [cv-plain-style, cv-tagged-ia, web]
     name:
       de: Latein
       en: Latin
@@ -754,76 +1045,75 @@ languages:
       en: Latinum
     level: 2
 
-
 # Structured schema (cv/parse >= v2.11.0): each cert carries an explicit
 #   code:   short exam code, rendered as a monochrome chip by the tagged style
 #   issuer: certifying body (currently unrendered; reserved for future styles)
 #   name:   bilingual title WITHOUT the code suffix
 # The tagged style emits \cvcert{code}{name} (code chip + muted title); the
 # plain/sidebar/fs/web targets render a reconstructed "<name> (<code>)" string,
-# byte-identical to the previous "text" output.
+# byte-identical to the previous "text" output. The academic cv-plain-style
+# variant lists no certifications (none of the entries target it).
 certifications:
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   code: AZ-104
   #   issuer: Microsoft
   #   name:
   #     de: "Microsoft Azure Administrator"
   #     en: "Microsoft Azure Administrator"
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   code: AZ-204
   #   issuer: Microsoft
   #   name:
   #     de: "Developing Solutions for Microsoft Azure"
   #     en: "Developing Solutions for Microsoft Azure"
-  - targets: [latex, web]
+  - targets: [cv-tagged-ia, web]
     code: AZ-305
     issuer: Microsoft
     name:
       de: "Designing Microsoft Azure Infrastructure Solutions"
       en: "Designing Microsoft Azure Infrastructure Solutions"
-  - targets: [latex, web]
+  - targets: [cv-tagged-ia, web]
     code: AZ-400
     issuer: Microsoft
     name:
       de: "Designing and Implementing Microsoft DevOps Solutions"
       en: "Designing and Implementing Microsoft DevOps Solutions"
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   code: AZ-500
   #   issuer: Microsoft
   #   name:
   #     de: "Microsoft Azure Security Technologies"
   #     en: "Microsoft Azure Security Technologies"
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   code: AI-900
   #   issuer: Microsoft
   #   name:
   #     de: "Microsoft Azure AI Fundamentals"
   #     en: "Microsoft Azure AI Fundamentals"
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   code: DP-900
   #   issuer: Microsoft
   #   name:
   #     de: "Microsoft Azure Data Fundamentals"
   #     en: "Microsoft Azure Data Fundamentals"
-  # - targets: [latex, web]
+  # - targets: [cv-tagged-ia, web]
   #   code: AZ-900
   #   issuer: Microsoft
   #   name:
   #     de: "Microsoft Azure Fundamentals"
   #     en: "Microsoft Azure Fundamentals"
-  - targets: [latex, web]
+  - targets: [cv-tagged-ia, web]
     code: DP-100
     issuer: Microsoft
     name:
       de: "Designing and Implementing a Data Science Solution on Azure"
       en: "Designing and Implementing a Data Science Solution on Azure"
-  - targets: [latex, web]
+  - targets: [cv-tagged-ia, web]
     code: DP-203
     issuer: Microsoft
     name:
       de: "Data Engineering on Microsoft Azure"
       en: "Data Engineering on Microsoft Azure"
-
 
 # interests[].icon is an optional FontAwesome control-sequence name (without
 # the leading backslash) used by the tagged style as the list bullet via
@@ -832,27 +1122,47 @@ certifications:
 # (faDice). faDiceD20 was tried first but renders as a blank glyph in the
 # bundled FA5 font, so the earlier-vintage faDice is used instead.
 interests:
-  - targets: [latex]
+  # -- cv-tagged-ia (Databricks/industry) entries ------------------------
+  - targets: [cv-tagged-ia]
     de: Radfahren
     en: Cycling
     icon: faBicycle
-  - targets: [latex]
+  - targets: [cv-tagged-ia]
     de: Laufen
     en: Running
     icon: faRunning
-  - targets: [latex]
+  - targets: [cv-tagged-ia]
     de: "Sci-Fi- & Geschichtsbücher lesen"
     en: "Reading Sci-Fi & History Books"
     icon: faBookReader
-  - targets: [latex]
+  - targets: [cv-tagged-ia]
     de: Brettspiel Design
     en: Designing Boardgames
     icon: faChessKnight
-  - targets: [latex]
+  - targets: [cv-tagged-ia]
     de: "Pen&Paper RPG und TCG Spiele"
     en: "Playing Pen&Paper RPGs and TCGs"
     icon: faDice
-  - targets: [latex]
+  - targets: [cv-tagged-ia]
     de: Computer Musikprogrammierung
     en: Programming Computer Music
     icon: faMusic
+  # -- cv-plain-style (academic) entries ---------------------------------
+  - targets: [cv-plain-style]
+    de: Radfahren
+    en: Cycling
+  - targets: [cv-plain-style]
+    de: Bergwandern
+    en: Hiking
+  - targets: [cv-plain-style]
+    de: Kulturelle Reisen in Europa/Nordamerika
+    en: Cultural travel in Europe/North America
+  - targets: [cv-plain-style]
+    de: Europäische und globale Geschichte/Politik
+    en: European and global history/politics
+  - targets: [cv-plain-style]
+    de: E-Mobilität
+    en: E-mobility
+  - targets: [cv-plain-style]
+    de: Neue Informationstechnologien
+    en: New information technologies
