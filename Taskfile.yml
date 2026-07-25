@@ -9,24 +9,28 @@
 #                  manifest-driven matrix build (whatever variants.yml
 #                  currently declares). No overlay, nothing local-only.
 #
-#   cv:databricks  Builds ONLY language `en` across ALL non-plain styles.
-#                  The matrix is derived dynamically from the `styles`
-#                  registry in data/variants.yml (every style except
-#                  cv-plain-style), emitted into a gitignored overlay
+#   cv:databricks  Builds ONLY language `en` across ALL non-plain styles
+#                  from the merged data/cv.yml (entries targeting the
+#                  tagged/sidebar styles). The matrix is derived
+#                  dynamically from the `styles` registry in
+#                  data/variants.yml (every style except cv-plain-style),
+#                  emitted into a gitignored overlay
 #                  (data/variants.local.yml). Self-contained: adding a new
 #                  non-plain style to the registry extends this build with
 #                  no edit here.
 #
 #   cv:academics   Builds ONLY the cv-plain-style + language `de` variant
-#                  from the PII-bearing, gitignored data/cv-academics.yml.
-#                  Like cv:databricks it writes its own matrix into the
-#                  gitignored overlay data/variants.local.yml.
+#                  from the merged data/cv.yml (entries targeting
+#                  cv-plain-style) plus the PII-bearing, gitignored
+#                  data/cv.local.yml overlay. Like cv:databricks it writes
+#                  its own matrix into the gitignored overlay
+#                  data/variants.local.yml.
 #
 # Both cv:* targets generate the overlay deterministically: they copy the
 # `styles`/`langs` registries from data/variants.yml, then append a fresh
 # `cvs:` block with their own matrix. The overlay is ALWAYS removed
 # afterwards (success, failure, or Ctrl-C). Nothing PII-related ever
-# enters the git index: data/cv-academics.yml and data/variants.local.yml
+# enters the git index: data/cv.local.yml and data/variants.local.yml
 # are both gitignored.
 #
 # Requires: go-task (https://taskfile.dev), gh + gh-act extension
@@ -44,7 +48,8 @@ vars:
   VARIANTS_SRC: data/variants.yml
   # Gitignored overlay the cv:* targets generate and feed to the workflow.
   OVERLAY: data/variants.local.yml
-  ACADEMICS_SRC: data/cv-academics.yml
+  # Gitignored PII overlay for data/cv.yml, required by cv:academics.
+  PII_OVERLAY: data/cv.local.yml
   # The single plain style; cv:databricks excludes it from its matrix.
   PLAIN_STYLE: cv-plain-style
   # On Apple Silicon the TeX Live image is pulled as arm64; act defaults to
@@ -82,15 +87,15 @@ tasks:
       # The overlay is always removed afterwards (success, failure, Ctrl-C).
       - defer: rm -f {{.OVERLAY}}
       # Build the overlay: keep the registries from variants.yml, then
-      # append a cv-databricks matrix of {style, lang: en} for every style
-      # in the registry except the plain one.
+      # append a `cv` matrix of {style, lang: en} for every style in the
+      # registry except the plain one.
       - |
         set -euo pipefail
         # Registries only: everything up to (but excluding) the `cvs:` line.
         sed '/^cvs:/,$d' {{.VARIANTS_SRC}} > {{.OVERLAY}}
         {
           echo 'cvs:'
-          echo '  cv-databricks:'
+          echo '  cv:'
           # Style registry keys are 2-space indented `  <style>: {...}`.
           sed -nE 's|^  ([A-Za-z0-9_-]+):[[:space:]]*\{.*|\1|p' {{.VARIANTS_SRC}} \
             | grep -vx '{{.PLAIN_STYLE}}' \
@@ -99,7 +104,7 @@ tasks:
               done
         } >> {{.OVERLAY}}
         if ! grep -qE '^    - \{style: .*, lang: en\}$' {{.OVERLAY}}; then
-          echo "::error:: failed to build cv-databricks matrix in {{.OVERLAY}}" >&2
+          echo "::error:: failed to build the cv matrix in {{.OVERLAY}}" >&2
           exit 1
         fi
       # Run the build under gh act, pointing generation at the overlay.
@@ -111,26 +116,26 @@ tasks:
         {{.ARCH_FLAG}} {{.ACT_ENV}}
 
   cv:academics:
-    desc: Build the local-only, PII-bearing cv-academics variant (cv-plain-style, de) via gh act
+    desc: Build the local-only academic variant (cv-plain-style, de) via gh act
     preconditions:
-      - sh: 'test -f {{.ACADEMICS_SRC}}'
-        msg: "{{.ACADEMICS_SRC}} not found (it is gitignored — provide it locally to build this variant)."
+      - sh: 'test -f {{.PII_OVERLAY}}'
+        msg: "{{.PII_OVERLAY}} not found (it is gitignored — provide the PII overlay locally to build this variant)."
     cmds:
       # The overlay is always removed afterwards (success, failure, Ctrl-C).
       - defer: rm -f {{.OVERLAY}}
       # Build the overlay: keep the registries from variants.yml, then
-      # append the single cv-academics leaf (cv-plain-style + de).
+      # append the single academic leaf (cv-plain-style + de).
       - |
         set -euo pipefail
         # Registries only: everything up to (but excluding) the `cvs:` line.
         sed '/^cvs:/,$d' {{.VARIANTS_SRC}} > {{.OVERLAY}}
         {
           echo 'cvs:'
-          echo '  cv-academics:'
+          echo '  cv:'
           echo '    - {style: {{.PLAIN_STYLE}}, lang: de}'
         } >> {{.OVERLAY}}
-        if ! grep -qE '^  cv-academics:' {{.OVERLAY}}; then
-          echo "::error:: failed to build cv-academics matrix in {{.OVERLAY}}" >&2
+        if ! grep -qE '^  cv:$' {{.OVERLAY}}; then
+          echo "::error:: failed to build the cv matrix in {{.OVERLAY}}" >&2
           exit 1
         fi
       # Run the build under gh act, pointing generation at the overlay.

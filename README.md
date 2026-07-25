@@ -51,19 +51,21 @@ cvs/<yaml>-<lang>/<style>/sklug-cv.pdf
 
 ## Source CVs and styles
 
-Two canonical sources live under `data/`. Only `cv-databricks` is in the
-committed build matrix; `cv-academics` is a local-only source (its YAML is
-gitignored) built on demand via `task cv:academics`:
+One canonical, merged source lives under `data/`. Every entry selects its
+presentation style(s) via per-entry `targets` (`cv-tagged-ia` |
+`cv-plain-style` | `web`); the critical-PII contact fields of the academic
+variant live in a gitignored `data/cv.local.yml` overlay that `cv/parse`
+deep-merges over the source when present:
 
-| Source YAML | Focus | Variants | Built |
+| Source YAML | Content | Variants | Built |
 | --- | --- | --- | --- |
-| `data/cv-databricks.yml` | Industry / Databricks | cv-tagged-ia (en) | Committed matrix (CI + local) |
-| `data/cv-academics.yml` | Academic-leaning | cv-plain-style (de) | Local only (`task cv:academics`) |
+| `data/cv.yml` | Merged: industry/Databricks + academic entries | cv-tagged-ia (en) committed; cv-plain-style (de) local | Committed matrix (CI + local); `task cv:academics` for the plain leaf |
+| `data/cv.local.yml` | PII overlay (birthdate, address, …) for cv-plain-style | — | Gitignored, local only |
 
 All six styles below are authored and available in the repo. The committed
-matrix currently activates a single one (`cv-tagged-ia`) against the
-`cv-databricks` source; the others remain ready to enable by uncommenting
-their `styles` registry entries and adding matrix lines.
+matrix currently activates a single one (`cv-tagged-ia`); the others remain
+ready to enable by uncommenting their `styles` registry entries and adding
+matrix lines.
 
 Styles are declared in `data/variants.yml`'s `styles` registry. Each maps
 to a TeX engine and a `cv/parse` body emitter (`parse_style`): `plain`,
@@ -87,33 +89,36 @@ photo box** except the classic plain style.
 
 The generated per-section bodies (`\cventry` / longtable rows) are
 style-agnostic, so the presentation styles within a profile share one
-emitter. The two profiles, however, are **not** interchangeable: the
-`plain`-family sources (`cv-academics`) and the `tagged` source
-(`cv-databricks`) carry different cert and skill shapes (plain-string
-skills + `certifications[].text` vs. `{name, size}` skills + structured
-certifications), and `cv/parse`'s `check` mode validates each source under
-the profile of the style it is built with. A source authored for one
-profile is rejected by the other.
+emitter. The two profiles, however, are **not** interchangeable: entries
+targeting the `plain`-family styles (`cv-plain-style`) and entries
+targeting the `tagged` style (`cv-tagged-ia`) carry different cert and
+skill shapes (plain-string skills + `certifications[].text` vs.
+`{name, size}` skills + structured certifications). `cv/parse` selects the
+entries a style consumes via their per-style `targets` tokens and its
+`check` mode validates that selection under the style's profile, so both
+shapes coexist in the single merged `data/cv.yml`. An entry authored for
+one profile but targeted at the other is rejected.
 
 ## The build matrix
 
 `data/variants.yml` is the single control plane. The committed matrix
-currently declares one active `cv-databricks` leaf, with the remaining
-styles commented out (ready to re-enable):
+currently declares one active leaf under the merged `cv` source, with the
+remaining styles commented out (ready to re-enable):
 
 | Style | Lang | Leaf directory | Engine | Active |
 | --- | --- | --- | --- | --- |
-| cv-tagged-ia | en | `cvs/cv-databricks-en/cv-tagged-ia/` | xelatex | yes |
-| cv-banking-fs | en | `cvs/cv-databricks-en/cv-banking-fs/` | xelatex | commented |
-| cv-sidebar-pw | en | `cvs/cv-databricks-en/cv-sidebar-pw/` | xelatex | commented |
-| cv-sidebar-dh | en | `cvs/cv-databricks-en/cv-sidebar-dh/` | xelatex | commented |
-| cv-sidebar-vs | en | `cvs/cv-databricks-en/cv-sidebar-vs/` | xelatex | commented |
+| cv-tagged-ia | en | `cvs/cv-en/cv-tagged-ia/` | xelatex | yes |
+| cv-banking-fs | en | `cvs/cv-en/cv-banking-fs/` | xelatex | commented |
+| cv-sidebar-pw | en | `cvs/cv-en/cv-sidebar-pw/` | xelatex | commented |
+| cv-sidebar-dh | en | `cvs/cv-en/cv-sidebar-dh/` | xelatex | commented |
+| cv-sidebar-vs | en | `cvs/cv-en/cv-sidebar-vs/` | xelatex | commented |
 
 Uncomment a matrix line (and its `styles` registry entry) to build that
-style. `cv-academics` is intentionally absent from the committed matrix
-(its gitignored source carries PII); it builds locally via
-`task cv:academics` into `cvs/cv-academics-de/cv-plain-style/` (pdflatex).
-Any registered `{ style, lang }` pairing remains expressible in the matrix.
+style. The academic `cv-plain-style` leaf is intentionally absent from the
+committed matrix (its contact PII lives in the gitignored
+`data/cv.local.yml` overlay); it builds locally via `task cv:academics`
+into `cvs/cv-de/cv-plain-style/` (pdflatex). Any registered
+`{ style, lang }` pairing remains expressible in the matrix.
 
 The leaf main is always `sklug-cv.tex`. The directory scheme is
 `cvs/<yaml-without-extension>-<lang>/<style>/`. Languages and their
@@ -163,12 +168,12 @@ same value for local builds.
 
 ## Editing CV content
 
-Content is **not** edited in the `.tex` files — edit the canonical sources
-[`data/cv-academics.yml`](data/cv-academics.yml) and
-[`data/cv-databricks.yml`](data/cv-databricks.yml) (bilingual). CI
-regenerates the whole `cvs/` tree on every build. See
-[`data/README.md`](data/README.md) for the schema and the `targets`
-contract. Do not hand-edit the generated `sklug-cv.tex` / `cv-*.tex` /
+Content is **not** edited in the `.tex` files — edit the canonical merged
+source [`data/cv.yml`](data/cv.yml) (bilingual; per-entry `targets` select
+the style) and, for the academic variant's PII contact fields, the
+gitignored local overlay `data/cv.local.yml`. CI regenerates the whole
+`cvs/` tree on every build. See [`data/README.md`](data/README.md) for the
+schema and the `targets` contract. Do not hand-edit the generated `sklug-cv.tex` / `cv-*.tex` /
 `personal-info.tex` files; they carry a "do not edit by hand" banner and
 are overwritten on regeneration.
 
@@ -181,7 +186,7 @@ in which style/language), edit `data/variants.yml`.
 Because the build is matrix-driven, adding a variant is a one-line change:
 
 1. Open [`data/variants.yml`](data/variants.yml).
-2. Under the desired `cvs.<yaml>` (e.g. `cv-academics`), add an entry:
+2. Under the desired `cvs.<yaml>` (e.g. `cv`), add an entry:
 
    ```yaml
    - { style: cv-sidebar-pw, lang: de }
@@ -210,11 +215,11 @@ the shared `*.sty` files, and `images/` from the repo root.
 
 ```sh
 # Classic two-page CV (pdflatex)
-cd cvs/cv-academics-de/cv-plain-style
+cd cvs/cv-de/cv-plain-style
 TEXINPUTS=.:../../..:../../../styles:../../../images: pdflatex -interaction=nonstopmode -halt-on-error sklug-cv.tex
 
 # A sidebar variant (xelatex)
-cd cvs/cv-academics-en/cv-sidebar-pw
+cd cvs/cv-en/cv-sidebar-pw
 TEXINPUTS=.:../../..:../../../styles:../../../images: xelatex -interaction=nonstopmode -halt-on-error sklug-cv.tex
 ```
 
@@ -272,7 +277,7 @@ automatically on `darwin/arm64`). Requires
 task                 # list available tasks
 task build           # build the full committed matrix (data/variants.yml)
 task cv:databricks   # build language en across all non-plain styles
-task cv:academics    # build the local-only, PII-bearing cv-academics variant
+task cv:academics    # build the local-only academic variant (needs data/cv.local.yml)
 task lint            # run the lint workflow locally
 task clean           # remove the overlay and the generated cvs/ tree
 ```
@@ -284,13 +289,16 @@ There are three build targets:
   build (whatever the committed matrix currently declares). This is the
   CI-equivalent local build; no overlay is involved.
 - **`task cv:databricks`** builds language `en` across **all non-plain
-  styles**. Its matrix is derived dynamically from the `styles` registry
+  styles** from the merged `data/cv.yml` (the entries targeting those
+  styles). Its matrix is derived dynamically from the `styles` registry
   in `data/variants.yml` (every style except `cv-plain-style`), emitted as
   `{style, lang: en}` leaves into a gitignored overlay
   (`data/variants.local.yml`). Adding a new non-plain style to the
   registry extends this build with no edit to the Taskfile.
 - **`task cv:academics`** builds the single `cv-plain-style` + language
-  `de` variant from the PII-bearing source `data/cv-academics.yml`.
+  `de` variant from the merged `data/cv.yml` (the entries targeting
+  `cv-plain-style`) plus the PII-bearing, gitignored overlay
+  `data/cv.local.yml`.
 
 Both `cv:*` targets generate the overlay deterministically: they copy the
 `styles`/`langs` registries from `data/variants.yml`, then append their own
@@ -299,12 +307,12 @@ Both `cv:*` targets generate the overlay deterministically: they copy the
 when the task finishes (success, failure, or interrupt), so no PII-bearing
 file ever enters the git index.
 
-The committed build matrix (`data/variants.yml`) deliberately excludes
-`cv-academics`: its source `data/cv-academics.yml` carries critical PII
-(date and place of birth, home address, signature) and is **gitignored**,
-so it never reaches the remote — hence it is built only locally via
-`task cv:academics`. By contrast `data/cv-databricks.yml` carries only
-professional contact details and is committed normally.
+The committed build matrix (`data/variants.yml`) deliberately excludes the
+academic `cv-plain-style` leaf: its contact PII (date and place of birth,
+home address, signature) lives in the **gitignored** `data/cv.local.yml`
+overlay, so it never reaches the remote — hence that leaf is built only
+locally via `task cv:academics`. The committed `data/cv.yml` carries only
+professional contact details.
 
 ## CI workflow explained
 
@@ -503,7 +511,7 @@ dotfile (default `latexmk` if absent), and detects per-main auxiliary
 toolchain requirements (`bibtex`, `biblatex`, `makeindex`, `glossaries`,
 `psfrag`). The result is a JSON matrix consumed by `build`. Each leaf's
 matrix `name` is its path relative to `root` with `/` replaced by `-`
-(e.g. `cv-academics-en-cv-sidebar-pw`), keeping artifact names unique.
+(e.g. `cv-en-cv-sidebar-pw`), keeping artifact names unique.
 
 **3. `build` (matrix)** — one leg per variant via
 `strategy.matrix: fromJson(...)` with `fail-fast: false`. Each leg
@@ -531,8 +539,8 @@ corresponding artifact.
 
 | Artifact | Pattern | Example (this repo, `curriculum-vitae`) |
 | --- | --- | --- |
-| Per-CV PDF | `<repo>-<name>-pdf` | `curriculum-vitae-cv-academics-en-cv-sidebar-pw-pdf` |
-| Per-CV logs (failure) | `<repo>-<name>-logs` | `curriculum-vitae-cv-academics-de-cv-plain-style-logs` |
+| Per-CV PDF | `<repo>-<name>-pdf` | `curriculum-vitae-cv-en-cv-sidebar-pw-pdf` |
+| Per-CV logs (failure) | `<repo>-<name>-logs` | `curriculum-vitae-cv-de-cv-plain-style-logs` |
 | Combined | `<repo>` | `curriculum-vitae` |
 
 ### Engine selection guide

@@ -5,27 +5,29 @@ This directory holds everything that drives CV generation:
 | File | Role |
 | --- | --- |
 | [`variants.yml`](variants.yml) | **Build matrix control plane** — declares every style, language and `(yaml × style × lang)` leaf the repo generates and builds. |
-| [`cv-databricks.yml`](cv-databricks.yml) | Canonical, bilingual (`de`/`en`) CV source — Databricks/industry-leaning content. In the committed matrix. |
-| `cv-academics.yml` | Canonical, bilingual (`de`/`en`) CV source — academic-leaning content. **Gitignored (carries PII); local-only**, built via `task cv:academics`. |
+| [`cv.yml`](cv.yml) | Canonical, bilingual (`de`/`en`) **merged** CV source — Databricks/industry entries (`targets: [cv-tagged-ia, web]`) and academic entries (`targets: [cv-plain-style]`) side by side. In the committed matrix. |
+| `cv.local.yml` | **Gitignored, local-only** overlay for `cv.yml` — carries the critical-PII contact fields (birthdate, address, …) consumed by the academic `cv-plain-style` variant. Deep-merged over `cv.yml` by `cv/parse` when present. Never committed. |
 
-Both `cv-*.yml` files share most of the schema (below) but validate
-against **two style-dependent profiles** for the handful of fields where
-the layouts genuinely diverge. The `parse_style` a source is built with
-(via `variants.yml`) selects the profile:
+The merged source validates against **two style-dependent profiles** for
+the handful of fields where the layouts genuinely diverge. Instead of a
+per-file profile, selection is **per entry**: each entry's `targets` name
+the presentation style(s) it feeds, and `cv/parse` validates (and emits)
+only the entries a style consumes, under that style's profile:
 
-- **`plain` profile** (`cv-academics.yml` → `cv-plain-style`, and the
+- **`plain` profile** (entries targeting `cv-plain-style`, and the
   sidebar-family styles): plain-string `skills[].items`, bilingual
   `certifications[].text`, and **no** tagged-only fields.
-- **`tagged` profile** (`cv-databricks.yml` → `cv-tagged-ia`):
+- **`tagged` profile** (entries targeting `cv-tagged-ia`):
   `{name, size}` skill items, structured `certifications[]`, plus the
   optional `concepts[]`, `interests[].icon` and `conferences[].lat`/`lon`.
 
-The profiles are **strict** — a plain source carrying a tagged-only field
-(or vice-versa) fails `check` with a pinpointed message — so each source
-matches exactly the shape its emitter consumes. `meta.pdf_title` is
-accepted by **both**. Each file is a self-contained source of truth; the
-per-section LaTeX files under `cvs/<yaml>-<lang>/<style>/` are *generated*
-from them by the
+The profiles are **strict** — an entry carrying a tagged-only field but
+targeting a plain style (or vice-versa) fails `check` with a pinpointed
+message — so each style's selection matches exactly the shape its emitter
+consumes. `meta.pdf_title` is accepted by **both**. Per-style `meta` /
+`contact` deltas live in the optional top-level `overrides.<style>` block
+(deep-merged over the base for that style). The per-section LaTeX files
+under `cvs/<yaml>-<lang>/<style>/` are *generated* by the
 [`stklug84/actions` `cv/parse`](https://github.com/stklug84/actions)
 emitter (major alias `v2`). Edit the YAML, regenerate (CI does this
 automatically), commit.
@@ -70,7 +72,7 @@ composite action, driven by the `latex-build-cv` reusable workflow with
 
 ```text
 data/variants.yml ─┐
-data/cv-*.yml      ├─▶ cv/generate ─▶ cvs/<yaml>-<lang>/<style>/{sklug-cv.tex,.engine,cv-*.tex,personal-info.tex}
+data/cv.yml        ├─▶ cv/generate ─▶ cvs/<yaml>-<lang>/<style>/{sklug-cv.tex,.engine,cv-*.tex,personal-info.tex}
 templates/*.tex.j2 ┘        │
                             ├─ leaf main : Jinja2 render of templates/<style>.tex.j2
                             │              (engine + babel/polyglossia + label_* from the manifest)
@@ -84,10 +86,13 @@ before discovery and the TeX Live build. The matrix is read only from
 
 Validate the sources against the `cv/parse` schema with the action's
 `check` mode (`check: 'true'`); it writes nothing and exits non-zero on
-the first violation. The check is **style-dependent** — each source is
-validated under the profile of every `parse_style` it is built with in
-the matrix — so a source is only accepted if it matches the exact shape
-its style consumes.
+the first violation. The check is **style-dependent and per entry** —
+for every style a source is built with, the entries targeting that style
+(via `targets`) are validated under the style's schema profile — so each
+style's selection is only accepted if it matches the exact shape the
+style consumes. The `targets` tokens themselves are validated on the
+full, unfiltered document, so a typo'd style name fails loudly instead
+of silently dropping the entry.
 
 ## Generated tree is not committed
 
@@ -129,12 +134,34 @@ headings.
 ## Schema contract
 
 `targets` selects which consumers an entry feeds. **Absent ⇒
-`[latex, web]`.** Allowed values: `latex`, `web`. Bilingual text fields are
-`{de, en}` (both required, non-empty). Neutral fields are scalars. `kind ∈
-{work, study, cert}`; `level` is an int `1..5`; `year` is an int.
+`[latex, web]`.** Allowed values: `web`, the registered **style names**
+from `variants.yml` (`cv-plain-style`, `cv-tagged-ia`, …; wired through
+`cv/generate` as `--valid-targets`), and the legacy `latex` token
+(meaning "every LaTeX style" — kept for single-style sources; this repo's
+merged source uses explicit style names instead). When `cv/parse` emits a
+style, an entry is selected if its `targets` contain that style's name or
+`latex`. Bilingual text fields are `{de, en}` (both required, non-empty).
+Neutral fields are scalars. `kind ∈ {work, study, cert}`; `level` is an
+int `1..5`; `year` is an int.
 
 Top-level required keys: `meta`, `contact`, `experience`, `education`,
 `conferences`, `skills`, `languages`, `certifications`, `interests`.
+
+Two optional top-level mechanisms support the merged multi-style source:
+
+- **`overrides.<style>`** — per-style `meta` / `contact` deltas,
+  deep-merged over the base when that style is generated (e.g. the
+  academic variant's role line, header location, summary and phone).
+  Only `meta` and `contact` may be overridden; sections are selected per
+  entry via `targets` instead.
+- **`<source-stem>.local.yml` overlay** — a gitignored sibling file
+  (here `cv.local.yml`) deep-merged over the source by `cv/parse` when
+  present. It carries the local-only PII contact fields inside
+  `overrides.cv-plain-style.contact`, so the committed source stays
+  clean while local builds see the full document. `id` uniqueness is
+  scoped **per style** (the filtered document), so the same `id` may
+  appear once per style (e.g. two `phd` education entries with different
+  grades/details).
 
 `contact` additionally supports **optional** profile links — `linkedin`,
 `github` and `website` — each a `{url, label}` mapping (`url` required and
@@ -169,13 +196,13 @@ and signature `\includegraphics` calls so an empty `photo_path` /
 
 | Section | Targets | Rationale |
 | --- | --- | --- |
-| `experience` | `[latex, web]` | Roles appear in the PDF and feed the web timeline (`monogram`/`bg` set) |
-| `skills` | `[latex, web]` | Shared between the PDF qualifications table and web skill chips |
-| `languages` | `[latex, web]` | Shown in both the PDF and the sidebar/web |
-| `certifications` | `[]` | None today (empty list) |
-| `education` | `[latex]` | Detailed academic record is PDF-only |
-| `conferences` | `[latex]` | Conference list is PDF-only |
-| `interests` | `[latex]` | Personal interests are PDF-only |
+| `experience` | `[cv-tagged-ia, web]` / `[cv-plain-style]` | Industry roles feed the tagged PDF and the web timeline; academic roles feed the plain PDF only |
+| `skills` | `[cv-tagged-ia, web]` / `[cv-plain-style]` | Tagged groups carry `{name, size}` items (shared with web chips); plain groups carry string items |
+| `languages` | `[cv-plain-style, cv-tagged-ia, web]` | Identical across variants — one set feeds every consumer |
+| `certifications` | `[cv-tagged-ia, web]` | Structured certs render in the tagged PDF and on the web; the academic variant lists none |
+| `education` | `[cv-tagged-ia]` / `[cv-plain-style]` | PDF-only; the academic variant carries the detailed record (incl. Abitur/Bachelor), the tagged one a condensed pair |
+| `conferences` | `[cv-plain-style]` | Conference list renders in the plain PDF today (tagged candidates stay commented) |
+| `interests` | `[cv-tagged-ia]` / `[cv-plain-style]` | PDF-only; the tagged entries carry FontAwesome `icon`s |
 
 ## Role line and summary
 
