@@ -190,7 +190,7 @@ jobs:
       # fields; 'tagged' accepts structured certifications, {name, size}
       # skill items, concepts and lat/lon) applies to the selection.
       - name: Validate ${{ matrix.source }} (${{ matrix.target_style || matrix.style }})
-        uses: stklug84/actions/cv/parse@071f9e9c98cf0660f0d080ac13cecfc415dac81b  # v2.15.0
+        uses: stklug84/actions/cv/parse@fcf81eaf154cfbf73ba88118d5c045dbf5c3815e  # v2.17.0
         with:
           source: ${{ matrix.source }}
           style: ${{ matrix.style }}
