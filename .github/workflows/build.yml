@@ -101,7 +101,7 @@ jobs:
     # so a build producing a single PDF variant releases correctly instead of
     # failing the flatten step with "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@52d6300511edb3dc7c198d4941dcc4ee2cd9f8f3  # v1.19.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@176a7a46472032661cab6f62994177d107265cce  # v1.21.0
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).
