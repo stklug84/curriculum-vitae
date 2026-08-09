@@ -73,8 +73,12 @@ jobs:
     permissions:
       contents: write
       actions: read
-    # SHA-pinned to github-workflows v1.19.0: bundles stklug84/actions
-    # v2.15.0 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
+    # SHA-pinned to github-workflows v1.22.2: every embedded action
+    # (actions/checkout, upload-artifact, download-artifact) is itself
+    # pinned to a full-length commit SHA, which this repo's Actions
+    # policy (sha_pinning_required) enforces; earlier releases referenced
+    # them by tag and were rejected at job setup. Bundles stklug84/actions
+    # v2.17.1 (cv/generate, texlive/*, incl. the cv/parse 'tagged' style
     # driving cv-tagged-ia per-item skill proficiency bars
     # (\cvskillgroupheading + \cvskillitembar from skills[].items
     # {name,size}), per-interest FontAwesome icons (\cvinterest{icon}{text}
@@ -101,7 +105,7 @@ jobs:
     # so a build producing a single PDF variant releases correctly instead of
     # failing the flatten step with "No PDFs found to release."
     # yamllint disable-line rule:line-length
-    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@176a7a46472032661cab6f62994177d107265cce  # v1.21.0
+    uses: stklug84/github-workflows/.github/workflows/latex-build-cv.yml@e4dba2dea8e228278d17286685a750d693e347cc  # v1.22.2
     with:
       # Render the full variant tree before building, straight from the
       # build matrix (defaults: templates/, data/).
