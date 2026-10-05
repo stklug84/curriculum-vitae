@@ -31,7 +31,7 @@ jobs:
   # discover-sources / cv-schema pair below is the check unique to this
   # repository.
   repo-lint:
-    uses: stklug84/github-workflows/.github/workflows/repo-lint.yml@ef0b2e5ae729ef22d91331095281856a97b4dbd5  # v2.0.0
+    uses: stklug84/github-workflows/.github/workflows/repo-lint.yml@e099d4771b62e7814a0206424b176b91a1747ecc  # v4.1.0
     with:
       hadolint-dockerfile: ".github/docker/texlive/Dockerfile"
 
@@ -137,7 +137,7 @@ jobs:
       # fields; 'tagged' accepts structured certifications, {name, size}
       # skill items, concepts and lat/lon) applies to the selection.
       - name: Validate ${{ matrix.source }} (${{ matrix.target_style || matrix.style }})
-        uses: stklug84/actions/cv/parse@fcf81eaf154cfbf73ba88118d5c045dbf5c3815e  # v2.17.0
+        uses: stklug84/actions/cv/parse@c6c3adbc4140cbf096c0c61c30b4fa96ff82b8dd  # v2.19.0
         with:
           source: ${{ matrix.source }}
           style: ${{ matrix.style }}
