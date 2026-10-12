@@ -12,10 +12,11 @@ model: azure-anthropic/claude-opus-5-5
 # This repository owns the agent; the global ~/.config/opencode tree carries
 # no copy (opencode merges same-named agents by name, and two copies drift).
 # Context diet: resume work never touches GitHub MCPs, the code knowledge
-# graph, oreilly search, Databricks, Jira or the research toolchain — the
-# families below are gated here per agent because the global top-level
-# "tools" block is inert. websearch_* stays on for company and role research;
-# webfetch fetches the posting itself.
+# graph, oreilly search, Databricks, Jira or the research toolchain, so those
+# families are switched off here, whatever the global rules say. websearch_*
+# is switched on for company and role research (the global config denies the
+# family; an agent's own entry lands after that rule); webfetch fetches the
+# posting itself.
 tools:
   "github_*": false
   "ghes_*": false
@@ -26,6 +27,7 @@ tools:
   "crawlberg_*": false
   "xberg_*": false
   "research_papers": false
+  "websearch_*": true
 permission:
   read: allow
   glob: allow
