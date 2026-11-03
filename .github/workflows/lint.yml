@@ -34,6 +34,12 @@ jobs:
     uses: stklug84/github-workflows/.github/workflows/repo-lint.yml@ef0b2e5ae729ef22d91331095281856a97b4dbd5  # v2.0.0
     with:
       hadolint-dockerfile: ".github/docker/texlive/Dockerfile"
+      # .opencode/agents/*.md are opencode agent prompts (YAML front matter
+      # plus a system prompt), not documentation; markdownlint-cli2 globs
+      # dot directories, so exclude them explicitly.
+      markdownlint-globs: |
+        **/*.md
+        !.opencode/**
 
   # Discover every CV data source present in the checkout and pair it
   # with every registered LaTeX style from the data/variants.yml
